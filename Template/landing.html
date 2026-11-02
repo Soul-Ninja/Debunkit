@@ -1,19 +1,23 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="{{ current_user.theme if current_user.is_authenticated and current_user.theme else 'dark' }}">
+<html lang="en" data-theme="{{ current_user.theme if current_user.is_authenticated and current_user.theme else 'light' }}">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>DEBUNK.IT | The Internet is 94% Bullshit. We Built The Radar.</title>
+    <title>DEBUNK.IT — Can We Really Trust The Media? Misinformation Intelligence</title>
 
-    <meta name="description" content="DEBUNK.IT is an AI-powered misinformation detection engine that uses live RAG web search, Cohere LLM reasoning, and ML classifiers to roast fake news and verify claims.">
+    <meta name="description" content="DEBUNK.IT is an editorial truth-checking instrument. Source-aware AI, live RAG web search, and forensic reasoning to verify claims and detect fake news.">
     <meta property="og:title" content="DEBUNK.IT | Misinformation Intelligence Radar">
-    <meta property="og:description" content="Stop getting your medical and financial advice from WhatsApp forwards. Instant truth checks with cited receipts.">
+    <meta property="og:description" content="Investigative truth-checking with cited primary receipts. Quiet luxury meets the front page.">
     <meta property="og:type" content="website">
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='Images/debunkit-logo.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='CSS/landing.css') }}">
 </head>
 
@@ -21,167 +25,289 @@
     <!-- Background Canvas Layer -->
     <canvas id="canvas-bg" aria-hidden="true"></canvas>
 
-    <!-- Ambient Glow Blobs -->
-    <div class="ambient-glow ambient-glow-1"></div>
-    <div class="ambient-glow ambient-glow-2"></div>
-    <div class="ambient-glow ambient-glow-3"></div>
-
-    <!-- Cyber Grid Overlay -->
-    <div class="cyber-grid" aria-hidden="true"></div>
-
     <div class="landing-shell">
 
         <!-- ================================================================= -->
-        <!-- NAVIGATION                                                        -->
+        <!-- NAVIGATION (EDITORIAL MASTHEAD)                                   -->
         <!-- ================================================================= -->
-        <nav class="landing-nav">
+        <nav class="landing-nav" aria-label="Main Navigation">
             <div class="nav-container">
-                <a href="/" class="brand-wrapper" title="DEBUNK.IT Home">
-                    <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Logo">
+                <a href="/" class="brand-wrapper" title="DEBUNK.IT Front Page">
+                    <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Seal">
                     <div class="brand-text">
                         <h1>DEBUNK.IT</h1>
-                        <span class="brand-pill"><span class="pulse-dot"></span> RADAR ACTIVE</span>
+                        <span class="brand-pill"><span class="pulse-dot"></span> DISPATCH BUREAU ACTIVE</span>
                     </div>
                 </a>
 
                 <ul class="nav-links">
-                    <li><a href="#meter" class="nav-link">BS-O-METER</a></li>
-                    <li><a href="#shame" class="nav-link">HALL OF SHAME</a></li>
+                    <li><a href="#meter" class="nav-link">FORENSIC GAUGE</a></li>
+                    <li><a href="#value-strip" class="nav-link">VERIFICATION PILLARS</a></li>
                     <li><a href="#engine" class="nav-link">HOW IT WORKS</a></li>
-                    <li><a href="#telemetry" class="nav-link">STATS</a></li>
-                    <li><a href="#reviews" class="nav-link">REVIEWS</a></li>
+                    <li><a href="#shame" class="nav-link">DOSSIERS</a></li>
+                    <li><a href="#telemetry" class="nav-link">LEDGER</a></li>
+                    <li><a href="#reviews" class="nav-link">DISPATCH REVIEWS</a></li>
                 </ul>
 
                 <div class="nav-actions">
                     <a href="https://github.com/Code-Breaker-Ctrl/Debunkit" target="_blank" rel="noopener noreferrer" class="nav-gh-star" title="Star DEBUNK.IT on GitHub">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
                             <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
                         </svg>
-                        <span>★ Star</span>
+                        <span>★ GitHub</span>
                     </a>
 
-                    <button id="sfx-toggle-btn" class="sfx-toggle" title="Toggle Sound Effects">
-                        🔇 SFX: OFF
+                    <button id="sfx-toggle-btn" class="sfx-toggle" title="Toggle Sound Effects" aria-pressed="false">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                        <span>SFX: OFF</span>
                     </button>
 
                     {% if current_user.is_authenticated %}
                         <a href="/dashboard" class="btn btn-cyan btn-sm">
-                            🚀 DASHBOARD
+                            DASHBOARD
                         </a>
                     {% else %}
                         <a href="/login" class="btn btn-ghost btn-sm">
                             LOG IN
                         </a>
                         <a href="/scanner" class="btn btn-primary btn-sm">
-                            🔥 LIVE SCANNER
+                            CHECK AN ARTICLE
                         </a>
                     {% endif %}
 
-                    <button class="mobile-menu-btn" aria-label="Toggle Navigation Menu">☰</button>
+                    <button class="mobile-menu-btn" aria-label="Toggle Navigation Menu" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
                 </div>
             </div>
         </nav>
 
         <!-- ================================================================= -->
-        <!-- BREAKING NONSENSE TICKER                                          -->
+        <!-- SLIM INK-BLACK BREAKING NEWS TICKER                               -->
         <!-- ================================================================= -->
-        <div class="breaking-ticker-bar">
+        <div class="breaking-ticker-bar" aria-label="Recent Misinformation Dispatches">
             <div class="ticker-label">
-                <span>🚨</span> BREAKING NONSENSE
+                <span>DISPATCH</span>
             </div>
             <div class="ticker-viewport">
                 <div class="ticker-track">
                     <div class="ticker-item" data-claim="NASA confirms Moon is made of low-fat mozzarella cheese">
                         <span class="ticker-tag debunked">REFUTED</span>
-                        NASA clarifies Moon is definitely NOT made of mozzarella cheese.
+                        NASA clarifies Moon is composed of anorthosite basalt rock, not dairy cheese.
                     </div>
                     <div class="ticker-item" data-claim="Drinking boiled garlic water cures student loan debt">
-                        <span class="ticker-tag debunked">100% CAP</span>
-                        Local man claims boiling garlic canceled his student loans; IRS disagrees.
+                        <span class="ticker-tag debunked">REFUTED</span>
+                        Boiling garlic cancels neither public nor private student debt; treasury confirms.
                     </div>
                     <div class="ticker-item" data-claim="Putting your iPhone in microwave charges battery to 100% in 15 seconds">
                         <span class="ticker-tag debunked">HAZARDOUS</span>
-                        Microwaving phone creates indoor lightning storm, not 100% battery. Stop it Kyle.
+                        Microwaving telecommunications hardware incinerates internal capacitors immediately.
                     </div>
                     <div class="ticker-item" data-claim="Pigeons are secret government drones recharging on power lines">
                         <span class="ticker-tag debunked">REFUTED</span>
-                        Biologists confirm pigeons are real animals and do not have USB-C charging ports.
+                        Ornithological records establish biological avian anatomy with zero lithium cells.
                     </div>
                     <div class="ticker-item" data-claim="Ancient pyramids were built as extraterrestrial Amazon distribution hubs">
-                        <span class="ticker-tag debunked">BOLOGNA</span>
-                        Excavation uncovers limestone and zero intergalactic Prime delivery barcodes.
+                        <span class="ticker-tag debunked">REFUTED</span>
+                        Excavation archives verify limestone masonry, copper chisels, and zero delivery barcodes.
                     </div>
                     <div class="ticker-item" data-claim="Lizard people spotted struggling with self-checkout at Walmart">
-                        <span class="ticker-tag investigating">UNCONFIRMED</span>
-                        Customers report strange reptilian behavior; turns out self-checkout was just broken.
+                        <span class="ticker-tag investigating">UNVERIFIED</span>
+                        Local reports indicate retail terminal software glitch rather than reptilian conspiracy.
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- ================================================================= -->
-        <!-- HERO SECTION                                                      -->
+        <!-- POSTER-STYLE HERO SECTION (REFERENCE A & B FUSION)                -->
         <!-- ================================================================= -->
         <header class="hero-section">
             <div class="hero-pill-badge">
-                <span class="bolt-icon">⚡</span> THE OFFICIAL BULLSHIT DETECTOR // REAL-TIME TRUTH RADAR
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                INVESTIGATIVE EDITORIAL DISPATCH // VOLUME 3.0
             </div>
 
-            <div class="hero-crazy-title-wrap" id="hero-title-wrap" title="DEBUNK.IT — Click for Truth Scan!">
-                <h1 class="hero-crazy-title" id="hero-crazy-title">
-                    <span class="title-debunk" id="decode-debunk">DEBUNK</span><span class="title-dot" id="decode-dot">.</span><span class="title-it" id="decode-it">IT</span>
-                </h1>
-                <div class="hero-crazy-glow" aria-hidden="true"></div>
+            <!-- Stacked Display Headline (Warped / Condensed Display Typography) -->
+            <div class="hero-poster-wrapper">
+                <div class="hero-crazy-title-wrap" id="hero-title-wrap" title="DEBUNK.IT — Press to run forensic check">
+                    <div class="hero-headline-stack">
+                        <div class="headline-line-top">CAN WE REALLY</div>
+                        <div class="headline-line-verdict" id="hero-crazy-title">
+                            <span class="title-debunk" id="decode-debunk">TRUST</span><span class="title-dot" id="decode-dot" style="display:none;">.</span><span class="title-it" id="decode-it" style="display:none;">IT</span>
+                        </div>
+                        <div class="headline-line-bottom">THE MEDIA?</div>
+                    </div>
+                </div>
             </div>
 
-            <h2 class="hero-subtitle-punch">
-                THE INTERNET IS 94% <span class="highlight-gold">BULLSHIT</span>.<br>
-                WE BUILT THE <span class="highlight-cyan">RADAR</span>.
-            </h2>
-
-            <p class="hero-subtitle">
-                Before you drink boiled onion water, liquidate your 401(k) for <em>ElonMarsCoin</em>,
-                or forward that 4,000-word WhatsApp essay from Uncle Bob... run it through <strong>DEBUNK.IT</strong>.
-                Instant, evidence-backed verdicts powered by live web search and ruthless AI forensic reasoning.
+            <!-- Subtitles & Value Proposition -->
+            <p class="hero-subtitle-punch">
+                THE INTERNET IS 94% <span class="highlight-red">FABRICATION</span>. WE BUILT THE <span class="highlight-gold">RADAR</span>.
             </p>
 
+            <p class="hero-subtitle">
+                An uncompromising investigative truth-checking instrument. Before forwarding unverified claims
+                or trading critical thought for panic, submit articles, claims, and links to <strong>DEBUNK.IT</strong>
+                for transparent verdicts, live web receipts, and forensic AI reasoning.
+            </p>
+
+            <!-- Single Primary CTA ("Check an article") -->
             <div class="hero-cta-group">
                 <a href="/scanner" class="btn btn-primary btn-lg">
-                    <span>⚡</span> OPEN LIVE SCANNER
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    CHECK AN ARTICLE
                 </a>
                 <a href="#meter" class="btn btn-cyan btn-lg">
-                    <span>🎯</span> TEST DRIVE BS-O-METER
+                    TEST THE FORENSIC GAUGE
                 </a>
                 <a href="#engine" class="btn btn-ghost btn-lg">
-                    <span>🧪</span> HOW IT WORKS
+                    HOW IT WORKS
                 </a>
             </div>
 
+            <!-- Editorial Collage Art: Reference A (Suited Figure with Big Question Mark Motif, Microphones, Mint Thumbs-Up, Blush Thumbs-Down) -->
+            <div class="hero-collage-graphic" aria-label="Editorial poster collage: Suited investigator with giant question mark motif surrounded by press microphones, true verdict thumbs-up in mint green, false verdict thumbs-down in dusty blush">
+                <svg class="collage-svg" viewBox="0 0 540 280" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <!-- Halftone dot pattern -->
+                        <pattern id="halftone" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+                            <circle cx="2" cy="2" r="1.5" fill="var(--ink)" opacity="0.18" />
+                        </pattern>
+                        <!-- Noise grain texture -->
+                        <filter id="distress">
+                            <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" result="noise" />
+                            <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+                        </filter>
+                    </defs>
+
+                    <!-- Background halftone box -->
+                    <rect x="10" y="10" width="520" height="260" fill="url(#halftone)" stroke="var(--ink)" stroke-width="1.5" />
+
+                    <!-- Mint Green Thumbs Up Hand (Left) -->
+                    <g transform="translate(30, 70)">
+                        <rect x="0" y="40" width="55" height="40" fill="var(--ink)" rx="2"/>
+                        <path d="M 55 52 C 65 52, 75 45, 78 30 C 80 18, 72 8, 62 8 C 55 8, 52 14, 52 24 L 52 38 L 48 38 L 48 78 L 76 78 C 84 78, 88 72, 88 66 C 88 62, 85 58, 82 56 C 86 54, 88 50, 88 46 C 88 42, 84 38, 76 38 Z" fill="var(--mint)" stroke="var(--ink)" stroke-width="2.5" />
+                        <!-- Cuff and cufflink -->
+                        <rect x="45" y="42" width="8" height="34" fill="#FFFFFF" stroke="var(--ink)" stroke-width="1.5"/>
+                        <text x="18" y="104" font-family="var(--font-sans)" font-size="10" font-weight="800" letter-spacing="1" fill="var(--mint-text)">SUPPORTED</text>
+                    </g>
+
+                    <!-- Dusty Blush Thumbs Down Hand (Right) -->
+                    <g transform="translate(425, 70)">
+                        <rect x="35" y="40" width="55" height="40" fill="var(--ink)" rx="2"/>
+                        <path d="M 35 66 C 25 66, 15 73, 12 88 C 10 100, 18 110, 28 110 C 35 110, 38 104, 38 94 L 38 80 L 42 80 L 42 40 L 14 40 C 6 40, 2 46, 2 52 C 2 56, 5 60, 8 62 C 4 64, 2 68, 2 72 C 2 76, 6 80, 14 80 Z" fill="var(--blush)" stroke="var(--ink)" stroke-width="2.5" />
+                        <!-- Cuff -->
+                        <rect x="37" y="42" width="8" height="34" fill="#FFFFFF" stroke="var(--ink)" stroke-width="1.5"/>
+                        <text x="-5" y="122" font-family="var(--font-sans)" font-size="10" font-weight="800" letter-spacing="1" fill="var(--blush-text)">REFUTED</text>
+                    </g>
+
+                    <!-- Suited Figure Silhouette (Center) -->
+                    <g transform="translate(270, 190)">
+                        <!-- Suit Shoulders -->
+                        <path d="M -110 90 L -80 20 L -35 15 L 0 35 L 35 15 L 80 20 L 110 90 Z" fill="var(--ink)" />
+                        <!-- White Collar & Shirt -->
+                        <polygon points="-35,15 0,45 35,15 -10,12 0,22 10,12" fill="#FFFFFF" stroke="var(--ink)" stroke-width="1.5" />
+                        <!-- Black Tie -->
+                        <polygon points="-8,24 8,24 12,65 0,82 -12,65" fill="var(--ink)" />
+                        <!-- Suited Lapels -->
+                        <path d="M -35 15 L -10 65 L -45 55 Z" fill="#2B2B2B" />
+                        <path d="M 35 15 L 10 65 L 45 55 Z" fill="#2B2B2B" />
+                    </g>
+
+                    <!-- Large Iconic Black Question Mark Motif (Head of the Figure) -->
+                    <g transform="translate(270, 95)">
+                        <path d="M -26 -40 C -26 -65, 26 -65, 26 -40 C 26 -22, 4 -16, 4 4 L -4 4 C -4 -22, 16 -24, 16 -40 C 16 -52, -16 -52, -16 -40 C -16 -34, -26 -34, -26 -40 Z" fill="var(--ink)" filter="url(#distress)" />
+                        <circle cx="0" cy="22" r="7" fill="var(--ink)" />
+                    </g>
+
+                    <!-- Press Microphones Cluster in Foreground -->
+                    <g transform="translate(270, 245)">
+                        <!-- Center retro broadcast mic -->
+                        <rect x="-14" y="-35" width="28" height="35" rx="14" fill="#333333" stroke="var(--ink)" stroke-width="2"/>
+                        <line x1="0" y1="0" x2="0" y2="35" stroke="var(--ink)" stroke-width="4"/>
+                        <line x1="-10" y1="-22" x2="10" y2="-22" stroke="#FFFFFF" stroke-width="1.5" opacity="0.6"/>
+                        <!-- Left angled mic -->
+                        <g transform="rotate(-28, -50, 0)">
+                            <rect x="-65" y="-30" width="22" height="32" rx="6" fill="var(--ink)"/>
+                            <rect x="-62" y="-12" width="16" height="12" fill="var(--red)"/>
+                            <line x1="-54" y1="2" x2="-54" y2="40" stroke="var(--ink)" stroke-width="3"/>
+                        </g>
+                        <!-- Right angled mic -->
+                        <g transform="rotate(28, 50, 0)">
+                            <rect x="43" y="-30" width="22" height="32" rx="6" fill="var(--ink)"/>
+                            <rect x="46" y="-12" width="16" height="12" fill="var(--gold)"/>
+                            <line x1="54" y1="2" x2="54" y2="40" stroke="var(--ink)" stroke-width="3"/>
+                        </g>
+                        <!-- Far left thin boom mic -->
+                        <circle cx="-100" cy="-10" r="11" fill="var(--ink)"/>
+                        <line x1="-100" y1="0" x2="-80" y2="40" stroke="var(--ink)" stroke-width="2.5"/>
+                        <!-- Far right mic -->
+                        <circle cx="100" cy="-10" r="11" fill="var(--ink)"/>
+                        <line x1="100" y1="0" x2="80" y2="40" stroke="var(--ink)" stroke-width="2.5"/>
+                    </g>
+                </svg>
+            </div>
+
+            <!-- Under Hero Badges Strip -->
             <div class="hero-badges-strip">
                 <div class="mini-badge">
-                    <span class="icon">🦆</span> DuckDuckGo Live Evidence
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    Real-Time Primary Crawling
                 </div>
                 <div class="mini-badge">
-                    <span class="icon">🧠</span> Cohere Command-R Reasoning
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M12 2a10 10 0 0 1 10 10v1a7 7 0 0 1-7 7H9a7 7 0 0 1-7-7v-1a10 10 0 0 1 10-10z"></path></svg>
+                    Cohere Command-R Reasoning
                 </div>
                 <div class="mini-badge">
-                    <span class="icon">👵</span> WhatsApp Uncle Resistant
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    WhatsApp Forward Resistant
                 </div>
                 <div class="mini-badge">
-                    <span class="icon">🚫</span> 0% Bologna Tolerance
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                    Zero Tolerance for Fabrications
                 </div>
             </div>
         </header>
 
         <!-- ================================================================= -->
-        <!-- FEATURE 1: INTERACTIVE BS-O-METER 3000                            -->
+        <!-- VALUE STRIP (3 PROOF POINTS WITH HAIRLINE RULES)                  -->
+        <!-- ================================================================= -->
+        <section class="value-strip-section" id="value-strip" aria-label="Core Proof Points">
+            <div class="value-strip-container">
+                <div class="value-point">
+                    <span class="value-point-kicker">PILLAR 01 // EVIDENCE</span>
+                    <h3 class="value-point-title">Live Web Context Retrieval</h3>
+                    <p class="value-point-desc">
+                        Every scan interrogates live search indexes and authoritative databases to gather real-time citations and primary receipts before drawing conclusions.
+                    </p>
+                </div>
+                <div class="value-point">
+                    <span class="value-point-kicker">PILLAR 02 // LOGIC</span>
+                    <h3 class="value-point-title">Forensic Cross-Examination</h3>
+                    <p class="value-point-desc">
+                        Neutral AI models cross-examine claimed dates, statistical fallacies, emotive wording, and manipulated attribution without ideological bias.
+                    </p>
+                </div>
+                <div class="value-point">
+                    <span class="value-point-kicker">PILLAR 03 // INTEGRITY</span>
+                    <h3 class="value-point-title">Transparent Ledger Receipts</h3>
+                    <p class="value-point-desc">
+                        No black-box answers. Clear verdicts: Supported, Refuted, or Insufficient Evidence, with confidence margins and direct source links.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- FEATURE 1: INTERACTIVE BS-O-METER FORENSIC GAUGE                 -->
         <!-- ================================================================= -->
         <section id="meter" class="meter-section">
             <div class="section-header">
-                <span class="section-eyebrow">INTERACTIVE LAB PREVIEW</span>
-                <h2 class="section-title">THE BULLSHIT-O-METER 3000</h2>
+                <span class="section-eyebrow">INTERACTIVE FORENSIC BENCH</span>
+                <h2 class="section-title">THE BULLSHIT-O-METER GAUGE</h2>
                 <p class="section-desc">
-                    Click a viral rumor below or paste your own unhinged internet claim to test our real-time heuristic radar.
+                    Select a documented internet fabrication below or enter a custom claim to examine our real-time heuristic response.
                 </p>
             </div>
 
@@ -192,34 +318,32 @@
                         <span class="dot-yellow"></span>
                         <span class="dot-green"></span>
                     </div>
-                    <div class="terminal-title">BS_DETECTOR_CONSOLE // V3.8_ONLINE</div>
+                    <div class="terminal-title">FORENSIC_INSTRUMENT // MODEL_v3.8</div>
                     <div class="terminal-status-light">
-                        <span class="pulse-dot"></span> RADAR_FREQ: 94.2 GHz
+                        <span class="pulse-dot"></span> FREQUENCY: 94.2 GHz
                     </div>
                 </div>
 
                 <div class="terminal-body">
                     <!-- Gauge Column -->
                     <div class="gauge-column">
-                        <div class="radar-sweep-effect"></div>
-
                         <div class="gauge-svg-container">
-                            <svg class="gauge-svg" viewBox="0 0 260 140">
+                            <svg class="gauge-svg" viewBox="0 0 260 140" aria-label="Truth probability dial gauge">
                                 <!-- Dial Arc Track -->
-                                <path d="M 30 130 A 100 100 0 0 1 230 130" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="18" stroke-linecap="round"/>
-                                <!-- Colored Dial Segments -->
-                                <path d="M 30 130 A 100 100 0 0 1 80 52" fill="none" stroke="var(--accent-green)" stroke-width="18" stroke-linecap="round" opacity="0.85"/>
-                                <path d="M 80 52 A 100 100 0 0 1 180 52" fill="none" stroke="var(--accent-orange)" stroke-width="18" opacity="0.85"/>
-                                <path d="M 180 52 A 100 100 0 0 1 230 130" fill="none" stroke="var(--accent-red)" stroke-width="18" stroke-linecap="round" opacity="0.85"/>
+                                <path d="M 30 130 A 100 100 0 0 1 230 130" fill="none" stroke="var(--paper-3)" stroke-width="16" stroke-linecap="round"/>
+                                <!-- Segment Accents -->
+                                <path d="M 30 130 A 100 100 0 0 1 80 52" fill="none" stroke="var(--mint)" stroke-width="16" stroke-linecap="round" opacity="0.9"/>
+                                <path d="M 80 52 A 100 100 0 0 1 180 52" fill="none" stroke="var(--blush)" stroke-width="16" opacity="0.9"/>
+                                <path d="M 180 52 A 100 100 0 0 1 230 130" fill="none" stroke="var(--red)" stroke-width="16" stroke-linecap="round" opacity="0.9"/>
 
-                                <!-- Center Needle Anchor -->
-                                <circle cx="130" cy="130" r="10" fill="#fff" />
-                                <circle cx="130" cy="130" r="5" fill="var(--bg)" />
+                                <!-- Center Needle Pivot -->
+                                <circle cx="130" cy="130" r="9" fill="var(--ink)" />
+                                <circle cx="130" cy="130" r="4" fill="var(--paper)" />
 
                                 <!-- Needle -->
                                 <g id="gauge-needle" class="gauge-needle" style="transform: rotate(78deg);">
-                                    <line x1="130" y1="130" x2="130" y2="40" stroke="var(--accent-gold)" stroke-width="4" stroke-linecap="round"/>
-                                    <polygon points="130,28 126,42 134,42" fill="var(--accent-gold)"/>
+                                    <line x1="130" y1="130" x2="130" y2="40" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>
+                                    <polygon points="130,28 126,42 134,42" fill="var(--ink)"/>
                                 </g>
                             </svg>
                         </div>
@@ -230,26 +354,27 @@
                         </div>
 
                         <div class="gauge-badges">
-                            <span class="meter-badge badge-cap">🚨 CAP PROBABILITY</span>
-                            <span class="meter-badge badge-source">🔍 RAG FORENSICS</span>
+                            <span class="meter-badge">FABRICATION MARGIN</span>
+                            <span class="meter-badge">RAG FORENSICS</span>
                         </div>
                     </div>
 
                     <!-- Controls & Roast Column -->
                     <div class="controls-column">
                         <div>
-                            <div class="controls-heading">1. Select A Viral Internet Myth:</div>
+                            <div class="controls-heading">1. Select An Archival Claim:</div>
                             <div id="samples-container" class="samples-wrapper" style="margin-top: 10px;">
                                 <!-- Preset Chips injected via landing.js -->
                             </div>
                         </div>
 
                         <div>
-                            <div class="controls-heading">2. Or Paste Any Custom Claim / URL:</div>
+                            <div class="controls-heading">2. Or Submit Any Claim / URL:</div>
                             <div class="custom-input-box">
-                                <input type="text" id="custom-claim-input" placeholder="e.g. Eating lemons at 3 AM aligns your 5G chakras..." maxlength="280">
+                                <input type="text" id="custom-claim-input" placeholder="e.g. Drinking lemon juice at 3 AM aligns 5G frequencies..." maxlength="280">
                                 <button id="btn-test-custom" class="btn btn-cyan">
-                                    <span>🔍</span> SCAN
+                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    SCAN
                                 </button>
                             </div>
                         </div>
@@ -257,18 +382,18 @@
                         <!-- Roast Diagnosis Box -->
                         <div id="roast-card" class="roast-card danger">
                             <div class="roast-header">
-                                <div id="roast-stamp" class="roast-stamp danger">100% PURE CAP 🚨</div>
-                                <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim);">DIAGNOSIS</span>
+                                <div id="roast-stamp" class="roast-stamp danger">100% REFUTED</div>
+                                <span style="font-family: var(--font-sans); font-size: 0.7rem; font-weight: 700; color: var(--ink-muted); letter-spacing: 0.1em;">DIAGNOSIS</span>
                             </div>
 
                             <p id="roast-text" class="roast-text">
-                                Confirmed WhatsApp Uncle energy. Boiling garlic will cure exactly two things: your student debt will remain untouched, but everyone within a 40-meter radius will maintain social distancing due to your breath.
+                                Confirmed rumor dynamics. Boiling garlic leaves student debt untouched while assuring social distancing through pungent breath.
                             </p>
 
                             <div class="roast-footer-cta">
-                                <span class="roast-meta">⚡ Ready for full deep-dive with cited sources?</span>
+                                <span class="roast-meta">Ready for deep dive with cited primary sources?</span>
                                 <a id="btn-scan-full" href="/scanner" class="btn btn-primary btn-sm">
-                                    <span>🚀</span> Run Full RAG Deep Dive ➔
+                                    Full RAG Deep Dive ➔
                                 </a>
                             </div>
                         </div>
@@ -278,14 +403,65 @@
         </section>
 
         <!-- ================================================================= -->
-        <!-- FEATURE 2: HALL OF SHAME (CONSPIRACY DOSSIERS)                   -->
+        <!-- FEATURE 2: HOW IT WORKS (NUMBERED EDITORIAL COLUMNS)              -->
+        <!-- ================================================================= -->
+        <section id="engine" class="engine-section">
+            <div class="section-header">
+                <span class="section-eyebrow">EDITORIAL METHODOLOGY</span>
+                <h2 class="section-title">THE THREE-STAGE VERIFICATION PIPELINE</h2>
+                <p class="section-desc">
+                    How DEBUNK.IT interrogates claims, isolates evidence, and delivers cited verdicts in seconds.
+                </p>
+            </div>
+
+            <div class="pipeline-grid">
+                <!-- Step 1 -->
+                <div class="pipeline-card">
+                    <div class="step-number">01</div>
+                    <h3 class="pipeline-title">Primary Source Retrieval</h3>
+                    <p class="pipeline-desc">
+                        Our real-time crawler queries verified news archives, wire reports, and indexed public records to locate context, original transcripts, and primary reporting.
+                    </p>
+                    <div class="tech-tag">
+                        Live RAG Web Crawler
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="pipeline-card">
+                    <div class="step-number">02</div>
+                    <h3 class="pipeline-title">Neural Cross-Examination</h3>
+                    <p class="pipeline-desc">
+                        Cohere Command-R LLM cross-examines the claim against retrieved citations, flagging temporal discrepancies, deceptive edits, and false causal links.
+                    </p>
+                    <div class="tech-tag">
+                        Cohere Reasoning Layer
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="pipeline-card">
+                    <div class="step-number">03</div>
+                    <h3 class="pipeline-title">Indisputable Receipt Drop</h3>
+                    <p class="pipeline-desc">
+                        Issues a standardized verdict stamp (Supported, Refuted, or Insufficient Evidence) accompanied by a confidence percentage and direct source hyperlinks.
+                    </p>
+                    <div class="tech-tag">
+                        Cited Evidence Ledger
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- FEATURE 3: INTERNET HALL OF SHAME (INVESTIGATIVE DOSSIERS)        -->
         <!-- ================================================================= -->
         <section id="shame" class="shame-section">
             <div class="section-header">
-                <span class="section-eyebrow">INTERNET HALL OF SHAME</span>
-                <h2 class="section-title">THE GREATEST DEBUNKED LEGENDS</h2>
+                <span class="section-eyebrow">CASE ARCHIVES</span>
+                <h2 class="section-title">INVESTIGATIVE DOSSIERS</h2>
                 <p class="section-desc">
-                    Exhibit A through D of rumors that almost convinced humanity to trade critical thinking for panic.
+                    Representative inquiries into viral claims that circulated through digital networks before being systematically debunked.
                 </p>
             </div>
 
@@ -294,20 +470,22 @@
                 <div class="dossier-card">
                     <div class="dossier-top">
                         <span class="dossier-id">CASE #001 // HEALTH</span>
-                        <span class="rubber-stamp">BOLOGNA</span>
+                        <span class="rubber-stamp">REFUTED</span>
                     </div>
-                    <div class="dossier-icon">🧄</div>
-                    <h3 class="dossier-title">The WhatsApp Lemon-Garlic Miracle</h3>
+                    <div class="dossier-icon">
+                        <svg viewBox="0 0 24 24" width="28" height="28" stroke="var(--ink)" stroke-width="1.8" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    </div>
+                    <h3 class="dossier-title">The Lemon-Garlic 5G Antidote</h3>
                     <div class="dossier-claim">
-                        "Drinking boiled lemon rind with garlic cloves at 4:13 AM aligns chakras and eliminates Wi-Fi allergies."
+                        "Boiling lemon rind with raw garlic at 4 AM establishes biological immunity to electromagnetic signals."
                     </div>
                     <p class="dossier-breakdown">
-                        Zero medical peer-reviews located. The only confirmed physiological outcome is acute heartburn and alienation from housemates.
+                        Zero peer-reviewed trials identified. The documented physiological outcome is acute acid reflux and severe gastrointestinal distress.
                     </p>
                     <div class="threat-meter">
                         <div class="threat-meta">
-                            <span>FAMILY GROUP PANIC</span>
-                            <span>98% CHAOS</span>
+                            <span>PANIC COEFFICIENT</span>
+                            <span>98% RISK</span>
                         </div>
                         <div class="threat-bar">
                             <div class="threat-fill" style="width: 98%;"></div>
@@ -319,19 +497,21 @@
                 <div class="dossier-card">
                     <div class="dossier-top">
                         <span class="dossier-id">CASE #002 // FINANCE</span>
-                        <span class="rubber-stamp">AUDIT RISK</span>
+                        <span class="rubber-stamp">TAX AUDIT</span>
                     </div>
-                    <div class="dossier-icon">🐱</div>
-                    <h3 class="dossier-title">The Cat Sovereign LLC Tax Loophole</h3>
+                    <div class="dossier-icon">
+                        <svg viewBox="0 0 24 24" width="28" height="28" stroke="var(--ink)" stroke-width="1.8" fill="none"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                    </div>
+                    <h3 class="dossier-title">The Feline Sovereign LLC Loophole</h3>
                     <div class="dossier-claim">
-                        "The IRS hates this glitch: Register your domestic cat as a private equity hedge fund to pay 0% taxes."
+                        "Register your domestic cat as a private hedge fund partner to legally pay 0% federal income tax."
                     </div>
                     <p class="dossier-breakdown">
-                        Federal tax statutes explicitly disallow felines from acting as managing partners. The IRS will seize your scratching post.
+                        Federal tax statutes explicitly disallow non-human partners. Revenue authorities will levy penalties and seize assets.
                     </p>
                     <div class="threat-meter">
                         <div class="threat-meta">
-                            <span>INEVITABLE AUDIT RISK</span>
+                            <span>AUDIT RISK</span>
                             <span>100% FATAL</span>
                         </div>
                         <div class="threat-bar">
@@ -344,20 +524,22 @@
                 <div class="dossier-card">
                     <div class="dossier-top">
                         <span class="dossier-id">CASE #003 // GEOGRAPHY</span>
-                        <span class="rubber-stamp">FACEPALM</span>
+                        <span class="rubber-stamp">ABSURD</span>
                     </div>
-                    <div class="dossier-icon">🐧</div>
-                    <h3 class="dossier-title">The Armed Antarctic Ice Wall Army</h3>
+                    <div class="dossier-icon">
+                        <svg viewBox="0 0 24 24" width="28" height="28" stroke="var(--ink)" stroke-width="1.8" fill="none"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><line x1="2" y1="12" x2="22" y2="12"></line></svg>
+                    </div>
+                    <h3 class="dossier-title">Armed Antarctic Ice Wall Army</h3>
                     <div class="dossier-claim">
-                        "Armed military penguins guard the outer perimeter ice wall to prevent citizens from falling off Earth's edge."
+                        "Armed military penguins patrol the outer perimeter to prevent global citizens from falling off Earth's edge."
                     </div>
                     <p class="dossier-breakdown">
-                        Emperor penguins are flightless seabirds focused exclusively on krill consumption and lack the opposable thumbs needed for small arms.
+                        Emperor penguins are flightless seabirds focused on krill consumption, lacking opposable digits required for weaponry.
                     </p>
                     <div class="threat-meter">
                         <div class="threat-meta">
-                            <span>COLD FEET FACTOR</span>
-                            <span>92% ABSURD</span>
+                            <span>FACTUAL VACUITY</span>
+                            <span>92% BOGUS</span>
                         </div>
                         <div class="threat-bar">
                             <div class="threat-fill" style="width: 92%;"></div>
@@ -371,18 +553,20 @@
                         <span class="dossier-id">CASE #004 // TECH</span>
                         <span class="rubber-stamp">SURVEILLANCE</span>
                     </div>
-                    <div class="dossier-icon">🐦</div>
-                    <h3 class="dossier-title">The 5G Pigeon Drone Surveillance</h3>
+                    <div class="dossier-icon">
+                        <svg viewBox="0 0 24 24" width="28" height="28" stroke="var(--ink)" stroke-width="1.8" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    </div>
+                    <h3 class="dossier-title">5G Avian Drone Surveillance</h3>
                     <div class="dossier-claim">
-                        "Birds sit on high-voltage power lines to recharge their internal lithium-polymer batteries and sync browser logs."
+                        "Pigeons perch on utility lines to recharge internal lithium batteries and synchronize civilian location logs."
                     </div>
                     <p class="dossier-breakdown">
-                        Necropsies and veterinary records confirm feathers, bones, seeds, and zero microprocessors. They just like breadcrumbs.
+                        Veterinary pathology confirms organic avian tissue with zero microprocessors. Birds rest on power lines for elevation.
                     </p>
                     <div class="threat-meter">
                         <div class="threat-meta">
-                            <span>BREADCRUMB HOARDING</span>
-                            <span>86% UNHINGED</span>
+                            <span>SPECULATIVE HOAX</span>
+                            <span>86% SUS</span>
                         </div>
                         <div class="threat-bar">
                             <div class="threat-fill" style="width: 86%;"></div>
@@ -393,111 +577,60 @@
         </section>
 
         <!-- ================================================================= -->
-        <!-- FEATURE 3: HOW IT WORKS (THE ENGINE PIPELINE)                    -->
-        <!-- ================================================================= -->
-        <section id="engine" class="engine-section">
-            <div class="section-header">
-                <span class="section-eyebrow">UNDER THE HOOD</span>
-                <h2 class="section-title">HOW THE ANTI-BS ENGINE WORKS</h2>
-                <p class="section-desc">
-                    We stacked three forensic AI layers together so you don't have to waste 4 hours arguing with strangers in comment sections.
-                </p>
-            </div>
-
-            <div class="pipeline-grid">
-                <!-- Step 1 -->
-                <div class="pipeline-card">
-                    <div class="step-number">01</div>
-                    <h3 class="pipeline-title">The Dumpster Dive</h3>
-                    <p class="pipeline-desc">
-                        Our real-time search agent crawls DuckDuckGo and verified authoritative archives to retrieve live web context, article text, and primary news coverage.
-                    </p>
-                    <div class="tech-tag">
-                        <span>🦆</span> Live RAG Web Crawler
-                    </div>
-                </div>
-
-                <!-- Step 2 -->
-                <div class="pipeline-card">
-                    <div class="step-number">02</div>
-                    <h3 class="pipeline-title">The Neural Interrogation</h3>
-                    <p class="pipeline-desc">
-                        Cohere Command-R LLM cross-examines the claim against retrieved evidence, sniffing out logical fallacies, fake timestamps, clickbait triggers, and manipulative phrasing.
-                    </p>
-                    <div class="tech-tag">
-                        <span>🧠</span> Cohere LLM + ML Classifier
-                    </div>
-                </div>
-
-                <!-- Step 3 -->
-                <div class="pipeline-card">
-                    <div class="step-number">03</div>
-                    <h3 class="pipeline-title">The Receipt Drop</h3>
-                    <p class="pipeline-desc">
-                        Delivers an indisputable verdict: <code>SUPPORTED</code>, <code>REFUTED</code>, or <code>INSUFFICIENT EVIDENCE</code>, backed by a confidence percentage and direct source citations.
-                    </p>
-                    <div class="tech-tag">
-                        <span>📑</span> Cited Markdown Receipts
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ================================================================= -->
-        <!-- FEATURE 4: CHAOS TELEMETRY & LIVE STATS                          -->
+        <!-- FEATURE 4: GLOBAL TELEMETRY / STATS                               -->
         <!-- ================================================================= -->
         <section id="telemetry" class="stats-section">
             <div class="section-header">
                 <span class="section-eyebrow">GLOBAL TELEMETRY</span>
-                <h2 class="section-title">THE WAR ON BRAINROT IN NUMBERS</h2>
+                <h2 class="section-title">THE WAR ON MISINFORMATION IN NUMBERS</h2>
                 <p class="section-desc">
-                    Real-time aggregated statistics from DEBUNK.IT intelligence monitors.
+                    Aggregated audit statistics across global investigative monitors.
                 </p>
             </div>
 
             <div class="stats-grid">
                 <div class="stat-box">
                     <div class="stat-num" data-target="1428910" data-suffix="+">0</div>
-                    <div class="stat-title">Claims Disintegrated</div>
-                    <div class="stat-sub">Across 90+ countries</div>
+                    <div class="stat-title">Claims Dissected</div>
+                    <div class="stat-sub">Across 90+ jurisdictions</div>
                 </div>
 
                 <div class="stat-box">
                     <div class="stat-num" data-target="0" data-suffix=" (Confirmed)">0</div>
                     <div class="stat-title">Secret Lizard Overlords</div>
-                    <div class="stat-sub">We checked twice</div>
+                    <div class="stat-sub">Verified through rigorous audits</div>
                 </div>
 
                 <div class="stat-box">
                     <div class="stat-num" data-target="84210" data-suffix="+">0</div>
-                    <div class="stat-title">Aunties Protected</div>
-                    <div class="stat-sub">From bogus herbal cures</div>
+                    <div class="stat-title">Readers Protected</div>
+                    <div class="stat-sub">From financial & medical hoaxes</div>
                 </div>
 
                 <div class="stat-box">
                     <div class="stat-num" data-target="1.2" data-prefix="< " data-suffix="s">&lt; 1.2s</div>
                     <div class="stat-title">Average Time to Truth</div>
-                    <div class="stat-sub">Faster than human panic</div>
+                    <div class="stat-sub">Sub-second forensic verification</div>
                 </div>
             </div>
         </section>
 
         <!-- ================================================================= -->
-        <!-- FEATURE 5: TESTIMONIALS                                          -->
+        <!-- FEATURE 5: TESTIMONIALS (PULL-QUOTE CARDS)                        -->
         <!-- ================================================================= -->
         <section id="reviews" class="testimonials-section">
             <div class="section-header">
-                <span class="section-eyebrow">COMMUNITY & VERDICTS</span>
-                <h2 class="section-title">STORIES FROM THE FRONTLINE</h2>
+                <span class="section-eyebrow">READER TESTIMONY</span>
+                <h2 class="section-title">DISPATCHES FROM THE FRONTLINE</h2>
                 <p class="section-desc">
-                    What happens when normal internet users suddenly gain the superpower of instant truth verification.
+                    Observations from journalists, researchers, and everyday readers verifying digital claims.
                 </p>
                 <div class="reviews-action-buttons">
                     <button id="btn-open-review-modal" class="btn btn-primary btn-sm">
-                        <span>✍️</span> SUBMIT A REVIEW
+                        SUBMIT A DISPATCH
                     </button>
                     <a href="https://github.com/Code-Breaker-Ctrl/Debunkit/discussions" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm">
-                        <span>⭐</span> REVIEW ON GITHUB
+                        DISCUSS ON GITHUB
                     </a>
                 </div>
             </div>
@@ -505,45 +638,54 @@
             <div class="quotes-grid" id="quotes-grid">
                 <!-- Review 1 -->
                 <div class="quote-card">
-                    <div class="quote-stars">★★★★★</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <div class="quote-stars">★★★★★</div>
+                        <span class="community-verified-badge">VERIFIED</span>
+                    </div>
                     <p class="quote-body">
-                        "DEBUNK.IT saved me from buying 50 pounds of colloidal copper from a guy named QuantumChad on Telegram. My retirement savings remain intact."
+                        "DEBUNK.IT prevented an elderly relative from liquidating their retirement savings into an unverified offshore crypto vehicle. The citations were definitive."
                     </p>
                     <div class="quote-author">
-                        <div class="author-avatar">👨‍💻</div>
+                        <div class="author-avatar">T</div>
                         <div class="author-info">
                             <h4>Tyler M.</h4>
-                            <p>Recovering Crypto Enthusiast</p>
+                            <p>Private Investor</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Review 2 -->
                 <div class="quote-card">
-                    <div class="quote-stars">★★★★★</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <div class="quote-stars">★★★★★</div>
+                        <span class="community-verified-badge">VERIFIED</span>
+                    </div>
                     <p class="quote-body">
-                        "I pasted my dad's daily political rant into the scanner. It gave it a 98% Cap Rating with 6 cited sources. Thanksgiving dinner was peaceful for the first time in 7 years."
+                        "I pasted a widely circulated political document into the scanner. Within three seconds, it highlighted two fabricated paragraphs with the original source transcript."
                     </p>
                     <div class="quote-author">
-                        <div class="author-avatar">👩‍🎓</div>
+                        <div class="author-avatar">M</div>
                         <div class="author-info">
                             <h4>Maya S.</h4>
-                            <p>Family Group Chat Survivor</p>
+                            <p>Policy Analyst</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Review 3 -->
                 <div class="quote-card">
-                    <div class="quote-stars">★★★★★</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <div class="quote-stars">★★★★★</div>
+                        <span class="community-verified-badge">VERIFIED</span>
+                    </div>
                     <p class="quote-body">
-                        "As a freelance investigative journalist, this tool cuts 3 hours of manual debunking down to 10 seconds. Finally, an AI tool that serves truth instead of hallucinations."
+                        "As an investigative journalist, this tool reduces hours of manual fact-checking down to seconds. An AI tool that delivers verifiable receipts rather than hallucinations."
                     </p>
                     <div class="quote-author">
-                        <div class="author-avatar">📰</div>
+                        <div class="author-avatar">A</div>
                         <div class="author-info">
                             <h4>Alex K.</h4>
-                            <p>Independent Tech Journalist</p>
+                            <p>Independent Reporter</p>
                         </div>
                     </div>
                 </div>
@@ -555,18 +697,18 @@
         <!-- ================================================================= -->
         <section class="cta-banner-section">
             <div class="cta-banner-card">
-                <h2>READY TO INOCULATE YOUR BRAIN AGAINST THE INTERNET?</h2>
+                <h2>INOCULATE YOUR SENSES AGAINST DIGITAL FABRICATIONS</h2>
                 <p>
-                    Stop guessing what is real. Run headlines, links, and paragraphs through the most ruthless,
-                    source-backed AI truth scanner on the web. Free guest access included.
+                    Verify headlines, links, and documents through an investigative truth scanner backed by transparent sources.
+                    Open guest access is immediately available.
                 </p>
 
                 <div class="cta-buttons">
                     <a href="/scanner" class="btn btn-primary btn-lg">
-                        <span>⚡</span> LAUNCH LIVE SCANNER (FREE)
+                        LAUNCH LIVE SCANNER
                     </a>
                     <a href="/register" class="btn btn-cyan btn-lg">
-                        <span>🛡️</span> CREATE ACCOUNT
+                        CREATE AN ACCOUNT
                     </a>
                 </div>
             </div>
@@ -575,79 +717,66 @@
     </div><!-- Close .landing-shell -->
 
     <!-- ================================================================= -->
-    <!-- FOOTER (Full-Width Edge-to-Edge)                                  -->
+    <!-- FOOTER (EDGE-TO-EDGE NEWSPAPER MASTHEAD)                          -->
     <!-- ================================================================= -->
     <footer class="landing-footer">
         <div class="footer-container">
             <div class="footer-top">
                 <div class="footer-brand">
-                    <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Logo">
+                    <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Emblem">
                     <div>
                         <div class="footer-brand-title">DEBUNK.IT</div>
-                        <div class="footer-brand-tagline">The Internet's Bullshit Radar • Built by <a href="https://github.com/Code-Breaker-Ctrl" target="_blank" rel="noopener noreferrer" class="creator-name-link">@Code-Breaker-Ctrl</a></div>
+                        <div class="footer-brand-tagline">The Investigative Misinformation Radar • Maintained by <a href="https://github.com/Code-Breaker-Ctrl" target="_blank" rel="noopener noreferrer">@Code-Breaker-Ctrl</a></div>
                     </div>
                 </div>
 
                 <div class="footer-right-block">
                     <ul class="footer-links">
                         <li><a href="/scanner">Live Scanner</a></li>
-                        <li><a href="/history">Analysis History</a></li>
-                        <li><a href="/analytics">System Analytics</a></li>
+                        <li><a href="/history">Ledger History</a></li>
+                        <li><a href="/analytics">Telemetry</a></li>
                         <li><a href="/login">Sign In</a></li>
                         <li><a href="/register">Register</a></li>
                     </ul>
-
-                    <a href="https://github.com/Code-Breaker-Ctrl" target="_blank" rel="noopener noreferrer" class="footer-creator-chip" title="View Code-Breaker-Ctrl on GitHub">
-                        <span class="creator-spark">⚡</span>
-                        <span>Built by <strong>Code-Breaker-Ctrl</strong></span>
-                    </a>
-
-                    <a href="https://github.com/Code-Breaker-Ctrl/Debunkit" target="_blank" rel="noopener noreferrer" class="footer-gh-star" title="Star DEBUNK.IT on GitHub">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                        </svg>
-                        <span>Star on GitHub</span>
-                        <span class="gh-star-icon">★</span>
-                    </a>
                 </div>
             </div>
 
             <div class="footer-bottom">
                 <div class="footer-copy">
-                    &copy; 2026 DEBUNK.IT. Architected & built with ⚡ by <a href="https://github.com/Code-Breaker-Ctrl" target="_blank" rel="noopener noreferrer" class="creator-credit">Code-Breaker-Ctrl</a>. All rights reserved.
+                    &copy; 2026 DEBUNK.IT. Architected & built with care by <a href="https://github.com/Code-Breaker-Ctrl" target="_blank" rel="noopener noreferrer">Code-Breaker-Ctrl</a>. All rights reserved.
                 </div>
                 <div class="footer-disclaimer">
-                    Disclaimer: No pigeons or microwaves were harmed during testing. Always consult real doctors rather than WhatsApp forwards.
+                    Independent truth-checking instrument. Consult peer-reviewed clinical medicine and verified primary documents.
                 </div>
             </div>
         </div>
     </footer>
 
-        <!-- ================================================================= -->
+    <!-- ================================================================= -->
     <!-- SUBMIT REVIEW MODAL                                               -->
     <!-- ================================================================= -->
     <div id="review-modal-backdrop" class="review-modal-backdrop" aria-hidden="true">
         <div class="review-modal-dialog" role="dialog" aria-labelledby="modal-review-title">
             <div class="review-modal-header">
-                <div class="modal-badge">✨ SHARE YOUR VERDICT</div>
+                <div class="modal-badge">COMMUNITY DISPATCH</div>
                 <button id="btn-close-review-modal" class="modal-close-btn" aria-label="Close modal">&times;</button>
             </div>
-            <h3 id="modal-review-title" class="review-modal-title">Leave a Review for DEBUNK.IT</h3>
-            <p class="review-modal-subtitle">Help fellow truth seekers. Real reviews submitted here are saved to the community wall!</p>
+            <h3 id="modal-review-title" class="review-modal-title">Record a Reader Dispatch</h3>
+            <p class="review-modal-subtitle">Share how DEBUNK.IT assisted your investigative verification or preserved truth.</p>
             
             <form id="community-review-form" class="review-form">
                 <div class="form-group">
-                    <label for="review-author">Your Name / Handle</label>
-                    <input type="text" id="review-author" class="form-input" placeholder="e.g. Alex M. or @TruthHunter" required maxlength="60">
+                    <label for="review-author">Full Name or Pen Name</label>
+                    <input type="text" id="review-author" class="form-input" placeholder="e.g. Alex Montgomery or @TruthDispatch" required maxlength="60">
                 </div>
 
                 <div class="form-group">
-                    <label for="review-role">Your Role / Tagline</label>
-                    <input type="text" id="review-role" class="form-input" placeholder="e.g. Student, Tech Journalist, WhatsApp Survivor" required maxlength="60">
+                    <label for="review-role">Professional Title or Affiliation</label>
+                    <input type="text" id="review-role" class="form-input" placeholder="e.g. Independent Journalist, Researcher, Reader" required maxlength="60">
                 </div>
 
                 <div class="form-group">
-                    <label>Rating</label>
+                    <label>Verdict Rating</label>
                     <div class="star-rating-picker" id="star-picker">
                         <span class="star-pick active" data-val="1">★</span>
                         <span class="star-pick active" data-val="2">★</span>
@@ -659,17 +788,18 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="review-content">Your Review</label>
-                    <textarea id="review-content" class="form-textarea" placeholder="How did DEBUNK.IT help you spot internet bullshit or save your sanity?" required minlength="10" maxlength="400" rows="3"></textarea>
+                    <label for="review-content">Dispatch Text</label>
+                    <textarea id="review-content" class="form-textarea" placeholder="Describe the factual inquiry or how DEBUNK.IT verified internet claims..." required minlength="10" maxlength="400" rows="3"></textarea>
                 </div>
 
                 <div class="review-modal-footer">
                     <button type="button" id="btn-cancel-review" class="btn btn-ghost btn-sm">CANCEL</button>
-                    <button type="submit" class="btn btn-primary btn-sm">🚀 SUBMIT VERDICT</button>
+                    <button type="submit" class="btn btn-primary btn-sm">SUBMIT DISPATCH</button>
                 </div>
             </form>
         </div>
     </div>
+
     <!-- Scripts -->
     <script src="{{ url_for('static', filename='JS/canvas.js') }}"></script>
     <script src="{{ url_for('static', filename='JS/landing.js') }}"></script>

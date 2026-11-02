@@ -546,17 +546,20 @@ function showNotification(message, type = 'info') {
 
     notification.style.cssText = `
         position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'error' ? 'var(--danger)' : type === 'success' ? 'var(--success)' : type === 'warning' ? 'var(--warn)' : 'var(--accent)'};
-        color: white;
-        padding: 15px 25px;
-        border-radius: 6px;
+        top: 24px;
+        right: 24px;
+        background: ${type === 'error' ? 'var(--red)' : type === 'success' ? 'var(--mint)' : type === 'warning' ? 'var(--blush)' : 'var(--ink)'};
+        color: ${type === 'success' ? 'var(--ink)' : 'var(--paper)'};
+        border: 2px solid var(--ink);
+        padding: 12px 20px;
+        border-radius: var(--radius-sm, 2px);
         z-index: 10000;
-        animation: slideInRight 0.3s ease-out;
-        font-weight: bold;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-        font-family: 'Courier New', Courier, monospace;
+        font-weight: 700;
+        box-shadow: var(--shadow-press, 3px 3px 0 var(--ink));
+        font-family: var(--font-sans, system-ui, sans-serif);
+        font-size: 0.82rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
     `;
 
     document.body.appendChild(notification);
@@ -753,6 +756,9 @@ async function startScan(retryCount = 0) {
             if (vSpan) {
                 vSpan.innerText = 'VERDICT: ' + verdict;
                 vSpan.className = 'res-verdict ' + verdictClass(verdict);
+                vSpan.style.animation = 'none';
+                void vSpan.offsetWidth;
+                vSpan.style.animation = 'stampThud 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards';
             }
 
             const confidenceEl = document.getElementById('res-confidence');

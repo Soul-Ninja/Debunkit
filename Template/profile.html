@@ -1,147 +1,140 @@
 <!DOCTYPE html>
-<html lang="en"
-    data-theme="{{ current_user.theme if current_user.is_authenticated and current_user.theme else 'system' }}">
+<html lang="en" data-theme="{{ current_user.theme if current_user.is_authenticated and current_user.theme else 'light' }}">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>DEBUNK.IT | Profile</title>
+    <title>DEBUNK.IT — Investigator Dossier</title>
+
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='Images/debunkit-logo.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='CSS/profile.css') }}">
 </head>
 
 <body>
+    <!-- Background Canvas Layer -->
     <canvas id="canvas-bg" aria-hidden="true"></canvas>
 
     <div class="app-container">
-        <nav class="sidebar">
+        <!-- Sidebar -->
+        <nav class="sidebar" aria-label="Sidebar Navigation">
             <div class="brand">
-                <div class="brand-lockup">
+                <a href="/" class="brand-lockup" title="Return to Landing Page">
                     <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Logo">
-
                     <div>
                         <h1>DEBUNK.IT</h1>
-                        <p>SYSTEM ADMIN v3.0</p>
+                        <p>DISPATCH BUREAU v3.0</p>
                     </div>
-                </div>
+                </a>
 
                 <div class="server-status">
                     <span class="status-dot"></span>
-                    <span class="status-text">SYS.STATE: OPTIMAL</span>
+                    <span class="status-text">BUREAU: ACTIVE</span>
                 </div>
             </div>
 
             <div class="nav-menu">
                 <button class="nav-btn" onclick="window.location.href='/dashboard'">
-                    <span class="icon">🏠</span> Dashboard
+                    <svg viewBox="0 0 24 24" class="icon-svg"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Dashboard</span>
                 </button>
 
                 <button class="nav-btn active" onclick="window.location.href='/profile'">
-                    <span class="icon">👤</span> Profile
+                    <svg viewBox="0 0 24 24" class="icon-svg"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span>Dossier Profile</span>
                 </button>
 
                 <button class="nav-btn" onclick="window.location.href='/settings'">
-                    <span class="icon">⚙️</span> Settings
+                    <svg viewBox="0 0 24 24" class="icon-svg"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span>Settings</span>
                 </button>
             </div>
 
             <div class="user-menu">
-                <button class="nav-btn" onclick="logout()"
-                    style="background: rgba(224, 82, 82, 0.1); border-color: var(--danger); color: var(--danger);">
-                    <span class="icon">🚪</span> Logout
+                <button class="nav-btn" onclick="logout()" style="color: var(--red-text);">
+                    <svg viewBox="0 0 24 24" class="icon-svg"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span>Sign Out</span>
                 </button>
             </div>
         </nav>
 
+        <!-- Main Content -->
         <main class="main-stage">
-            <h2 class="view-title">Your Profile</h2>
+            <h2 class="view-title">INVESTIGATOR DOSSIER</h2>
 
-            <div class="profile-container glass-panel">
+            <div class="profile-container">
+                <div class="dossier-masthead">
+                    <span class="dossier-tag">OFFICIAL BUREAU DOSSIER</span>
+                    <span class="dossier-seal">VERIFIED RECORD</span>
+                </div>
+
                 <div class="profile-header">
                     <div class="profile-avatar">
                         <span id="avatar-initials">{{ user.username[0].upper() }}</span>
                     </div>
                     <div class="profile-info">
                         <h3 id="username">{{ user.username }}</h3>
-                        <p id="tier-badge">Free Plan</p>
+                        <p id="tier-badge">Standard Investigator Access</p>
                     </div>
                 </div>
 
                 <div class="profile-details">
                     <div class="detail-row">
-                        <span class="detail-label">Email:</span>
+                        <span class="detail-label">Registry Email</span>
                         <span class="detail-value">{{ user.email }}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Member Since:</span>
+                        <span class="detail-label">Credentials Issued</span>
                         <span class="detail-value" id="created-date">{{ user.created_at.strftime('%B %d, %Y') }}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Total Analyses:</span>
+                        <span class="detail-label">Recorded Inquiries</span>
                         <span class="detail-value" id="analyses-count">{{ user.analyses|length }}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Rate Limit:</span>
-                        <span class="detail-value">10 analyses per minute</span>
+                        <span class="detail-label">Inspection Bandwidth</span>
+                        <span class="detail-value">10 scans per minute</span>
                     </div>
                 </div>
 
                 <div class="settings-section">
-                    <h3>Edit Profile</h3>
+                    <h3>Modify Credentials</h3>
 
                     <div class="setting-item">
-                        <label for="edit-username">Change Username</label>
-                        <input type="text" id="edit-username" placeholder="New username (min 3 characters)"
-                            minlength="3">
+                        <label for="edit-username">Change Investigator Username</label>
+                        <input type="text" id="edit-username" placeholder="New username (min 3 characters)" minlength="3">
                         <button class="btn" onclick="updateUsername()">Update Username</button>
                     </div>
 
                     <div class="setting-item">
-                        <label for="edit-email">Change Email</label>
+                        <label for="edit-email">Change Registry Email</label>
                         <input type="email" id="edit-email" placeholder="New email address">
                         <button class="btn" onclick="updateEmail()">Update Email</button>
                     </div>
                 </div>
 
                 <div class="profile-actions">
-                    <button class="btn" onclick="window.location.href='/settings'">Go to Settings</button>
+                    <button class="btn" onclick="window.location.href='/settings'">Configure Bureau Settings</button>
                 </div>
             </div>
 
-            <div id="message-box" class="message-box" style="display: none; margin-top: 20px;"></div>
+            <div id="message-box" class="message-box" style="display: none;"></div>
         </main>
     </div>
+
     <script>
         (function () {
             const savedTheme = localStorage.getItem('debunkit_theme')
                 || document.documentElement.getAttribute('data-theme')
-                || 'system';
-
-            const savedBgMode = localStorage.getItem('debunkit_bg_mode') || 'animated';
-
+                || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
-
-            document.addEventListener('DOMContentLoaded', () => {
-                const body = document.body;
-                const canvas = document.getElementById('canvas-bg');
-
-                body.classList.remove('bg-solid', 'bg-gradient', 'bg-animated', 'no-canvas');
-
-                if (savedBgMode === 'solid') {
-                    body.classList.add('bg-solid', 'no-canvas');
-                    if (canvas) canvas.style.display = 'none';
-                } else if (savedBgMode === 'gradient') {
-                    body.classList.add('bg-gradient', 'no-canvas');
-                    if (canvas) canvas.style.display = 'none';
-                } else {
-                    body.classList.add('bg-animated');
-                    if (canvas) canvas.style.display = 'block';
-                }
-            });
         })();
     </script>
+
     <script src="{{ url_for('static', filename='JS/canvas.js') }}"></script>
     <script>
         function getCSRFToken() {
@@ -155,11 +148,12 @@
                 'X-CSRFToken': getCSRFToken()
             };
         }
+
         async function updateUsername() {
             const newUsername = document.getElementById('edit-username').value.trim();
 
             if (!newUsername || newUsername.length < 3) {
-                showMessage('Username must be at least 3 characters', 'error');
+                showMessage('Username must be at least 3 characters.', 'error');
                 return;
             }
 
@@ -173,15 +167,15 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    showMessage('Username updated successfully!', 'success');
+                    showMessage('Username updated successfully.', 'success');
                     document.getElementById('username').textContent = newUsername;
                     document.getElementById('edit-username').value = '';
                     setTimeout(() => location.reload(), 1500);
                 } else {
-                    showMessage(data.error || 'Failed to update username', 'error');
+                    showMessage(data.error || 'Failed to update username.', 'error');
                 }
             } catch (error) {
-                showMessage('Error updating username', 'error');
+                showMessage('Error communicating with bureau server.', 'error');
             }
         }
 
@@ -189,7 +183,7 @@
             const newEmail = document.getElementById('edit-email').value.trim();
 
             if (!newEmail || !newEmail.includes('@')) {
-                showMessage('Please enter a valid email address', 'error');
+                showMessage('Please enter a valid email address.', 'error');
                 return;
             }
 
@@ -203,14 +197,14 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    showMessage('Email updated successfully!', 'success');
+                    showMessage('Email updated successfully.', 'success');
                     document.getElementById('edit-email').value = '';
                     setTimeout(() => location.reload(), 1500);
                 } else {
-                    showMessage(data.error || 'Failed to update email', 'error');
+                    showMessage(data.error || 'Failed to update email.', 'error');
                 }
             } catch (error) {
-                showMessage('Error updating email', 'error');
+                showMessage('Error communicating with bureau server.', 'error');
             }
         }
 
@@ -227,39 +221,29 @@
         }
 
         function showLogoutModal() {
-            const modal = document.getElementById('modal-overlay');
+            let modal = document.getElementById('modal-overlay');
             if (!modal) {
-                createLogoutModal();
-            } else {
-                openLogoutModal();
+                modal = document.createElement('div');
+                modal.id = 'modal-overlay';
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-box">
+                        <div class="modal-header">
+                            <h3>Confirm Sign Out</h3>
+                            <button class="modal-close" onclick="closeModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you wish to conclude this bureau session?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+                            <button class="modal-btn confirm" onclick="confirmLogout()">Sign Out</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
             }
-        }
-
-        function createLogoutModal() {
-            const modal = document.createElement('div');
-            modal.id = 'modal-overlay';
-            modal.className = 'modal-overlay';
-            modal.innerHTML = `
-                <div class="modal-box">
-                    <div class="modal-header">
-                        <h3>Confirm Logout</h3>
-                        <button class="modal-close" onclick="closeModal()">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Are you sure you want to logout?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
-                        <button class="modal-btn confirm" onclick="confirmLogout()">Logout</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
             modal.style.display = 'flex';
-        }
-
-        function openLogoutModal() {
-            document.getElementById('modal-overlay').style.display = 'flex';
         }
 
         function closeModal() {
@@ -269,7 +253,7 @@
 
         async function confirmLogout() {
             try {
-                const response = await fetch('/logout', {
+                await fetch('/logout', {
                     method: 'POST',
                     headers: csrfHeaders({
                         'Content-Type': 'application/json'
@@ -280,7 +264,7 @@
                     window.location.replace('/');
                 }, 100);
             } catch (error) {
-                console.log('Logout completed');
+                window.location.replace('/');
             }
         }
 

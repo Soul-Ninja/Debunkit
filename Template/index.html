@@ -1,114 +1,133 @@
 <!DOCTYPE html>
-<html lang="en"
-    data-theme="{{ current_user.theme if current_user.is_authenticated and current_user.theme else 'system' }}">
+<html lang="en" data-theme="{{ current_user.theme if current_user.is_authenticated and current_user.theme else 'light' }}">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>DEBUNK.IT</title>
+    <title>DEBUNK.IT — Investigative Truth Bureau & Scanner</title>
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='Images/debunkit-logo.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
 </head>
 
 <body>
+    <!-- Background Canvas Layer -->
     <canvas id="canvas-bg" aria-hidden="true"></canvas>
 
     <div class="app-container">
 
-        <nav class="sidebar">
+        <!-- ================================================================= -->
+        <!-- EDITORIAL DISPATCH SIDEBAR                                        -->
+        <!-- ================================================================= -->
+        <nav class="sidebar" aria-label="Application Navigation">
             <div class="brand">
-                <a href="/" class="brand-lockup" style="text-decoration: none; color: inherit;" title="Back to Landing Page">
-                    <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Logo">
-
+                <a href="/" class="brand-lockup" title="Return to Landing Page">
+                    <img src="{{ url_for('static', filename='Images/debunkit-logo.png') }}" alt="DEBUNK.IT Seal">
                     <div>
                         <h1>DEBUNK.IT</h1>
-                        <p>SYSTEM ADMIN v3.0</p>
+                        <p>DISPATCH BUREAU v3.0</p>
                     </div>
                 </a>
 
                 <div class="server-status">
                     <span class="status-dot"></span>
-                    <span class="status-text">SYS.STATE: OPTIMAL</span>
+                    <span class="status-text">BUREAU: ACTIVE</span>
                 </div>
             </div>
 
             <div class="nav-menu">
-                <a href="/" class="nav-btn" style="text-decoration: none; display: flex; align-items: center; gap: 8px;">
-                    <span class="icon">🏠</span> Landing Page
+                <a href="/" class="nav-btn" title="Front Page">
+                    <svg viewBox="0 0 24 24" class="icon-svg" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Front Page</span>
                 </a>
 
                 <button class="nav-btn active" onclick="switchView('scanner')" id="nav-scanner">
-                    <span class="icon">🔍</span> Live Scanner
+                    <svg viewBox="0 0 24 24" class="icon-svg" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <span>Live Scanner</span>
                 </button>
 
                 <button class="nav-btn" onclick="switchView('history')" id="nav-history">
-                    <span class="icon">📚</span> Analysis History
+                    <svg viewBox="0 0 24 24" class="icon-svg" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    <span>Ledger History</span>
                 </button>
 
                 <button class="nav-btn" onclick="switchView('analytics')" id="nav-analytics">
-                    <span class="icon">📊</span> System Analytics
+                    <svg viewBox="0 0 24 24" class="icon-svg" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Telemetry</span>
                 </button>
             </div>
 
+            <!-- User Menu -->
             <div class="user-menu" id="user-menu-container" style="display: none;">
-                <button class="user-btn" onclick="toggleUserMenu()">
-                    <span class="user-icon">👤</span>
+                <button class="user-btn" onclick="toggleUserMenu()" aria-haspopup="true" aria-expanded="false" id="user-menu-btn">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     <span class="user-name" id="user-display">User</span>
                 </button>
 
-                <div class="user-dropdown" id="user-dropdown" style="display: none;">
-                    <a href="/profile" class="dropdown-item">📋 Profile</a>
-                    <a href="/settings" class="dropdown-item">⚙️ Settings</a>
-
-                    <hr style="margin: 5px 0; border: none; border-top: 1px solid var(--border);">
-
-                    <a href="#" class="dropdown-item" onclick="showLanguageModal(); return false;">🌐 Language</a>
-                    <a href="#" class="dropdown-item" onclick="showHelpModal(); return false;">❓ Get Help</a>
-                    <a href="#" class="dropdown-item" onclick="showAboutModal(); return false;">ℹ️ About Us</a>
-
-                    <hr style="margin: 5px 0; border: none; border-top: 1px solid var(--border);">
-
-                    <a href="#" class="dropdown-item" onclick="logout(); return false;">🚪 Logout</a>
+                <div class="user-dropdown" id="user-dropdown" style="display: none;" role="menu">
+                    <a href="/profile" class="dropdown-item" role="menuitem">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <span>Dossier Profile</span>
+                    </a>
+                    <a href="/settings" class="dropdown-item" role="menuitem">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        <span>Bureau Settings</span>
+                    </a>
+                    <hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border-hairline);">
+                    <a href="#" class="dropdown-item" onclick="showLanguageModal(); return false;" role="menuitem">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                        <span>Language</span>
+                    </a>
+                    <a href="#" class="dropdown-item" onclick="showHelpModal(); return false;" role="menuitem">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        <span>Help Archive</span>
+                    </a>
+                    <hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border-hairline);">
+                    <a href="#" class="dropdown-item" onclick="logout(); return false;" role="menuitem" style="color: var(--red-text);">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        <span>Sign Out</span>
+                    </a>
                 </div>
             </div>
 
-            <div id="not-logged-in-message"
-                style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;">
+            <!-- Guest State in Sidebar -->
+            <div id="not-logged-in-message" style="margin-top: auto; padding-top: var(--space-4); border-top: 1px solid var(--border-hairline); display: flex; flex-direction: column; gap: 8px;">
                 <button class="btn" style="width: 100%;" onclick="window.location.href='/login'">
-                    LOGIN
+                    SIGN IN
                 </button>
-
-                <button class="btn" style="width: 100%; background: var(--border); color: var(--text);"
-                    onclick="window.location.href='/register'">
-                    SIGN UP
+                <button class="btn muted-btn" style="width: 100%;" onclick="window.location.href='/register'">
+                    REGISTER
                 </button>
             </div>
         </nav>
 
+        <!-- ================================================================= -->
+        <!-- MAIN EDITORIAL STAGE                                              -->
+        <!-- ================================================================= -->
         <main class="main-stage">
 
-            <!-- SCANNER / DASHBOARD VIEW -->
+            <!-- ------------------------------------------------------------- -->
+            <!-- 1. SCANNER / ANALYZER VIEW                                    -->
+            <!-- ------------------------------------------------------------- -->
             <div id="view-scanner" class="view-section active">
 
                 <section class="dashboard-hero">
                     <div class="hero-copy">
-                        <div class="eyebrow">AI MISINFORMATION INTELLIGENCE</div>
-
-                        <h2>Analyze claims before they spread.</h2>
-
+                        <div class="eyebrow">EDITORIAL TRUTH RADAR</div>
+                        <h2>Analyze Claims Before They Spread.</h2>
                         <p>
-                            Check headlines, article links, and full text with source-aware AI,
-                            live web context, and transparent verdict reasoning.
+                            Verify headlines, article links, and extended prose with live web context,
+                            neutral AI reasoning, and verifiable evidence receipts.
                         </p>
-
                         <div class="hero-actions">
                             <button class="btn hero-primary" onclick="focusScannerMode('title')">
                                 Scan Headline
                             </button>
-
                             <button class="btn hero-secondary" onclick="focusScannerMode('url')">
                                 Analyze URL
                             </button>
@@ -117,143 +136,140 @@
 
                     <div class="hero-stats">
                         <div class="hero-stat-card">
-                            <span class="stat-label">TOTAL SCANS</span>
+                            <span class="stat-label">TOTAL SCANS RECORDED</span>
                             <strong id="dash-total-scans">--</strong>
                         </div>
-
                         <div class="hero-stat-card">
-                            <span class="stat-label">SUPPORTED</span>
-                            <strong id="dash-supported-count">--</strong>
+                            <span class="stat-label">CONFIRMED SUPPORTED</span>
+                            <strong id="dash-supported-count" style="color: var(--mint-text);">--</strong>
                         </div>
-
                         <div class="hero-stat-card">
-                            <span class="stat-label">REFUTED</span>
-                            <strong id="dash-refuted-count">--</strong>
+                            <span class="stat-label">CONFIRMED REFUTED</span>
+                            <strong id="dash-refuted-count" style="color: var(--red-text);">--</strong>
                         </div>
                     </div>
                 </section>
 
-                <section class="quick-actions">
+                <!-- Quick Action Cards -->
+                <section class="quick-actions" aria-label="Input Mode Shortcuts">
                     <button class="quick-card" onclick="focusScannerMode('title')">
-                        <span class="quick-icon">📰</span>
+                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>
                         <strong>Headline Check</strong>
-                        <small>Best for viral titles, short claims, and breaking news.</small>
+                        <small>Best for viral breaking titles, tweets, and short claims.</small>
                     </button>
 
                     <button class="quick-card" onclick="focusScannerMode('url')">
-                        <span class="quick-icon">🔗</span>
+                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                         <strong>URL Article Scan</strong>
-                        <small>Extract article text and verify with source-aware AI.</small>
+                        <small>Extract live article contents and cross-check against news wire indexes.</small>
                     </button>
 
                     <button class="quick-card" onclick="focusScannerMode('text')">
-                        <span class="quick-icon">📄</span>
+                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                         <strong>Full Text Analysis</strong>
-                        <small>Paste long articles, posts, or forwarded messages.</small>
+                        <small>Paste multi-paragraph articles, forwarded essays, or press releases.</small>
                     </button>
                 </section>
 
-                <section class="example-strip">
+                <!-- Archival Examples Strip -->
+                <section class="example-strip" aria-label="Example Claims">
                     <span>Try examples:</span>
-
-                    <button
-                        onclick="fillExampleClaim('A video of London’s Stamford Street shows the Unite the Kingdom rally held on May 16, 2026.')">
-                        Old video claim
+                    <button onclick="fillExampleClaim('A video of London’s Stamford Street shows the Unite the Kingdom rally held on May 16, 2026.')">
+                        Outdated video claim
                     </button>
-
-                    <button
-                        onclick="fillExampleClaim('The Simpsons predicted a hantavirus outbreak on a cruise ship in 2012.')">
-                        Prediction claim
+                    <button onclick="fillExampleClaim('The Simpsons predicted a hantavirus outbreak on a cruise ship in 2012.')">
+                        Cartoon prediction myth
                     </button>
-
-                    <button
-                        onclick="fillExampleClaim('Rajasthan Royals dropped Vaibhav Sooryavanshi because he is poor at fielding.')">
-                        Misleading sports claim
+                    <button onclick="fillExampleClaim('Rajasthan Royals dropped Vaibhav Sooryavanshi because he is poor at fielding.')">
+                        Sports rumor claim
                     </button>
-
-                    <button
-                        onclick="fillExampleClaim('https://en.wikipedia.org/wiki/Artificial_intelligence', 'url')">
+                    <button onclick="fillExampleClaim('https://en.wikipedia.org/wiki/Artificial_intelligence', 'url')">
                         Wikipedia AI article
                     </button>
                 </section>
 
+                <!-- Core Grid: Analyzer Input & Verdict Stamp -->
                 <section class="dashboard-grid">
-
                     <div class="scanner-stack">
 
                         <div class="glass-panel scanner-panel">
                             <div class="panel-heading-row">
                                 <div>
-                                    <h2 class="view-title dynamic-title">Misinformation Scanner</h2>
+                                    <h2 class="view-title dynamic-title">Forensic Claim Scanner</h2>
                                     <p class="mode-hint" id="mode-hint">
-                                        Headline mode is best for quick news claims and viral titles.
+                                        Headline mode is configured for fast verification of news claims.
                                     </p>
                                 </div>
-
                                 <div class="scanner-status-pill">
                                     <span class="status-dot"></span>
                                     READY
                                 </div>
                             </div>
 
+                            <!-- Input Mode Tabs -->
                             <div class="tabs upgraded-tabs" role="tablist">
-                                <button class="tab-btn active" onclick="switchTab(event, 'title')">HEADLINE</button>
-                                <button class="tab-btn" onclick="switchTab(event, 'url')">URL</button>
-                                <button class="tab-btn" onclick="switchTab(event, 'text')">TEXT</button>
+                                <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchTab(event, 'title')">HEADLINE</button>
+                                <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab(event, 'url')">URL</button>
+                                <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab(event, 'text')">FULL TEXT</button>
                             </div>
 
+                            <!-- Large Paper-Textured Input Areas -->
                             <div id="input-title" class="input-section active">
                                 <input type="text" class="input-box single-line" id="val-title"
-                                    placeholder="Paste a news headline or claim here...">
+                                    placeholder="Enter or paste a news headline or viral claim..." aria-label="Headline Input">
                             </div>
 
                             <div id="input-url" class="input-section">
                                 <input type="url" class="input-box single-line" id="val-url"
-                                    placeholder="https://en.wikipedia.org/wiki/Artificial_intelligence">
+                                    placeholder="https://example.com/investigation-article" aria-label="URL Input">
                             </div>
 
                             <div id="input-text" class="input-section">
                                 <textarea class="input-box" id="val-text"
-                                    placeholder="Paste full article text here..."></textarea>
+                                    placeholder="Paste full article prose or forwarded message here..." rows="6" aria-label="Full Text Input"></textarea>
                             </div>
 
+                            <!-- Scan Progress Animation -->
                             <div class="scan-container" id="scanner" aria-hidden="true">
                                 <div class="scan-bar"></div>
                             </div>
 
                             <div class="scanner-actions">
                                 <button class="btn" id="analyze-btn" onclick="startScan()">
-                                    ▶ ANALYZE DATA
+                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                    ANALYZE CLAIM
                                 </button>
-
                                 <button class="btn muted-btn" onclick="clearUI()">
-                                    ✕ CLEAR
+                                    CLEAR
                                 </button>
                             </div>
                         </div>
 
+                        <!-- Empty State -->
                         <div class="result-empty glass-panel" id="result-empty">
-                            <div class="empty-icon">🛰️</div>
-
+                            <div class="empty-icon">
+                                <svg viewBox="0 0 24 24" width="40" height="40" stroke="var(--ink-muted)" stroke-width="1.8" fill="none"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                            </div>
                             <div>
-                                <h3>Ready to scan</h3>
+                                <h3>Ready for Forensic Inspection</h3>
                                 <p>
-                                    Enter a headline, URL, or full article text. Your verdict, confidence,
-                                    fact-check summary, red flags, and sources will appear here.
+                                    Submit a headline, URL, or paragraph. Your verdict stamp, confidence bar,
+                                    fact-check synthesis, red flags, and primary receipts will appear here.
                                 </p>
                             </div>
                         </div>
 
-                        <div class="result-panel glass-panel upgraded-result" id="result-panel" style="display: none;">
+                        <!-- Verdict Stamp Result Panel (Physical Rubber Stamp on Newsprint) -->
+                        <div class="result-panel glass-panel upgraded-result" id="result-panel" style="display: none;" aria-live="polite">
                             <div class="result-top">
                                 <div>
-                                    <span class="result-kicker">ANALYSIS REPORT</span>
+                                    <span class="result-kicker">EDITORIAL AUDIT REPORT</span>
                                     <span class="res-verdict" id="res-verdict">VERDICT: ---</span>
                                 </div>
 
                                 <div class="confidence-card">
                                     <span id="res-confidence">CONFIDENCE: ---%</span>
-                                    <div class="confidence-track">
+                                    <div class="confidence-track" aria-hidden="true">
                                         <div class="confidence-fill" id="confidence-fill"></div>
                                     </div>
                                 </div>
@@ -261,102 +277,111 @@
 
                             <div class="result-actions-row">
                                 <button class="copy-report-btn" onclick="copyCurrentReport()">
-                                    📋 COPY REPORT
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    COPY REPORT
                                 </button>
                                 <button class="download-report-btn" onclick="downloadCurrentReport()">
-                                    ⬇ DOWNLOAD REPORT
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    DOWNLOAD RECEIPT
                                 </button>
                             </div>
 
                             <div class="result-cards">
                                 <div class="result-card">
-                                    <span class="res-label">REASON</span>
+                                    <span class="res-label">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                        REASONING
+                                    </span>
                                     <p id="res-reason"></p>
                                 </div>
 
                                 <div class="result-card">
-                                    <span class="res-label">FACT-CHECK</span>
+                                    <span class="res-label">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        FACT-CHECK SYNTHESIS
+                                    </span>
                                     <p id="res-factcheck"></p>
                                 </div>
 
                                 <div class="result-card">
-                                    <span class="res-label">RED FLAGS</span>
+                                    <span class="res-label">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                                        DOCUMENTED RED FLAGS
+                                    </span>
                                     <p id="res-flags"></p>
                                 </div>
                             </div>
 
                             <div class="res-section sources-card" id="res-sources-container" style="display: none;">
-                                <span class="res-label">SOURCES SCANNED</span>
+                                <span class="res-label">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                    SCANNED PRIMARY CITATIONS
+                                </span>
                                 <div id="res-sources"></div>
                             </div>
                         </div>
 
                     </div>
 
+                    <!-- Right Column: System Brief & Recent Analyses -->
                     <aside class="dashboard-side">
-
                         <div class="glass-panel mini-panel">
-                            <h3>System Brief</h3>
-
+                            <h3>BUREAU DISPATCH BRIEF</h3>
                             <div class="brief-list">
                                 <div>
-                                    <span>Input Modes</span>
-                                    <strong>Headline / URL / Text</strong>
+                                    <span>Input Types</span>
+                                    <strong>Headline / URL / Prose</strong>
                                 </div>
-
                                 <div>
-                                    <span>Security Layer</span>
-                                    <strong>CSRF + SSRF Guard</strong>
+                                    <span>Security Perimeter</span>
+                                    <strong>CSRF + SSRF Armor</strong>
                                 </div>
-
                                 <div>
-                                    <span>Verdict Model</span>
-                                    <strong>Source-aware AI</strong>
+                                    <span>Reasoning Engine</span>
+                                    <strong>Cohere Command-R + RAG</strong>
                                 </div>
                             </div>
                         </div>
 
                         <div class="glass-panel mini-panel">
                             <div class="panel-heading-row compact">
-                                <h3>Recent Analyses</h3>
-                                <button class="mini-link" onclick="switchView('history')">View all</button>
+                                <h3>RECENT INQUIRIES</h3>
+                                <button class="mini-link" onclick="switchView('history')">Ledger ➔</button>
                             </div>
-
                             <div id="recent-analyses-content" class="recent-list">
-                                <p class="muted-text">Loading recent scans...</p>
+                                <p class="muted-text">Retrieving recent scans...</p>
                             </div>
                         </div>
-
                     </aside>
-
                 </section>
             </div>
 
-            <!-- HISTORY VIEW -->
+            <!-- ------------------------------------------------------------- -->
+            <!-- 2. DATABASE LEDGER / HISTORY VIEW                             -->
+            <!-- ------------------------------------------------------------- -->
             <div id="view-history" class="view-section">
-                <h2 class="view-title">Database Ledger</h2>
+                <h2 class="view-title">INVESTIGATIVE LEDGER</h2>
 
                 <div class="glass-panel">
                     <div class="history-toolbar">
                         <button onclick="showClearConfirmation()" class="danger-action">
-                            CLEAR DATABASE
+                            PURGE LEDGER RECORDS
                         </button>
-
                         <button onclick="loadAnalysisHistory()" class="accent-action">
-                            🔄 REFRESH
+                            REFRESH LEDGER
                         </button>
                     </div>
 
                     <div class="history-filter-panel">
                         <div class="history-filter-grid">
                             <div class="history-filter-item">
-                                <label for="history-search">Search</label>
-                                <input type="text" id="history-search" placeholder="Search text, reason, fact-check..."
+                                <label for="history-search">Search Inquiry</label>
+                                <input type="text" id="history-search" placeholder="Filter by text, reason, or claim..."
                                     oninput="applyHistoryFilters()">
                             </div>
 
                             <div class="history-filter-item">
-                                <label for="history-verdict-filter">Verdict</label>
+                                <label for="history-verdict-filter">Verdict Stamp</label>
                                 <select id="history-verdict-filter" onchange="applyHistoryFilters()">
                                     <option value="all">All Verdicts</option>
                                     <option value="SUPPORTED">Supported</option>
@@ -368,7 +393,7 @@
                             </div>
 
                             <div class="history-filter-item">
-                                <label for="history-mode-filter">Mode</label>
+                                <label for="history-mode-filter">Inspection Mode</label>
                                 <select id="history-mode-filter" onchange="applyHistoryFilters()">
                                     <option value="all">All Modes</option>
                                     <option value="AI Analysis">AI Analysis</option>
@@ -378,50 +403,50 @@
                             </div>
 
                             <div class="history-filter-item">
-                                <label for="history-sort">Sort</label>
+                                <label for="history-sort">Chronology</label>
                                 <select id="history-sort" onchange="applyHistoryFilters()">
                                     <option value="newest">Newest First</option>
                                     <option value="oldest">Oldest First</option>
-                                    <option value="confidence-high">Confidence High → Low</option>
-                                    <option value="confidence-low">Confidence Low → High</option>
+                                    <option value="confidence-high">Confidence: High → Low</option>
+                                    <option value="confidence-low">Confidence: Low → High</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="history-filter-actions">
-                            <button class="mini-link" onclick="resetHistoryFilters()">Reset Filters</button>
-                            <span id="history-count-label">Showing 0 results</span>
+                            <button class="mini-link" onclick="resetHistoryFilters()">Reset All Filters</button>
+                            <span id="history-count-label">Showing 0 records</span>
                         </div>
                     </div>
 
-                    <div id="history-content">Loading analysis history...</div>
+                    <div id="history-content">Loading analysis history ledger...</div>
                 </div>
             </div>
 
-            <!-- ANALYTICS VIEW -->
+            <!-- ------------------------------------------------------------- -->
+            <!-- 3. ENGINE TELEMETRY / ANALYTICS VIEW                          -->
+            <!-- ------------------------------------------------------------- -->
             <div id="view-analytics" class="view-section">
-                <h2 class="view-title">Engine Telemetry</h2>
+                <h2 class="view-title">BUREAU TELEMETRY</h2>
 
                 <div class="glass-panel">
-                    <div id="analytics-content">Loading system analytics...</div>
+                    <div id="analytics-content">Compiling system telemetry records...</div>
                 </div>
             </div>
 
         </main>
     </div>
 
-    <!-- Modal Dialog -->
-    <div id="modal-overlay" class="modal-overlay" style="display: none;">
+    <!-- Modal Dialog (Confirmation & Details) -->
+    <div id="modal-overlay" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-box">
             <div class="modal-header">
                 <h3 id="modal-title">Confirm Action</h3>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <button class="modal-close" onclick="closeModal()" aria-label="Close dialog">&times;</button>
             </div>
-
             <div class="modal-body">
                 <div id="modal-message">Are you sure?</div>
             </div>
-
             <div class="modal-footer">
                 <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
                 <button class="modal-btn confirm" id="modal-confirm-btn" onclick="confirmAction()">Confirm</button>
@@ -435,29 +460,9 @@
         (function () {
             const savedTheme = localStorage.getItem('debunkit_theme')
                 || document.documentElement.getAttribute('data-theme')
-                || 'system';
-
-            const savedBgMode = localStorage.getItem('debunkit_bg_mode') || 'animated';
+                || 'light';
 
             document.documentElement.setAttribute('data-theme', savedTheme);
-
-            document.addEventListener('DOMContentLoaded', () => {
-                const body = document.body;
-                const canvas = document.getElementById('canvas-bg');
-
-                body.classList.remove('bg-solid', 'bg-gradient', 'bg-animated', 'no-canvas');
-
-                if (savedBgMode === 'solid') {
-                    body.classList.add('bg-solid', 'no-canvas');
-                    if (canvas) canvas.style.display = 'none';
-                } else if (savedBgMode === 'gradient') {
-                    body.classList.add('bg-gradient', 'no-canvas');
-                    if (canvas) canvas.style.display = 'none';
-                } else {
-                    body.classList.add('bg-animated');
-                    if (canvas) canvas.style.display = 'block';
-                }
-            });
         })();
     </script>
 
@@ -467,10 +472,8 @@
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const response = await fetch('/api/user/profile');
-
                 if (response.ok) {
                     const user = await response.json();
-
                     document.getElementById('user-menu-container').style.display = 'block';
                     document.getElementById('not-logged-in-message').style.display = 'none';
                     document.getElementById('user-display').textContent = user.username;
@@ -519,20 +522,24 @@
         });
 
         function showGuestMode() {
-            showNotification('Guest mode: 10 analyses per day. Log in for full access.', 'info');
+            showNotification('Guest access active: 10 scans daily. Sign in for complete ledger records.', 'info');
         }
 
         function toggleUserMenu() {
             const dropdown = document.getElementById('user-dropdown');
-            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            const btn = document.getElementById('user-menu-btn');
+            const isShown = dropdown.style.display === 'block';
+            dropdown.style.display = isShown ? 'none' : 'block';
+            if (btn) btn.setAttribute('aria-expanded', isShown ? 'false' : 'true');
         }
 
         document.addEventListener('click', (e) => {
             const userMenu = document.querySelector('.user-menu');
             const dropdown = document.getElementById('user-dropdown');
-
+            const btn = document.getElementById('user-menu-btn');
             if (userMenu && dropdown && !userMenu.contains(e.target)) {
                 dropdown.style.display = 'none';
+                if (btn) btn.setAttribute('aria-expanded', 'false');
             }
         });
 
@@ -545,7 +552,6 @@
                     }),
                     credentials: 'same-origin'
                 });
-
                 setTimeout(() => {
                     window.location.replace('/');
                 }, 100);
@@ -554,7 +560,6 @@
             }
         }
     </script>
-
 </body>
 
 </html>

@@ -1,106 +1,171 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="{{ current_user.theme if current_user.is_authenticated and current_user.theme else 'dark' }}">
+<html lang="en" data-theme="{{ current_user.theme if current_user.is_authenticated and current_user.theme else 'light' }}">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>DEBUNK.IT | Sign Up</title>
+    <title>DEBUNK.IT — Register Credentials</title>
+
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='Images/debunkit-logo.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='CSS/auth.css') }}">
 </head>
+
 <body>
+    <!-- Background Canvas Layer -->
     <canvas id="canvas-bg" aria-hidden="true"></canvas>
 
     <div class="auth-container">
-        <div class="auth-box">
-            <div style="margin-bottom: 12px; text-align: left;">
-                <a href="/" style="color: var(--muted); text-decoration: none; font-size: 0.82rem; font-family: monospace; display: inline-flex; align-items: center; gap: 4px;">
-                    ← Back to Landing Page
-                </a>
-            </div>
-            <div class="auth-header">
-                <h1>DEBUNK.IT</h1>
-                <p>Create Your Account</p>
-            </div>
+        <div class="auth-split-shell">
 
-            <form id="register-form" class="auth-form">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" placeholder="Choose a username" required minlength="3">
+            <!-- ============================================================= -->
+            <!-- LEFT: EDITORIAL POSTER COLLAGE PANEL                          -->
+            <!-- ============================================================= -->
+            <div class="auth-editorial-panel" aria-hidden="true">
+                <div class="auth-masthead-tag">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span>INVESTIGATIVE CREDENTIAL REGISTRATION // DEBUNK.IT</span>
                 </div>
 
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" placeholder="you@example.com" required>
-                </div>
+                <div class="auth-editorial-body">
+                    <h2 class="auth-editorial-title">
+                        QUESTION<br>
+                        <span class="word-red">EVERY</span><br>
+                        HEADLINE.
+                    </h2>
 
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <div class="password-input-group">
-                        <input type="password" id="password" name="password"
-                        placeholder="Min 8 chars: uppercase, lowercase, number, special character"
-                        required minlength="8">
-                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password')">👁️</button>
+                    <p class="auth-editorial-quote">
+                        "Independent verification requires an open mind, a critical eye, and permanent ledger access to cited evidence receipts."
+                    </p>
+
+                    <!-- Mini Editorial Poster SVG Collage -->
+                    <div class="auth-collage-art">
+                        <svg viewBox="0 0 400 160" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="100%" height="100%" fill="var(--paper-2)" stroke="var(--ink)" stroke-width="1"/>
+                            <!-- Mint Thumbs-Up Hand Left -->
+                            <g transform="translate(15, 30)">
+                                <path d="M 20 40 C 26 40, 32 35, 34 25 C 36 15, 30 7, 22 7 C 16 7, 14 12, 14 20 L 14 30 L 10 30 L 10 60 L 32 60 C 38 60, 42 55, 42 50 C 42 47, 40 44, 38 42 Z" fill="var(--mint)" stroke="var(--ink)" stroke-width="1.8"/>
+                                <text x="4" y="80" font-family="var(--font-sans)" font-size="8" font-weight="800" fill="var(--mint-text)">SUPPORTED</text>
+                            </g>
+                            <!-- Suited Figure Silhouette & Giant Question Mark -->
+                            <g transform="translate(200, 100)">
+                                <path d="M -70 60 L -50 15 L -20 10 L 0 22 L 20 10 L 50 15 L 70 60 Z" fill="var(--ink)" />
+                                <polygon points="-20,10 0,30 20,10 -5,8 0,15 5,8" fill="#FFFFFF" />
+                                <polygon points="-5,15 5,15 7,42 0,55 -7,42" fill="var(--ink)" />
+                            </g>
+                            <g transform="translate(200, 48)">
+                                <path d="M -16 -24 C -16 -40, 16 -40, 16 -24 C 16 -12, 2 -8, 2 5 L -2 5 C -2 -8, 10 -10, 10 -24 C 10 -32, -10 -32, -10 -24 C -10 -20, -16 -20, -16 -24 Z" fill="var(--ink)" />
+                                <circle cx="0" cy="16" r="4.5" fill="var(--ink)" />
+                            </g>
+                            <!-- Blush Thumbs-Down Hand Right -->
+                            <g transform="translate(325, 30)">
+                                <path d="M 22 40 C 16 40, 10 45, 8 55 C 6 65, 12 73, 20 73 C 26 73, 28 68, 28 60 L 28 50 L 32 50 L 32 20 L 10 20 C 4 20, 0 25, 0 30 C 0 33, 2 36, 4 38 Z" fill="var(--blush)" stroke="var(--ink)" stroke-width="1.8"/>
+                                <text x="-5" y="88" font-family="var(--font-sans)" font-size="8" font-weight="800" fill="var(--blush-text)">REFUTED</text>
+                            </g>
+                        </svg>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="password-confirm">Confirm Password</label>
-                    <div class="password-input-group">
-                        <input type="password" id="password-confirm" name="password-confirm" placeholder="Confirm password" required>
-                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password-confirm')">👁️</button>
-                    </div>
+                <div class="auth-editorial-footer">
+                    <span>REGISTRY // DEBUNK.IT PUBLIC TRUTH RADAR</span>
                 </div>
+            </div>
 
-                <button type="submit" class="auth-btn">CREATE ACCOUNT</button>
+            <!-- ============================================================= -->
+            <!-- RIGHT: CLEAN REGISTRATION FORM PANEL                          -->
+            <!-- ============================================================= -->
+            <div class="auth-form-panel">
+                <div class="auth-form-content">
+                    <a href="/" class="auth-back-link">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                        <span>Back to Front Page</span>
+                    </a>
 
-                <div class="auth-divider">or</div>
+                    <div class="auth-header">
+                        <h1>REGISTER</h1>
+                        <p>Create credentials for full analysis ledger history and personal dossier.</p>
+                    </div>
 
-                <p class="auth-switch">
-                    Already have an account? <a href="/login">Log in here</a>
-                </p>
-            </form>
+                    <form id="register-form" class="auth-form">
+                        <div class="form-group">
+                            <label for="username">Investigator Pseudonym / Username</label>
+                            <input type="text" id="username" name="username" placeholder="e.g. InspectorTruth" required minlength="3" autocomplete="username">
+                        </div>
 
-            <div id="error-message" class="error-message" style="display: none;"></div>
-            <div id="success-message" class="success-message" style="display: none;"></div>
+                        <div class="form-group">
+                            <label for="email">Direct Email Address</label>
+                            <input type="email" id="email" name="email" placeholder="correspondent@gazette.com" required autocomplete="email">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password (Min 8 chars, uppercase, lowercase, number, symbol)</label>
+                            <div class="password-input-group">
+                                <input type="password" id="password" name="password"
+                                    placeholder="Enter strong password" required minlength="8" autocomplete="new-password">
+                                <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password')" aria-label="Toggle password visibility">
+                                    <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" id="eye-icon-password"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password-confirm">Confirm Secret Password</label>
+                            <div class="password-input-group">
+                                <input type="password" id="password-confirm" name="password-confirm"
+                                    placeholder="Confirm password" required autocomplete="new-password">
+                                <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password-confirm')" aria-label="Toggle confirm password visibility">
+                                    <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" id="eye-icon-password-confirm"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="auth-btn">CREATE BUREAU ACCOUNT</button>
+
+                        <div class="auth-divider">or</div>
+
+                        <p class="auth-switch">
+                            Already registered? <a href="/login">Sign in here</a>
+                        </p>
+                    </form>
+
+                    <div id="error-message" class="error-message" style="display: none;" role="alert"></div>
+                    <div id="success-message" class="success-message" style="display: none;" role="status"></div>
+                </div>
+            </div>
+
         </div>
     </div>
+
     <script>
         (function () {
             const savedTheme = localStorage.getItem('debunkit_theme')
                 || document.documentElement.getAttribute('data-theme')
-                || 'system';
-
-            const savedBgMode = localStorage.getItem('debunkit_bg_mode') || 'animated';
-
+                || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
-
-            document.addEventListener('DOMContentLoaded', () => {
-                const body = document.body;
-                const canvas = document.getElementById('canvas-bg');
-
-                body.classList.remove('bg-solid', 'bg-gradient', 'bg-animated', 'no-canvas');
-
-                if (savedBgMode === 'solid') {
-                    body.classList.add('bg-solid', 'no-canvas');
-                    if (canvas) canvas.style.display = 'none';
-                } else if (savedBgMode === 'gradient') {
-                    body.classList.add('bg-gradient', 'no-canvas');
-                    if (canvas) canvas.style.display = 'none';
-                } else {
-                    body.classList.add('bg-animated');
-                    if (canvas) canvas.style.display = 'block';
-                }
-            });
         })();
     </script>
+
     <script src="{{ url_for('static', filename='JS/canvas.js') }}"></script>
     <script>
         function togglePasswordVisibility(fieldId) {
             const field = document.getElementById(fieldId);
-            const type = field.getAttribute('type') === 'password' ? 'text' : 'password';
-            field.setAttribute('type', type);
+            if (!field) return;
+            const isPassword = field.getAttribute('type') === 'password';
+            field.setAttribute('type', isPassword ? 'text' : 'password');
+            const icon = document.getElementById('eye-icon-' + fieldId);
+            if (icon) {
+                if (isPassword) {
+                    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+                } else {
+                    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+                }
+            }
         }
+
         function getCSRFToken() {
             const meta = document.querySelector('meta[name="csrf-token"]');
             return meta ? meta.getAttribute('content') : '';
@@ -116,15 +181,15 @@
         document.getElementById('register-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const username = document.getElementById('username').value;
-            const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const passwordConfirm = document.getElementById('password-confirm').value;
             const errorDiv = document.getElementById('error-message');
             const successDiv = document.getElementById('success-message');
             
             if (password !== passwordConfirm) {
-                errorDiv.textContent = 'Passwords do not match!';
+                errorDiv.textContent = 'Passwords do not match.';
                 errorDiv.style.display = 'block';
                 successDiv.style.display = 'none';
                 return;
@@ -142,23 +207,24 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    successDiv.textContent = data.message + ' Redirecting to login...';
+                    successDiv.textContent = (data.message || 'Credentials recorded successfully.') + ' Redirecting to sign in...';
                     successDiv.style.display = 'block';
                     errorDiv.style.display = 'none';
                     setTimeout(() => {
                         window.location.href = '/login';
-                    }, 2000);
+                    }, 1800);
                 } else {
-                    errorDiv.textContent = data.error;
+                    errorDiv.textContent = data.error || 'Registration failed.';
                     errorDiv.style.display = 'block';
                     successDiv.style.display = 'none';
                 }
             } catch (error) {
-                errorDiv.textContent = 'Registration failed. Please try again.';
+                errorDiv.textContent = 'Network communication failure. Please retry.';
                 errorDiv.style.display = 'block';
                 successDiv.style.display = 'none';
             }
         });
     </script>
 </body>
+
 </html>

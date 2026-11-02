@@ -1,16 +1,16 @@
 /**
- * DEBUNK.IT — High-Voltage Landing Page Interactive Engine
- * Handles BS-o-Meter 3000, Web Audio Synthesizer, Live Tickers & Easter Eggs
+ * DEBUNK.IT — Editorial Interactive Engine
+ * Handles BS-o-Meter truth gauge, Accessible SFX, Tickers & Editorial Reviews
  */
 
 (function () {
     'use strict';
 
     // =========================================================================
-    // 1. SOUND FX ENGINE (READY FOR CUSTOM SFX FILES)
+    // 1. SOUND FX ENGINE (DEFAULTS TO OFF, ACCESSIBLE)
     // =========================================================================
     let audioCtx = null;
-    let sfxEnabled = localStorage.getItem('debunkit_sfx') === 'on';
+    let sfxEnabled = localStorage.getItem('debunkit_sfx') === 'on'; // default OFF
 
     function initAudio() {
         if (!audioCtx) {
@@ -24,7 +24,7 @@
         }
     }
 
-    function playTone(freq, type, duration, gainStart = 0.15, gainEnd = 0.001) {
+    function playTone(freq, type, duration, gainStart = 0.12, gainEnd = 0.001) {
         if (!sfxEnabled || !audioCtx) return;
         try {
             const osc = audioCtx.createOscillator();
@@ -46,7 +46,6 @@
         }
     }
 
-    // Sound: Cap / Buzzer (Descending Sawtooth)
     function playBuzzer() {
         if (!sfxEnabled || !audioCtx) return;
         try {
@@ -54,10 +53,10 @@
             const gain = audioCtx.createGain();
             osc.type = 'sawtooth';
 
-            osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(280, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.35);
 
-            gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.14, audioCtx.currentTime);
             gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
 
             osc.connect(gain);
@@ -68,122 +67,102 @@
         } catch (e) {}
     }
 
-    // Sound: Legit / Verified (Ascending Triad)
     function playSuccessChime() {
         if (!sfxEnabled || !audioCtx) return;
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        const notes = [523.25, 659.25, 783.99, 1046.50];
         notes.forEach((freq, idx) => {
             setTimeout(() => {
-                playTone(freq, 'sine', 0.2, 0.12, 0.001);
+                playTone(freq, 'sine', 0.2, 0.1, 0.001);
             }, idx * 60);
         });
     }
 
-    // Sound: Radar Ping
     function playRadarPing() {
-        playTone(1800, 'sine', 0.12, 0.08, 0.001);
+        playTone(1600, 'sine', 0.1, 0.06, 0.001);
     }
 
-    // Sound: Button Click
     function playClick() {
-        playTone(800, 'triangle', 0.04, 0.05, 0.001);
+        playTone(700, 'triangle', 0.03, 0.04, 0.001);
     }
 
-    // Sound: Modal / Level-up Chime
-    function playAnimeChime() {
-        playTone(1046.50, 'triangle', 0.15, 0.06);
-    }
-
-    // Sound: Review / Victory Fanfare
-    function playAnimeVictoryFanfare() {
-        playSuccessChime();
-    }
-
-    // Sound: Rapid Rescan Completion
-    function playUltraInstinct() {
-        playTone(1046.50, 'triangle', 0.15, 0.06);
+    function playChime() {
+        playTone(980, 'triangle', 0.12, 0.05);
     }
 
     // =========================================================================
-    // 2. PRESET VIRAL CLAIMS DATABASE FOR BS-O-METER
+    // 2. PRESET VIRAL CLAIMS FOR BS-O-METER (CLEAN TYPOGRAPHY, NO EMOJIS)
     // =========================================================================
     const VIRAL_PRESETS = [
         {
             id: 'garlic',
-            btnText: '🧄 Garlic Cures Loans',
+            btnText: 'Garlic Cures Loans & 5G',
             claim: 'Drinking boiled garlic water cures student loans and 5G radiation.',
-            verdict: '100% PURE CAP 🚨',
+            verdict: '100% REFUTED',
             score: '99.9%',
             tone: 'danger',
             angle: 78,
             readoutText: 'MAXIMUM CAP',
-            diagnosis: 'Confirmed WhatsApp Uncle energy. Boiling garlic will cure exactly two things: your student debt will remain untouched, but everyone within a 40-meter radius will maintain social distancing due to your breath.',
-            redFlags: ['Zero peer-reviewed papers', 'WhatsApp forward font energy', 'Financial & biological impossibility'],
+            diagnosis: 'Confirmed rumor dynamics. Boiling garlic leaves your student debt untouched while assuring social distancing through pungent breath.',
             type: 'headline'
         },
         {
             id: 'microwave',
-            btnText: '📱 Microwave Fast-Charge',
+            btnText: 'Microwave Fast-Charge',
             claim: 'Putting your iPhone in the microwave for 30 seconds supercharges the battery to 100%.',
-            verdict: 'CRITICAL BRAIN DAMAGE 💥',
+            verdict: 'CRITICAL HAZARD',
             score: '100%',
             tone: 'danger',
             angle: 80,
             readoutText: 'HAZARDOUS BOGUS',
-            diagnosis: 'Debunked by basic thermodynamics. The only thing you are charging is your homeowner insurance deductible and creating an expensive indoor sparkler show.',
-            redFlags: ['Destructive physics', 'Ancient 4chan trolling scheme', 'Smells like lithium vapor'],
+            diagnosis: 'Debunked by basic thermodynamics. The only outcome is destroyed circuitry and an expensive insurance deductible.',
             type: 'headline'
         },
         {
             id: 'aliens',
-            btnText: '🛸 Pyramids Alien Wi-Fi',
+            btnText: 'Pyramids Alien Wi-Fi',
             claim: 'The Egyptian pyramids were ancient wireless power transmitters built by extraterrestrials.',
-            verdict: '99.8% UNHINGED SUS 🛸',
+            verdict: 'UNFOUNDED SPECULATION',
             score: '99.8%',
             tone: 'danger',
             angle: 75,
-            readoutText: 'COSMIC BALONEY',
-            diagnosis: 'Late-night cable TV is not an accredited archaeology degree. Ancient humans possessed remarkable engineering, limestone quarries, and zero intergalactic Wi-Fi router blueprints.',
-            redFlags: ['History Channel 3 AM citation', 'Discounts human labor', 'Zero USB ports discovered in sarcophagus'],
+            readoutText: 'COSMIC NONSENSE',
+            diagnosis: 'Limestone masonry and human labor documented. Zero intergalactic blueprints or electronic components uncovered.',
             type: 'headline'
         },
         {
             id: 'avocado',
-            btnText: '🥑 Avocado 5G Armor',
+            btnText: 'Avocado 5G Shield',
             claim: 'Eating ground avocado pits makes the human body immune to electromagnetic Wi-Fi signals.',
-            verdict: '96.4% ORGANIC NONSENSE 🥑',
+            verdict: 'ORGANIC BOGUS',
             score: '96.4%',
             tone: 'danger',
             angle: 70,
             readoutText: 'GRADE-A BOLOGNA',
-            diagnosis: 'Avocado pits are woody seed stones containing bitter tannins and zero Faraday cage properties. Please do not shatter your teeth on compost material.',
-            redFlags: ['Pseudoscientific wellness blog', 'Dentist emergency waiting to happen', 'Wi-Fi remains unaffected'],
+            diagnosis: 'Woody seed stones containing bitter tannins offer zero Faraday cage properties. Please do not damage teeth on seed stones.',
             type: 'headline'
         },
         {
             id: 'ai-laundry',
-            btnText: '🤖 AI Laundry Conspiracy',
+            btnText: 'AI Laundry Singularity',
             claim: 'AI models have secretly agreed to automate all laundry and fold clothes by next Tuesday.',
-            verdict: '50% DELUSIONAL WISH 🤖',
+            verdict: 'DELUSIONAL HOPE',
             score: '50.0%',
             tone: 'sus',
             angle: 0,
             readoutText: 'WISHFUL THINKING',
-            diagnosis: 'We desperately wish this were true. Current state-of-the-art AI can write Shakespearean sonnets in Rust, but it still cannot explain where your missing left sock disappeared to in the dryer.',
-            redFlags: ['Extreme wishful thinking', 'Robotics hardware deficit', 'Sock singularity unsolved'],
+            diagnosis: 'While modern models compose sonnets, robotic manipulators still struggle with cloth physics and missing laundry socks.',
             type: 'headline'
         },
         {
             id: 'water',
-            btnText: '💧 Water Hydrates Humans',
+            btnText: 'Water Hydrates Humans',
             claim: 'Drinking clean fresh water is necessary for human hydration and organ function.',
-            verdict: '100% SHOCKINGLY REAL ✅',
+            verdict: 'VERIFIED FACT',
             score: '0.1%',
             tone: 'legit',
             angle: -78,
             readoutText: 'CONFIRMED TRUTH',
-            diagnosis: 'Miracle of miracles: an actual true statement on the internet! H2O is indeed biologically required for mammalian life. Put down the neon energy drink and drink some water.',
-            redFlags: ['Zero scam detected', 'Universal medical consensus', 'Literally keeps you alive'],
+            diagnosis: 'Established biological reality. H2O is required for mammalian cellular metabolism and kidney filtration.',
             type: 'headline'
         }
     ];
@@ -210,12 +189,10 @@
             customInput.value = preset.claim;
         }
 
-        // Update needle rotation
         if (needle) {
             needle.style.transform = `rotate(${preset.angle}deg)`;
         }
 
-        // Update score readout
         if (score) {
             score.textContent = preset.score;
             score.className = `gauge-score ${preset.tone}`;
@@ -225,7 +202,6 @@
             label.textContent = preset.readoutText;
         }
 
-        // Update roast card
         if (roastStamp) {
             roastStamp.textContent = preset.verdict;
             roastStamp.className = `roast-stamp ${preset.tone}`;
@@ -243,16 +219,16 @@
             scanFullBtn.href = `/scanner?claim=${encodeURIComponent(preset.claim)}&mode=${preset.type || 'title'}`;
         }
 
-        // Highlight active chip
         document.querySelectorAll('.sample-chip').forEach(chip => {
             if (chip.dataset.id === preset.id) {
                 chip.classList.add('active');
+                chip.setAttribute('aria-pressed', 'true');
             } else {
                 chip.classList.remove('active');
+                chip.setAttribute('aria-pressed', 'false');
             }
         });
 
-        // Play sound effect
         if (preset.tone === 'legit') {
             playSuccessChime();
         } else if (preset.tone === 'danger') {
@@ -262,10 +238,9 @@
         }
     }
 
-    // Evaluate Custom Claim
     function evaluateCustomClaim(text) {
         if (!text || text.trim().length < 5) {
-            showLandingToast('Please enter at least 5 characters to test.');
+            showLandingToast('Please enter at least 5 characters to analyze.');
             return;
         }
 
@@ -273,48 +248,38 @@
         playRadarPing();
 
         const clean = text.toLowerCase().trim();
-
-        // Check against known funny patterns
         let scoreVal = 85;
         let angleVal = 55;
-        let verdictVal = 'HIGH SUSPICION 🚨';
+        let verdictVal = 'HIGH SUSPICION';
         let readoutVal = 'PROBABLE BOGUS';
         let toneVal = 'danger';
-        let diagVal = 'Our heuristic filters detected multiple classic internet red flags. This claim shows strong traces of unverified rumor dynamics.';
+        let diagVal = 'Heuristic indicators suggest unverified rumor dynamics or sensationalist phrasing. Check full citations below.';
 
         if (clean.includes('water') && (clean.includes('drink') || clean.includes('hydrate'))) {
             scoreVal = 0.5;
             angleVal = -75;
-            verdictVal = 'VERIFIED ACCURATE ✅';
+            verdictVal = 'VERIFIED ACCURATE';
             readoutVal = 'SOLID TRUTH';
             toneVal = 'legit';
-            diagVal = 'Hydration and water science checks out. Biological reality confirmed.';
-        } else if (clean.includes('alien') || clean.includes('ufo') || clean.includes('reptilian') || clean.includes('flat earth')) {
+            diagVal = 'Hydration and hydration biology confirmed by scientific consensus.';
+        } else if (clean.includes('alien') || clean.includes('ufo') || clean.includes('flat earth')) {
             scoreVal = 99.8;
             angleVal = 78;
-            verdictVal = 'TERMINAL CONSPIRACY 🛸';
-            readoutVal = 'UNHINGED PARANOIA';
+            verdictVal = 'UNVERIFIED CONSPIRACY';
+            readoutVal = 'SPECULATIVE LORE';
             toneVal = 'danger';
-            diagVal = 'Tin foil hat alert! This hypothesis relies heavily on unverified claims, secret shadow leagues, and late-night message board lore.';
-        } else if (clean.includes('cure') || clean.includes('miracle') || clean.includes('garlic') || clean.includes('lemon') || clean.includes('5g')) {
+            diagVal = 'This hypothesis relies on fringe message board discussions lacking documented evidence.';
+        } else if (clean.includes('cure') || clean.includes('miracle') || clean.includes('garlic') || clean.includes('5g')) {
             scoreVal = 97.5;
             angleVal = 72;
-            verdictVal = 'FAMILY FORWARD CAP 🧄';
-            readoutVal = 'WHATSAPP ENERGY';
+            verdictVal = 'UNVERIFIED WELLNESS CLAIM';
+            readoutVal = 'VIRAL RUMOR';
             toneVal = 'danger';
-            diagVal = 'Strong indicators of unverified miracle wellness claims. Real medicine usually requires peer-reviewed trials, not forwarded JPEG memes.';
-        } else if (clean.includes('crypto') || clean.includes('elon') || clean.includes('100x') || clean.includes('guaranteed profit')) {
-            scoreVal = 99.1;
-            angleVal = 76;
-            verdictVal = 'FINANCIAL RUGPULL 💸';
-            readoutVal = '100% BOGUS PROPHECY';
-            toneVal = 'danger';
-            diagVal = 'Sirens are blaring in the finance division. Guaranteed returns with astronomical multipliers are the oldest scam on the internet.';
+            diagVal = 'Medical assertions without clinical trials or regulatory approval.';
         } else {
-            // General calculation based on buzzword density
             scoreVal = Math.min(99, Math.max(45, 60 + (text.length % 35)));
             angleVal = ((scoreVal / 100) * 160) - 80;
-            diagVal = `Initial forensic heuristics analyze this as having a ${scoreVal}% probability of misinformation or missing vital contextual nuance. Run a live RAG scan below to get verified source citations.`;
+            diagVal = `Forensic analysis flags a ${scoreVal}% probability of misinformation or omission of primary context.`;
         }
 
         const customPreset = {
@@ -334,7 +299,7 @@
     }
 
     // =========================================================================
-    // 4. CHAOS COUNTERS ANIMATION (INTERSECTION OBSERVER)
+    // 4. STATS COUNTERS ANIMATION (INTERSECTION OBSERVER)
     // =========================================================================
     function initCounters() {
         const counters = document.querySelectorAll('.stat-num[data-target]');
@@ -347,14 +312,13 @@
                     const targetVal = parseFloat(targetEl.getAttribute('data-target'));
                     const prefix = targetEl.getAttribute('data-prefix') || '';
                     const suffix = targetEl.getAttribute('data-suffix') || '';
-                    const duration = 2000;
+                    const duration = 1600;
                     const startTime = performance.now();
 
                     function updateCount(currentTime) {
                         const elapsed = currentTime - startTime;
                         const progress = Math.min(elapsed / duration, 1);
-                        // Ease out quart
-                        const ease = 1 - Math.pow(1 - progress, 4);
+                        const ease = 1 - Math.pow(1 - progress, 3);
                         const currentNum = Math.floor(targetVal * ease);
 
                         targetEl.textContent = prefix + currentNum.toLocaleString() + suffix;
@@ -383,24 +347,7 @@
         if (!toast) {
             toast = document.createElement('div');
             toast.id = 'landing-toast';
-            toast.style.cssText = `
-                position: fixed;
-                bottom: 24px;
-                right: 24px;
-                background: rgba(18, 22, 32, 0.95);
-                border: 1px solid var(--accent-gold);
-                color: var(--text);
-                padding: 12px 20px;
-                border-radius: 8px;
-                font-family: var(--font-mono);
-                font-size: 0.85rem;
-                z-index: 9999;
-                box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-                transition: opacity 0.3s ease, transform 0.3s ease;
-                opacity: 0;
-                transform: translateY(10px);
-                pointer-events: none;
-            `;
+            toast.className = 'debunk-toast';
             document.body.appendChild(toast);
         }
 
@@ -415,197 +362,65 @@
     }
 
     // =========================================================================
-    // 6. EASTER EGG: CONSPIRACY OVERDRIVE
-    // =========================================================================
-    let logoClickCount = 0;
-    let logoTimer = null;
-
-    function initEasterEgg() {
-        const brand = document.querySelector('.brand-wrapper');
-        if (!brand) return;
-
-        brand.addEventListener('click', (e) => {
-            logoClickCount++;
-            clearTimeout(logoTimer);
-
-            if (logoClickCount === 5) {
-                initAudio();
-                playSuccessChime();
-                showLandingToast('🚨 CONSPIRACY OVERDRIVE UNLOCKED: Reptilians successfully evicted from the premises!');
-
-                const needle = document.getElementById('gauge-needle');
-                if (needle) {
-                    needle.style.transition = 'transform 0.1s linear';
-                    let w = 0;
-                    const interval = setInterval(() => {
-                        needle.style.transform = `rotate(${(Math.random() * 160) - 80}deg)`;
-                        w++;
-                        if (w > 20) {
-                            clearInterval(interval);
-                            needle.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                            if (currentActivePreset) renderMeterPreset(currentActivePreset);
-                        }
-                    }, 80);
-                }
-                logoClickCount = 0;
-            } else {
-                logoTimer = setTimeout(() => {
-                    logoClickCount = 0;
-                }, 1500);
-            }
-        });
-    }
-
-    // =========================================================================
-    // 8. CRAZY INTERACTIVE TITLE: VISIBLE 1.8s CYBER DECODE & ZERO-LAG ROAM
+    // 6. POSTER HEADLINE DECODE / REVEAL
     // =========================================================================
     function initCrazyTitle() {
         const debunkEl = document.getElementById('decode-debunk');
         const itEl = document.getElementById('decode-it');
         const titleEl = document.getElementById('hero-crazy-title');
         const titleWrap = document.getElementById('hero-title-wrap');
-        if (!debunkEl || !itEl || !titleEl) return;
+        if (!debunkEl) return;
 
-        const targetDebunk = 'DEBUNK';
-        const targetIt = 'IT';
-        const glyphs = ['!', '#', '@', '$', '%', '&', '*', '?', '<', '>', '0', '1', 'X', 'Y', 'Z', '_', '~', '+', '='];
+        // Poster headline key word is "TRUST"
+        const targetWord = 'TRUST';
+        const glyphs = ['?', '!', '#', '※', '§', '¶', 'T', 'R', 'U', 'S'];
 
-        let isDecoding = true;
-        let debunkSolved = 0; // 0 to 6
-        let itSolved = 0;     // 0 to 2
+        // Gentle staggered reveal if reduced-motion is not requested
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) {
+            debunkEl.textContent = targetWord;
+            return;
+        }
 
-        function getScrambled(target, solvedCount) {
-            let res = '';
-            for (let i = 0; i < target.length; i++) {
-                if (i < solvedCount) {
-                    res += target[i];
-                } else {
+        let step = 0;
+        const revealInterval = setInterval(() => {
+            step++;
+            if (step <= targetWord.length) {
+                let res = targetWord.substring(0, step);
+                for (let i = step; i < targetWord.length; i++) {
                     res += glyphs[Math.floor(Math.random() * glyphs.length)];
                 }
-            }
-            return res;
-        }
-
-        // Fast glyph scramble timer (runs every 45ms to shuffle unsolved letters)
-        const scrambleInterval = setInterval(() => {
-            if (debunkSolved < targetDebunk.length) {
-                debunkEl.textContent = getScrambled(targetDebunk, debunkSolved);
+                debunkEl.textContent = res;
+                playTone(480 + (step * 80), 'sine', 0.03, 0.03);
             } else {
-                debunkEl.textContent = targetDebunk;
+                clearInterval(revealInterval);
+                debunkEl.textContent = targetWord;
             }
+        }, 120);
 
-            if (itSolved < targetIt.length) {
-                itEl.textContent = getScrambled(targetIt, itSolved);
-            } else {
-                itEl.textContent = targetIt;
-            }
-        }, 45);
-
-        // Visible rhythmic solver (reveals 1 letter every 200ms = 1.8s total)
-        let step = 0;
-        const solverInterval = setInterval(() => {
-            step++;
-            if (step <= 6) {
-                debunkSolved = step;
-                debunkEl.textContent = getScrambled(targetDebunk, debunkSolved);
-                playTone(520 + (step * 85), 'sine', 0.035, 0.04);
-            } else if (step === 7) {
-                itSolved = 1;
-                itEl.textContent = getScrambled(targetIt, itSolved);
-                playTone(1050, 'sine', 0.035, 0.04);
-            } else if (step === 8) {
-                itSolved = 2;
-                itEl.textContent = targetIt;
-                playTone(1200, 'sine', 0.035, 0.04);
-            } else {
-                // Done!
-                clearInterval(solverInterval);
-                clearInterval(scrambleInterval);
-                debunkEl.textContent = targetDebunk;
-                itEl.textContent = targetIt;
-                isDecoding = false;
-                titleEl.classList.add('all-decoded');
-                playTone(1046.50, 'triangle', 0.2, 0.08); // High C triumph chime
-            }
-        }, 200);
-
-        // Interactive Letter Glitch & Audio Wave on Cursor Roam (Zero Lag, 60fps)
-        let lastGlitchTime = 0;
-        function glitchChar(el, word, charIdx) {
-            const chars = word.split('');
-            chars[charIdx] = glyphs[Math.floor(Math.random() * glyphs.length)];
-            el.textContent = chars.join('');
-            setTimeout(() => {
-                el.textContent = word;
-            }, 90);
-        }
-
-        debunkEl.addEventListener('mousemove', (e) => {
-            if (isDecoding) return;
-            const now = Date.now();
-            if (now - lastGlitchTime < 65) return;
-            lastGlitchTime = now;
-
-            const rect = debunkEl.getBoundingClientRect();
-            const ratio = Math.max(0, Math.min(0.999, (e.clientX - rect.left) / rect.width));
-            const idx = Math.floor(ratio * 6);
-            glitchChar(debunkEl, targetDebunk, idx);
-            playTone(460 + (idx * 50), 'triangle', 0.02, 0.03);
-        });
-
-        debunkEl.addEventListener('mouseleave', () => {
-            if (!isDecoding) debunkEl.textContent = targetDebunk;
-        });
-
-        itEl.addEventListener('mousemove', (e) => {
-            if (isDecoding) return;
-            const now = Date.now();
-            if (now - lastGlitchTime < 65) return;
-            lastGlitchTime = now;
-
-            const rect = itEl.getBoundingClientRect();
-            const ratio = Math.max(0, Math.min(0.999, (e.clientX - rect.left) / rect.width));
-            const idx = Math.floor(ratio * 2);
-            glitchChar(itEl, targetIt, idx);
-            playTone(760 + (idx * 90), 'triangle', 0.02, 0.03);
-        });
-
-        itEl.addEventListener('mouseleave', () => {
-            if (!isDecoding) itEl.textContent = targetIt;
-        });
-
-        // Click to trigger Reality Check Rapid Re-Scan (400ms burst)
         if (titleWrap) {
             titleWrap.addEventListener('click', () => {
-                if (isDecoding) return;
-                isDecoding = true;
                 playRadarPing();
-                let burstCount = 0;
-                const burstInterval = setInterval(() => {
-                    burstCount++;
-                    debunkEl.textContent = getScrambled(targetDebunk, 0);
-                    itEl.textContent = getScrambled(targetIt, 0);
-                    if (burstCount > 7) {
-                        clearInterval(burstInterval);
-                        debunkEl.textContent = targetDebunk;
-                        itEl.textContent = targetIt;
-                        isDecoding = false;
-                        titleEl.classList.remove('all-decoded');
-                        void titleEl.offsetWidth; // Force reflow
-                        titleEl.classList.add('all-decoded');
-                        playUltraInstinct();
+                let bursts = 0;
+                const burstInt = setInterval(() => {
+                    bursts++;
+                    let r = '';
+                    for (let i = 0; i < targetWord.length; i++) {
+                        r += glyphs[Math.floor(Math.random() * glyphs.length)];
                     }
-                }, 50);
+                    debunkEl.textContent = r;
+                    if (bursts > 4) {
+                        clearInterval(burstInt);
+                        debunkEl.textContent = targetWord;
+                        playSuccessChime();
+                    }
+                }, 60);
             });
         }
     }
 
     // =========================================================================
-    // 7. INITIALIZATION ON DOM READY
-    // =========================================================================
-    
-    // =========================================================================
-    // 9. COMMUNITY REVIEWS SYSTEM (Dynamic Submission & Storage)
+    // 7. COMMUNITY REVIEWS SYSTEM
     // =========================================================================
     function initCommunityReviews() {
         const modalBackdrop = document.getElementById('review-modal-backdrop');
@@ -617,13 +432,14 @@
         const ratingVal = document.getElementById('review-rating-val');
         const quotesGrid = document.getElementById('quotes-grid');
 
-        // Open / Close Modal
         function openModal() {
             if (!modalBackdrop) return;
             initAudio();
             modalBackdrop.classList.add('open');
             modalBackdrop.setAttribute('aria-hidden', 'false');
-            playAnimeChime();
+            playChime();
+            const firstInput = document.getElementById('review-author');
+            if (firstInput) firstInput.focus();
         }
 
         function closeModal() {
@@ -639,9 +455,13 @@
             modalBackdrop.addEventListener('click', (e) => {
                 if (e.target === modalBackdrop) closeModal();
             });
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modalBackdrop.classList.contains('open')) {
+                    closeModal();
+                }
+            });
         }
 
-        // Star Picker
         if (starPicker && ratingVal) {
             const stars = starPicker.querySelectorAll('.star-pick');
             stars.forEach(star => {
@@ -656,12 +476,11 @@
                             s.classList.remove('active');
                         }
                     });
-                    playTone(600 + (val * 90), 'triangle', 0.04, 0.05);
+                    playTone(550 + (val * 80), 'triangle', 0.04, 0.04);
                 });
             });
         }
 
-        // Render a Review Card
         function createReviewCard(author, role, rating, content, isNew = false) {
             const card = document.createElement('div');
             card.className = `quote-card ${isNew ? 'new-community-review' : ''}`;
@@ -670,11 +489,11 @@
             card.innerHTML = `
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                     <div class="quote-stars">${starsStr}</div>
-                    <span class="community-verified-badge">✨ VERIFIED</span>
+                    <span class="community-verified-badge">VERIFIED</span>
                 </div>
                 <p class="quote-body">"${escapeHtml(content)}"</p>
                 <div class="quote-author">
-                    <div class="author-avatar">⭐</div>
+                    <div class="author-avatar">${escapeHtml(author.charAt(0).toUpperCase())}</div>
                     <div class="author-info">
                         <h4>${escapeHtml(author)}</h4>
                         <p>${escapeHtml(role)}</p>
@@ -690,11 +509,8 @@
             return div.innerHTML;
         }
 
-        // Load Community Reviews (from localStorage and API)
         function loadCommunityReviews() {
             if (!quotesGrid) return;
-
-            // 1. LocalStorage
             try {
                 const saved = JSON.parse(localStorage.getItem('debunkit_community_reviews') || '[]');
                 saved.reverse().forEach(r => {
@@ -703,7 +519,6 @@
                 });
             } catch (e) {}
 
-            // 2. Fetch from Backend API
             fetch('/api/reviews')
                 .then(res => res.json())
                 .then(data => {
@@ -719,7 +534,6 @@
 
         loadCommunityReviews();
 
-        // Form Submit
         if (form) {
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -728,77 +542,86 @@
                 const contentInput = document.getElementById('review-content');
 
                 const author = authorInput ? authorInput.value.trim() : '';
-                const role = roleInput ? roleInput.value.trim() : 'Truth Seeker';
+                const role = roleInput ? roleInput.value.trim() : 'Reader';
                 const content = contentInput ? contentInput.value.trim() : '';
                 const rating = parseInt(ratingVal ? ratingVal.value : '5', 10);
 
                 if (!author || !content) return;
 
-                // 1. Prepend to DOM immediately
                 if (quotesGrid) {
                     const newCard = createReviewCard(author, role, rating, content, true);
                     quotesGrid.insertBefore(newCard, quotesGrid.firstChild);
                     newCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
 
-                // 2. Save in localStorage
                 try {
                     const existing = JSON.parse(localStorage.getItem('debunkit_community_reviews') || '[]');
                     existing.push({ author, role, rating, content, date: new Date().toISOString() });
                     localStorage.setItem('debunkit_community_reviews', JSON.stringify(existing));
                 } catch (e) {}
 
-                // 3. POST to /api/reviews
                 fetch('/api/reviews', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ author, role, rating, content })
                 }).catch(() => {});
 
-                // 4. Anime fanfare & feedback
-                playAnimeVictoryFanfare();
-                showLandingToast('✨ Arigato! Your review was recorded to the community wall.');
+                playSuccessChime();
+                showLandingToast('Review added to the community wall.');
                 closeModal();
                 form.reset();
             });
         }
     }
 
+    // =========================================================================
+    // 8. INITIALIZE ON DOM READY
+    // =========================================================================
     document.addEventListener('DOMContentLoaded', () => {
-        // Setup SFX Toggle Button
+        // SFX Toggle Setup (default OFF)
         const sfxBtn = document.getElementById('sfx-toggle-btn');
         if (sfxBtn) {
-            if (sfxEnabled) {
-                sfxBtn.classList.add('active');
-                sfxBtn.innerHTML = '🔊 SFX: ON';
-            } else {
-                sfxBtn.classList.remove('active');
-                sfxBtn.innerHTML = '🔇 SFX: OFF';
+            function updateSFXButtonUI() {
+                if (sfxEnabled) {
+                    sfxBtn.classList.add('active');
+                    sfxBtn.setAttribute('aria-pressed', 'true');
+                    sfxBtn.innerHTML = `
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                        <span>SFX: ON</span>
+                    `;
+                } else {
+                    sfxBtn.classList.remove('active');
+                    sfxBtn.setAttribute('aria-pressed', 'false');
+                    sfxBtn.innerHTML = `
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                        <span>SFX: OFF</span>
+                    `;
+                }
             }
+            updateSFXButtonUI();
 
             sfxBtn.addEventListener('click', () => {
                 initAudio();
                 sfxEnabled = !sfxEnabled;
                 localStorage.setItem('debunkit_sfx', sfxEnabled ? 'on' : 'off');
+                updateSFXButtonUI();
                 if (sfxEnabled) {
-                    sfxBtn.classList.add('active');
-                    sfxBtn.innerHTML = '🔊 SFX: ON';
                     playSuccessChime();
-                    showLandingToast('🔊 Sound effects enabled.');
+                    showLandingToast('Sound effects enabled.');
                 } else {
-                    sfxBtn.classList.remove('active');
-                    sfxBtn.innerHTML = '🔇 SFX: OFF';
-                    showLandingToast('🔇 Sound effects muted.');
+                    showLandingToast('Sound effects muted.');
                 }
             });
         }
 
-        // Setup Mobile Nav Toggle
+        // Mobile Nav Toggle
         const mobileBtn = document.querySelector('.mobile-menu-btn');
         const navLinks = document.querySelector('.nav-links');
         if (mobileBtn && navLinks) {
             mobileBtn.addEventListener('click', () => {
                 navLinks.classList.toggle('open');
+                const isOpen = navLinks.classList.contains('open');
+                mobileBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 playClick();
             });
         }
@@ -806,6 +629,7 @@
         // Render Preset Chips
         const chipsContainer = document.getElementById('samples-container');
         if (chipsContainer) {
+            chipsContainer.innerHTML = '';
             VIRAL_PRESETS.forEach(preset => {
                 const chip = document.createElement('button');
                 chip.className = 'sample-chip';
@@ -819,18 +643,15 @@
             });
         }
 
-        // Initial default preset load
         renderMeterPreset(VIRAL_PRESETS[0]);
 
-        // Setup Custom Claim Input & Button
+        // Custom Claim Input
         const testBtn = document.getElementById('btn-test-custom');
         const customInput = document.getElementById('custom-claim-input');
-
         if (testBtn && customInput) {
             testBtn.addEventListener('click', () => {
                 evaluateCustomClaim(customInput.value);
             });
-
             customInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     evaluateCustomClaim(customInput.value);
@@ -838,7 +659,7 @@
             });
         }
 
-        // Setup Ticker item clicks
+        // Ticker item clicks
         document.querySelectorAll('.ticker-item').forEach(item => {
             item.addEventListener('click', () => {
                 const claimText = item.getAttribute('data-claim');
@@ -853,22 +674,13 @@
             });
         });
 
-        // Setup Counters
         initCounters();
-
-        // Setup Community Reviews
         initCommunityReviews();
-
-        // Setup Easter Egg
-        initEasterEgg();
-
-        // Setup Crazy Title Cyber Decode & 3D Tilt
         initCrazyTitle();
 
-        // Audio activation on first click anywhere
+        // One-time audio unlock on first interaction
         document.body.addEventListener('click', () => {
             initAudio();
         }, { once: true });
     });
-
 })();
