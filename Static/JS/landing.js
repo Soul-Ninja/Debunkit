@@ -624,6 +624,16 @@
                 mobileBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 playClick();
             });
+
+            // Close mobile menu when an item is selected
+            navLinks.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (navLinks.classList.contains('open')) {
+                        navLinks.classList.remove('open');
+                        mobileBtn.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            });
         }
 
         // Render Preset Chips
