@@ -3,6 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
+    <script>
+        // Hidden reveal states apply only once JS runs; if landing.js never starts, show everything after 2.5s.
+        document.documentElement.classList.add('js-ready');
+        setTimeout(function () {
+            if (!window.__revealReady) document.querySelectorAll('[data-reveal]').forEach(function (el) { el.classList.add('is-in'); });
+        }, 2500);
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -132,11 +139,11 @@
             <div class="hero-poster-wrapper">
                 <div class="hero-crazy-title-wrap" id="hero-title-wrap" title="DEBUNK.IT — Press to run forensic check">
                     <div class="hero-headline-stack">
-                        <div class="headline-line-top">CAN WE REALLY</div>
+                        <div class="headline-line-top"><span class="redact-bar redact-line-1">CAN WE REALLY</span></div>
                         <div class="headline-line-verdict" id="hero-crazy-title">
-                            <span class="title-debunk" id="decode-debunk">TRUST</span><span class="title-dot" id="decode-dot" style="display:none;">.</span><span class="title-it" id="decode-it" style="display:none;">IT</span>
+                            <span class="redact-bar redact-verdict"><span class="title-debunk" id="decode-debunk">TRUST</span></span><span class="title-dot" id="decode-dot" style="display:none;">.</span><span class="title-it" id="decode-it" style="display:none;">IT</span>
                         </div>
-                        <div class="headline-line-bottom">THE MEDIA?</div>
+                        <div class="headline-line-bottom"><span class="redact-bar redact-line-3">THE MEDIA?</span></div>
                     </div>
                 </div>
             </div>
@@ -185,7 +192,7 @@
                     <rect x="10" y="10" width="520" height="260" fill="url(#halftone)" stroke="var(--ink)" stroke-width="1.5" />
 
                     <!-- Mint Green Thumbs Up Hand (Left) -->
-                    <g transform="translate(30, 70)">
+                    <g class="collage-thumb-mint" transform="translate(30, 70)">
                         <rect x="0" y="40" width="55" height="40" fill="var(--ink)" rx="2"/>
                         <path d="M 55 52 C 65 52, 75 45, 78 30 C 80 18, 72 8, 62 8 C 55 8, 52 14, 52 24 L 52 38 L 48 38 L 48 78 L 76 78 C 84 78, 88 72, 88 66 C 88 62, 85 58, 82 56 C 86 54, 88 50, 88 46 C 88 42, 84 38, 76 38 Z" fill="var(--mint)" stroke="var(--ink)" stroke-width="2.5" />
                         <!-- Cuff and cufflink -->
@@ -194,7 +201,7 @@
                     </g>
 
                     <!-- Dusty Blush Thumbs Down Hand (Right) -->
-                    <g transform="translate(425, 70)">
+                    <g class="collage-thumb-blush" transform="translate(425, 70)">
                         <rect x="35" y="40" width="55" height="40" fill="var(--ink)" rx="2"/>
                         <path d="M 35 66 C 25 66, 15 73, 12 88 C 10 100, 18 110, 28 110 C 35 110, 38 104, 38 94 L 38 80 L 42 80 L 42 40 L 14 40 C 6 40, 2 46, 2 52 C 2 56, 5 60, 8 62 C 4 64, 2 68, 2 72 C 2 76, 6 80, 14 80 Z" fill="var(--blush)" stroke="var(--ink)" stroke-width="2.5" />
                         <!-- Cuff -->
@@ -275,21 +282,21 @@
         <!-- ================================================================= -->
         <section class="value-strip-section" id="value-strip" aria-label="Core Proof Points">
             <div class="value-strip-container">
-                <div class="value-point">
+                <div class="value-point" data-reveal="rise" style="--i: 0;">
                     <span class="value-point-kicker">PILLAR 01 // EVIDENCE</span>
                     <h3 class="value-point-title">Live Web Context Retrieval</h3>
                     <p class="value-point-desc">
                         Every scan interrogates live search indexes and authoritative databases to gather real-time citations and primary receipts before drawing conclusions.
                     </p>
                 </div>
-                <div class="value-point">
+                <div class="value-point" data-reveal="rise" style="--i: 1;">
                     <span class="value-point-kicker">PILLAR 02 // LOGIC</span>
                     <h3 class="value-point-title">Forensic Cross-Examination</h3>
                     <p class="value-point-desc">
                         Neutral AI models cross-examine claimed dates, statistical fallacies, emotive wording, and manipulated attribution without ideological bias.
                     </p>
                 </div>
-                <div class="value-point">
+                <div class="value-point" data-reveal="rise" style="--i: 2;">
                     <span class="value-point-kicker">PILLAR 03 // INTEGRITY</span>
                     <h3 class="value-point-title">Transparent Ledger Receipts</h3>
                     <p class="value-point-desc">
@@ -303,9 +310,10 @@
         <!-- FEATURE 1: INTERACTIVE BS-O-METER FORENSIC GAUGE                 -->
         <!-- ================================================================= -->
         <section id="meter" class="meter-section">
-            <div class="section-header">
+            <div class="section-header" data-reveal="ink">
                 <span class="section-eyebrow">INTERACTIVE FORENSIC BENCH</span>
                 <h2 class="section-title">THE BULLSHIT-O-METER GAUGE</h2>
+                <div class="section-rule" data-reveal="rule"></div>
                 <p class="section-desc">
                     Select a documented internet fabrication below or enter a custom claim to examine our real-time heuristic response.
                 </p>
@@ -406,9 +414,10 @@
         <!-- FEATURE 2: HOW IT WORKS (NUMBERED EDITORIAL COLUMNS)              -->
         <!-- ================================================================= -->
         <section id="engine" class="engine-section">
-            <div class="section-header">
+            <div class="section-header" data-reveal="ink">
                 <span class="section-eyebrow">EDITORIAL METHODOLOGY</span>
                 <h2 class="section-title">THE THREE-STAGE VERIFICATION PIPELINE</h2>
+                <div class="section-rule" data-reveal="rule"></div>
                 <p class="section-desc">
                     How DEBUNK.IT interrogates claims, isolates evidence, and delivers cited verdicts in seconds.
                 </p>
@@ -416,7 +425,7 @@
 
             <div class="pipeline-grid">
                 <!-- Step 1 -->
-                <div class="pipeline-card">
+                <div class="pipeline-card" data-reveal="rise" style="--i: 0;">
                     <div class="step-number">01</div>
                     <h3 class="pipeline-title">Primary Source Retrieval</h3>
                     <p class="pipeline-desc">
@@ -428,7 +437,7 @@
                 </div>
 
                 <!-- Step 2 -->
-                <div class="pipeline-card">
+                <div class="pipeline-card" data-reveal="rise" style="--i: 1;">
                     <div class="step-number">02</div>
                     <h3 class="pipeline-title">Neural Cross-Examination</h3>
                     <p class="pipeline-desc">
@@ -440,7 +449,7 @@
                 </div>
 
                 <!-- Step 3 -->
-                <div class="pipeline-card">
+                <div class="pipeline-card" data-reveal="rise" style="--i: 2;">
                     <div class="step-number">03</div>
                     <h3 class="pipeline-title">Indisputable Receipt Drop</h3>
                     <p class="pipeline-desc">
@@ -457,9 +466,10 @@
         <!-- FEATURE 3: INTERNET HALL OF SHAME (INVESTIGATIVE DOSSIERS)        -->
         <!-- ================================================================= -->
         <section id="shame" class="shame-section">
-            <div class="section-header">
+            <div class="section-header" data-reveal="ink">
                 <span class="section-eyebrow">CASE ARCHIVES</span>
                 <h2 class="section-title">INVESTIGATIVE DOSSIERS</h2>
+                <div class="section-rule" data-reveal="rule"></div>
                 <p class="section-desc">
                     Representative inquiries into viral claims that circulated through digital networks before being systematically debunked.
                 </p>
@@ -467,7 +477,7 @@
 
             <div class="shame-grid">
                 <!-- Dossier 1 -->
-                <div class="dossier-card">
+                <div class="dossier-card" data-reveal="rise" style="--i: 0;">
                     <div class="dossier-top">
                         <span class="dossier-id">CASE #001 // HEALTH</span>
                         <span class="rubber-stamp">REFUTED</span>
@@ -494,7 +504,7 @@
                 </div>
 
                 <!-- Dossier 2 -->
-                <div class="dossier-card">
+                <div class="dossier-card" data-reveal="rise" style="--i: 1;">
                     <div class="dossier-top">
                         <span class="dossier-id">CASE #002 // FINANCE</span>
                         <span class="rubber-stamp">TAX AUDIT</span>
@@ -521,7 +531,7 @@
                 </div>
 
                 <!-- Dossier 3 -->
-                <div class="dossier-card">
+                <div class="dossier-card" data-reveal="rise" style="--i: 2;">
                     <div class="dossier-top">
                         <span class="dossier-id">CASE #003 // GEOGRAPHY</span>
                         <span class="rubber-stamp">ABSURD</span>
@@ -548,7 +558,7 @@
                 </div>
 
                 <!-- Dossier 4 -->
-                <div class="dossier-card">
+                <div class="dossier-card" data-reveal="rise" style="--i: 3;">
                     <div class="dossier-top">
                         <span class="dossier-id">CASE #004 // TECH</span>
                         <span class="rubber-stamp">SURVEILLANCE</span>
@@ -580,34 +590,35 @@
         <!-- FEATURE 4: GLOBAL TELEMETRY / STATS                               -->
         <!-- ================================================================= -->
         <section id="telemetry" class="stats-section">
-            <div class="section-header">
+            <div class="section-header" data-reveal="ink">
                 <span class="section-eyebrow">GLOBAL TELEMETRY</span>
                 <h2 class="section-title">THE WAR ON MISINFORMATION IN NUMBERS</h2>
+                <div class="section-rule" data-reveal="rule"></div>
                 <p class="section-desc">
                     Aggregated audit statistics across global investigative monitors.
                 </p>
             </div>
 
             <div class="stats-grid">
-                <div class="stat-box">
+                <div class="stat-box" data-reveal="rise" style="--i: 0;">
                     <div class="stat-num" data-target="1428910" data-suffix="+">0</div>
                     <div class="stat-title">Claims Dissected</div>
                     <div class="stat-sub">Across 90+ jurisdictions</div>
                 </div>
 
-                <div class="stat-box">
+                <div class="stat-box" data-reveal="rise" style="--i: 1;">
                     <div class="stat-num" data-target="0" data-suffix=" (Confirmed)">0</div>
                     <div class="stat-title">Secret Lizard Overlords</div>
                     <div class="stat-sub">Verified through rigorous audits</div>
                 </div>
 
-                <div class="stat-box">
+                <div class="stat-box" data-reveal="rise" style="--i: 2;">
                     <div class="stat-num" data-target="84210" data-suffix="+">0</div>
                     <div class="stat-title">Readers Protected</div>
                     <div class="stat-sub">From financial & medical hoaxes</div>
                 </div>
 
-                <div class="stat-box">
+                <div class="stat-box" data-reveal="rise" style="--i: 3;">
                     <div class="stat-num" data-target="1.2" data-prefix="< " data-suffix="s">&lt; 1.2s</div>
                     <div class="stat-title">Average Time to Truth</div>
                     <div class="stat-sub">Sub-second forensic verification</div>
@@ -619,9 +630,10 @@
         <!-- FEATURE 5: TESTIMONIALS (PULL-QUOTE CARDS)                        -->
         <!-- ================================================================= -->
         <section id="reviews" class="testimonials-section">
-            <div class="section-header">
+            <div class="section-header" data-reveal="ink">
                 <span class="section-eyebrow">READER TESTIMONY</span>
                 <h2 class="section-title">DISPATCHES FROM THE FRONTLINE</h2>
+                <div class="section-rule" data-reveal="rule"></div>
                 <p class="section-desc">
                     Observations from journalists, researchers, and everyday readers verifying digital claims.
                 </p>

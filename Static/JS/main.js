@@ -758,7 +758,7 @@ async function startScan(retryCount = 0) {
                 vSpan.className = 'res-verdict ' + verdictClass(verdict);
                 vSpan.style.animation = 'none';
                 void vSpan.offsetWidth;
-                vSpan.style.animation = 'stampThud 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards';
+                vSpan.style.animation = 'stampThud 220ms cubic-bezier(0.23, 1, 0.32, 1) forwards';
             }
 
             const confidenceEl = document.getElementById('res-confidence');
@@ -776,7 +776,12 @@ async function startScan(retryCount = 0) {
 
             if (flagsEl) flagsEl.textContent = flagsText;
 
-            updateConfidenceVisual(data.confidence);
+            // Confidence bar fills AFTER the stamp thud lands (220ms + slight bump)
+            const fillEl = document.getElementById('confidence-fill');
+            if (fillEl) fillEl.style.width = '0%';
+            setTimeout(() => {
+                updateConfidenceVisual(data.confidence);
+            }, 240);
             renderSources(data.sources);
 
             console.log(`[Analysis] Complete: ${verdict} (${data.confidence}%)`);
@@ -1920,3 +1925,18 @@ function showLanguageModal() {
 }
 
 console.log('[Main.js] Loaded successfully');
+// Page-to-page navigation: 150ms opacity fade only
+document.addEventListener('click', (e) => {
+    const anchor = e.target.closest('a');
+    if (!anchor) return;
+    const href = anchor.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:') || anchor.target === '_blank') return;
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    if (href.startsWith('/') || href.startsWith(window.location.origin)) {
+        e.preventDefault();
+        document.body.classList.add('page-leaving');
+        setTimeout(() => {
+            window.location.href = href;
+        }, 120);
+    }
+});

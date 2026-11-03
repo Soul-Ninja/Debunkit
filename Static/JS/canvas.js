@@ -72,7 +72,7 @@
             // Slow, soft, confident motion: gentle vertical drift with subtle horizontal wander
             this.speedY = Math.random() * 0.35 + 0.15;
             this.driftX = (Math.random() - 0.5) * 0.1;
-            this.opacity = Math.random() * 0.08 + 0.03; // Very quiet, 3% to 11% opacity
+            this.opacity = Math.random() * 0.05 + 0.02; // Refined luxury restraint: 2% to 7% opacity
             this.rotation = (Math.random() - 0.5) * 0.08;
         }
 
@@ -146,6 +146,21 @@
                     window.open(`https://duckduckgo.com/?q=define+${p.text.toLowerCase()}`, '_blank');
                 }
                 break;
+            }
+        }
+    });
+
+    
+    // Pause RAF when the tab is hidden to conserve resources and maintain battery efficiency
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        } else {
+            if (!prefersReducedMotion && !animationFrameId) {
+                animate();
             }
         }
     });

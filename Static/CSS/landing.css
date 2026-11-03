@@ -19,9 +19,15 @@
     top: 0;
     z-index: 1000;
     background: var(--paper);
-    border-bottom: 2px solid var(--ink);
+    border-bottom: 1.5px solid transparent;
     padding: 0;
-    transition: background 0.3s ease;
+    transition: background 200ms var(--ease-out), border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
+}
+
+.landing-nav.nav-scrolled {
+    background: var(--paper-2);
+    border-bottom-color: var(--ink);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .nav-container {
@@ -115,7 +121,8 @@
     position: relative;
     white-space: nowrap;
     line-height: 1;
-    transition: color 0.15s ease;
+    overflow: hidden;
+    transition: color 160ms var(--ease-out);
 }
 
 .nav-link:hover {
@@ -127,14 +134,17 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 0%;
+    width: 100%;
     height: 2px;
     background: var(--ink);
-    transition: width 0.25s ease;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 220ms var(--ease-out);
 }
 
 .nav-link:hover::after {
-    width: 100%;
+    transform: scaleX(1);
+    transform-origin: left;
 }
 
 .nav-actions {
@@ -1683,5 +1693,315 @@
     }
     .custom-input-box {
         flex-direction: column;
+    }
+}
+
+/* ==========================================================================
+   /* MOTION */
+   "Printed, redacted, stamped" motion layer
+   ========================================================================== */
+
+/* 1. Redaction reveal (the hero signature) */
+.redact-bar {
+    position: relative;
+    display: inline-block;
+}
+
+.redact-bar::after {
+    content: '';
+    position: absolute;
+    inset: -3px -8px;
+    background: var(--ink);
+    z-index: 4;
+    pointer-events: none;
+    border-radius: var(--radius-sm);
+    clip-path: inset(0 0 0 0);
+}
+
+/* Line 1: CAN WE REALLY (ink-black, wipes away 550ms ease-out, starts at 100ms) */
+.redact-line-1::after {
+    animation: redactWipeLine 550ms var(--ease-out) 100ms forwards;
+}
+
+/* Line 3: THE MEDIA? (ink-black, staggered 70ms after line 1 starts wiping -> at 240ms, 550ms ease-out) */
+.redact-line-3::after {
+    animation: redactWipeLine 550ms var(--ease-out) 240ms forwards;
+}
+
+/* Line 2: TRUST (the punchline: turns brick red, holds ~150ms, wipes off last) */
+.redact-verdict::after {
+    animation: redactWipeTrust 950ms var(--ease-out) 360ms forwards;
+}
+
+@keyframes redactWipeLine {
+    0% {
+        clip-path: inset(0 0 0 0);
+    }
+    100% {
+        clip-path: inset(0 0 0 100%);
+    }
+}
+
+@keyframes redactWipeTrust {
+    0% {
+        clip-path: inset(0 0 0 0);
+        background: var(--ink);
+    }
+    28% {
+        clip-path: inset(0 0 0 0);
+        background: var(--red);
+    }
+    52% {
+        /* Holds brick red for ~150ms */
+        clip-path: inset(0 0 0 0);
+        background: var(--red);
+    }
+    100% {
+        clip-path: inset(0 0 0 100%);
+        background: var(--red);
+    }
+}
+
+/* Redaction sweep on hover over TRUST */
+@media (hover: hover) and (pointer: fine) {
+    .headline-line-verdict,
+    .redact-verdict,
+    #decode-debunk {
+        cursor: pointer;
+    }
+
+    .redact-verdict.sweep-active::after {
+        animation: redactWipeTrustHover 450ms var(--ease-out) forwards !important;
+    }
+}
+
+@keyframes redactWipeTrustHover {
+    0% {
+        clip-path: inset(0 0 0 0);
+        background: var(--ink);
+        opacity: 0.9;
+    }
+    28% {
+        clip-path: inset(0 0 0 0);
+        background: var(--red);
+        opacity: 1;
+    }
+    52% {
+        /* Brief hold in brick red before peeling off */
+        clip-path: inset(0 0 0 0);
+        background: var(--red);
+        opacity: 1;
+    }
+    100% {
+        clip-path: inset(0 0 0 100%);
+        background: var(--red);
+        opacity: 0;
+    }
+}
+
+/* Sub-headline and paragraph fade up after hero headline reveals */
+.hero-subtitle-punch {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: heroFadeUp 300ms var(--ease-out) 1300ms forwards;
+}
+
+.hero-subtitle {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: heroFadeUp 300ms var(--ease-out) 1350ms forwards; /* 50ms stagger */
+}
+
+.hero-cta-group {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: heroFadeUp 300ms var(--ease-out) 1400ms forwards; /* 50ms stagger */
+}
+
+.hero-badges-strip {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: heroFadeUp 300ms var(--ease-out) 1450ms forwards;
+}
+
+@keyframes heroFadeUp {
+    0% {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 2. Letterpress ink-in for section titles */
+.js-ready [data-reveal="ink"] .section-title {
+    opacity: 0;
+    transform: translateY(10px);
+    letter-spacing: 0.05em;
+    transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-out), letter-spacing 400ms var(--ease-out);
+}
+
+[data-reveal="ink"].is-in .section-title {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: 0.03em;
+}
+
+/* Hairline rule beneath draws left-to-right */
+.section-rule {
+    display: block;
+    width: 64px;
+    height: 1.5px;
+    background: var(--ink);
+    margin: var(--space-3) auto;
+    transform: none;
+    transform-origin: left;
+    transition: transform 500ms var(--ease-out) 150ms;
+}
+
+.js-ready .section-rule {
+    transform: scaleX(0);
+}
+
+.is-in .section-rule,
+[data-reveal="ink"].is-in .section-rule,
+[data-reveal="rule"].is-in {
+    transform: scaleX(1);
+}
+
+/* 3. Halftone-to-clear hero collage art & settling thumbs */
+.hero-collage-graphic {
+    animation: halftoneReveal 700ms var(--ease-out) 450ms forwards;
+    opacity: 0;
+    -webkit-mask-image: radial-gradient(circle, #000 2px, transparent 2px);
+    mask-image: radial-gradient(circle, #000 2px, transparent 2px);
+    -webkit-mask-size: 24px 24px;
+    mask-size: 24px 24px;
+}
+
+@keyframes halftoneReveal {
+    0% {
+        opacity: 0;
+        -webkit-mask-size: 24px 24px;
+        mask-size: 24px 24px;
+    }
+    50% {
+        opacity: 0.8;
+        -webkit-mask-size: 8px 8px;
+        mask-size: 8px 8px;
+    }
+    90% {
+        opacity: 1;
+        -webkit-mask-size: 3px 3px;
+        mask-size: 3px 3px;
+    }
+    100% {
+        opacity: 1;
+        -webkit-mask-image: none;
+        mask-image: none;
+    }
+}
+
+.collage-thumb-mint {
+    opacity: 0;
+    transform-origin: 50px 70px;
+    animation: thumbSettleMint 500ms var(--ease-out) 620ms forwards;
+}
+
+.collage-thumb-blush {
+    opacity: 0;
+    transform-origin: 450px 70px;
+    animation: thumbSettleBlush 500ms var(--ease-out) 740ms forwards; /* 120ms apart */
+}
+
+@keyframes thumbSettleMint {
+    0% {
+        opacity: 0;
+        transform: translate(30px, 76px) rotate(-3deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(30px, 70px) rotate(0deg);
+    }
+}
+
+@keyframes thumbSettleBlush {
+    0% {
+        opacity: 0;
+        transform: translate(425px, 76px) rotate(3deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(425px, 70px) rotate(0deg);
+    }
+}
+
+/* 4. Numbered columns (01 / 02 / 03) and cards entrance & hover */
+.js-ready [data-reveal="rise"] {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 60ms);
+}
+
+[data-reveal="rise"].is-in {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .pipeline-card,
+    .dossier-card,
+    .quote-card,
+    .stat-box,
+    .value-point {
+        transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
+    }
+    .pipeline-card:hover,
+    .dossier-card:hover,
+    .quote-card:hover,
+    .stat-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 4px 4px 0 var(--ink);
+    }
+}
+
+/* 5. Primary button active press down */
+.btn:active,
+.btn-primary:active {
+    transform: scale(0.97) translate(2px, 2px);
+    box-shadow: 0 0 0 var(--ink);
+    transition: transform 120ms var(--ease-out), box-shadow 120ms var(--ease-out);
+}
+
+/* 6. Reduced Motion Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .redact-bar::after {
+        display: none !important;
+    }
+    .hero-subtitle-punch,
+    .hero-subtitle,
+    .hero-cta-group,
+    .hero-badges-strip,
+    [data-reveal="ink"] .section-title,
+    [data-reveal="rise"],
+    .hero-collage-graphic,
+    .collage-thumb-mint,
+    .collage-thumb-blush {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+        transition: none !important;
+        -webkit-mask-image: none !important;
+        mask-image: none !important;
+    }
+    .section-rule {
+        transform: scaleX(1) !important;
+        transition: none !important;
+    }
+    .ticker-item::after {
+        display: none !important;
     }
 }

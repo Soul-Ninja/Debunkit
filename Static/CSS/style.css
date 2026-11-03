@@ -34,6 +34,10 @@
     --gold: #A88B4A;            /* Tiny luxury accents / hairline rules */
     --gold-text: #786028;       /* Accessible text on paper (4.8:1 contrast) */
 
+    /* Motion Easing Tokens (Non-negotiable) */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
     /* Hairlines & Borders */
     --border: rgba(27, 27, 27, 0.16);
     --border-hairline: rgba(27, 27, 27, 0.10);
@@ -547,19 +551,22 @@ a:hover {
     color: var(--paper);
     text-decoration: none;
     box-shadow: 2px 2px 0 var(--ink);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out), background-color 160ms var(--ease-out);
     border-radius: var(--radius-sm);
 }
 
-.btn:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0 var(--ink);
-    opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+    .btn:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 3px 3px 0 var(--ink);
+        opacity: 1;
+    }
 }
 
 .btn:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0 var(--ink);
+    transform: scale(0.97) translate(2px, 2px);
+    box-shadow: 0 0 0 var(--ink);
+    transition: transform 120ms var(--ease-out), box-shadow 120ms var(--ease-out);
 }
 
 .btn.hero-secondary,
@@ -942,22 +949,25 @@ a:hover {
     padding: 6px 16px;
     border: 3px solid currentColor;
     border-radius: var(--radius-sm);
-    transform: rotate(-1.5deg);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    animation: stampThud 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    transform: rotate(-2deg);
+    animation: stampThud 220ms var(--ease-out) forwards;
 }
 
 @keyframes stampThud {
     0% {
         opacity: 0;
-        transform: scale(1.15) rotate(-3deg);
+        transform: scale(1.15) rotate(-6deg);
     }
-    70% {
-        transform: scale(0.98) rotate(-1.2deg);
+    85% {
+        opacity: 1;
+        transform: scale(1) rotate(-2deg) translateY(0);
+    }
+    92% {
+        transform: scale(1) rotate(-2deg) translateY(1px); /* paper bump */
     }
     100% {
         opacity: 1;
-        transform: scale(1) rotate(-1.5deg);
+        transform: scale(1) rotate(-2deg) translateY(0);
     }
 }
 
@@ -1009,7 +1019,8 @@ a:hover {
     height: 100%;
     background: var(--ink);
     width: 0%;
-    transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: width 600ms var(--ease-out);
+    will-change: width;
 }
 
 /* Report Action Buttons */
@@ -1508,5 +1519,41 @@ a:hover {
         animation-duration: 0.001ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.001ms !important;
+    }
+}
+
+/* ==========================================================================
+   /* MOTION */
+   Global motion tokens, page transitions & reduced motion accessibility
+   ========================================================================== */
+
+/* Page-to-page navigation: 150ms opacity fade only */
+body {
+    opacity: 1;
+    transition: opacity 150ms var(--ease-out);
+}
+
+body.page-leaving {
+    opacity: 0;
+}
+
+/* Reduced motion accessibility contract */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+    body {
+        transition: none !important;
+    }
+    .res-verdict {
+        animation: none !important;
+        transform: rotate(-2deg) !important;
+        opacity: 1 !important;
+    }
+    .confidence-fill {
+        transition: none !important;
     }
 }

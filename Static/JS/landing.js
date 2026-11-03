@@ -369,52 +369,82 @@
         const itEl = document.getElementById('decode-it');
         const titleEl = document.getElementById('hero-crazy-title');
         const titleWrap = document.getElementById('hero-title-wrap');
+        const redactEl = document.querySelector('.redact-verdict');
         if (!debunkEl) return;
 
         // Poster headline key word is "TRUST"
         const targetWord = 'TRUST';
         const glyphs = ['?', '!', '#', '※', '§', '¶', 'T', 'R', 'U', 'S'];
 
-        // Gentle staggered reveal if reduced-motion is not requested
+        // Check reduced motion
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (prefersReducedMotion) {
             debunkEl.textContent = targetWord;
             return;
         }
 
-        let step = 0;
-        const revealInterval = setInterval(() => {
-            step++;
-            if (step <= targetWord.length) {
-                let res = targetWord.substring(0, step);
-                for (let i = step; i < targetWord.length; i++) {
-                    res += glyphs[Math.floor(Math.random() * glyphs.length)];
-                }
-                debunkEl.textContent = res;
-                playTone(480 + (step * 80), 'sine', 0.03, 0.03);
-            } else {
-                clearInterval(revealInterval);
-                debunkEl.textContent = targetWord;
-            }
-        }, 120);
+        let isDecoding = false;
+        let decodeTimer = null;
 
+        function runTrustReveal(stepDuration = 60, playSound = true) {
+            if (isDecoding) return;
+            isDecoding = true;
+
+            // Trigger the redaction sweep overlay effect
+            if (redactEl) {
+                redactEl.classList.remove('sweep-active');
+                void redactEl.offsetWidth; // Force reflow so animation restarts
+                redactEl.classList.add('sweep-active');
+            }
+
+            let step = 0;
+            if (decodeTimer) clearInterval(decodeTimer);
+
+            decodeTimer = setInterval(() => {
+                step++;
+                if (step <= targetWord.length) {
+                    let res = targetWord.substring(0, step);
+                    for (let i = step; i < targetWord.length; i++) {
+                        res += glyphs[Math.floor(Math.random() * glyphs.length)];
+                    }
+                    debunkEl.textContent = res;
+                    if (playSound) {
+                        playTone(480 + (step * 80), 'sine', 0.03, 0.03);
+                    }
+                } else {
+                    clearInterval(decodeTimer);
+                    decodeTimer = null;
+                    debunkEl.textContent = targetWord;
+                    isDecoding = false;
+                    if (redactEl) {
+                        setTimeout(() => {
+                            redactEl.classList.remove('sweep-active');
+                        }, 250);
+                    }
+                }
+            }, stepDuration);
+        }
+
+        // 1. Initial reveal on page load/refresh
+        runTrustReveal(110, true);
+
+        // 2. Mouse hover effect on "TRUST" (and title wrapper)
+        const hoverTargets = [debunkEl, redactEl, titleEl].filter(Boolean);
+        hoverTargets.forEach(target => {
+            target.addEventListener('mouseenter', () => {
+                if (!isDecoding && !prefersReducedMotion) {
+                    runTrustReveal(60, true);
+                }
+            });
+        });
+
+        // 3. Click interaction to trigger quick burst
         if (titleWrap) {
             titleWrap.addEventListener('click', () => {
                 playRadarPing();
-                let bursts = 0;
-                const burstInt = setInterval(() => {
-                    bursts++;
-                    let r = '';
-                    for (let i = 0; i < targetWord.length; i++) {
-                        r += glyphs[Math.floor(Math.random() * glyphs.length)];
-                    }
-                    debunkEl.textContent = r;
-                    if (bursts > 4) {
-                        clearInterval(burstInt);
-                        debunkEl.textContent = targetWord;
-                        playSuccessChime();
-                    }
-                }, 60);
+                if (!isDecoding && !prefersReducedMotion) {
+                    runTrustReveal(45, true);
+                }
             });
         }
     }
@@ -575,6 +605,155 @@
     }
 
     // =========================================================================
+    // 9. SIGNATURE MOTION ENGINE: "PRINTED, REDACTED, STAMPED"
+    // =========================================================================
+
+    // 9.1 Data-reveal IntersectionObserver
+    function initScrollReveals() {
+        window.__revealReady = true;
+        const revealElements = document.querySelectorAll('[data-reveal]');
+        if (!revealElements.length) return;
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+            revealElements.forEach(el => el.classList.add('is-in'));
+            return;
+        }
+
+        const revealObserver = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-in');
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, {
+            rootMargin: '-80px 0px',
+            threshold: 0.1
+        });
+
+        revealElements.forEach(el => revealObserver.observe(el));
+    }
+
+    // 9.2 Sticky Nav hairline and backdrop toggle past 8px
+    function initStickyNavScroll() {
+        const nav = document.querySelector('.landing-nav');
+        if (!nav) return;
+
+        let isScrolled = false;
+        let ticking = false;
+
+        const onScroll = () => {
+            const scrolled = window.scrollY > 8;
+            if (scrolled !== isScrolled) {
+                isScrolled = scrolled;
+                nav.classList.toggle('nav-scrolled', isScrolled);
+            }
+            ticking = false;
+        };
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                window.requestAnimationFrame(onScroll);
+                ticking = true;
+            }
+        }, { passive: true });
+
+        onScroll();
+    }
+
+    // 9.3 Ticker headline snap highlight sweep
+    function initTickerSnap() {
+        const tickerViewport = document.querySelector('.ticker-viewport');
+        const tickerItems = document.querySelectorAll('.ticker-item');
+        if (!tickerViewport || !tickerItems.length || !('IntersectionObserver' in window)) return;
+
+        const snapObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('ticker-snap');
+                    setTimeout(() => {
+                        entry.target.classList.remove('ticker-snap');
+                    }, 400);
+                }
+            });
+        }, {
+            root: tickerViewport,
+            rootMargin: '0px 0px 0px -10px',
+            threshold: 0.5
+        });
+
+        tickerItems.forEach(item => snapObserver.observe(item));
+    }
+
+    // 9.4 Hero collage cursor-follow subtle parallax (max 6px, smoothed with lerp)
+    function initHeroParallax() {
+        const collage = document.querySelector('.hero-collage-graphic');
+        if (!collage) return;
+
+        const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!isFinePointer || prefersReducedMotion) return;
+
+        let targetX = 0;
+        let targetY = 0;
+        let currentX = 0;
+        let currentY = 0;
+        let animId = null;
+
+        const hero = document.querySelector('.hero-section');
+        if (!hero) return;
+
+        hero.addEventListener('mousemove', (e) => {
+            const rect = hero.getBoundingClientRect();
+            const relX = (e.clientX - rect.left) / rect.width - 0.5;
+            const relY = (e.clientY - rect.top) / rect.height - 0.5;
+            targetX = relX * 12; // max ±6px
+            targetY = relY * 12;
+
+            if (!animId) {
+                animId = requestAnimationFrame(updateParallax);
+            }
+        }, { passive: true });
+
+        hero.addEventListener('mouseleave', () => {
+            targetX = 0;
+            targetY = 0;
+        });
+
+        function updateParallax() {
+            currentX += (targetX - currentX) * 0.08;
+            currentY += (targetY - currentY) * 0.08;
+
+            collage.style.transform = `translate3d(${currentX.toFixed(2)}px, ${currentY.toFixed(2)}px, 0)`;
+
+            if (Math.abs(targetX - currentX) > 0.05 || Math.abs(targetY - currentY) > 0.05) {
+                animId = requestAnimationFrame(updateParallax);
+            } else {
+                animId = null;
+            }
+        }
+    }
+
+    // 9.5 Page-to-page navigation: 150ms opacity fade only
+    function initPageFadeTransition() {
+        document.addEventListener('click', (e) => {
+            const anchor = e.target.closest('a');
+            if (!anchor) return;
+            const href = anchor.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('javascript:') || anchor.target === '_blank') return;
+            if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+            if (href.startsWith('/') || href.startsWith(window.location.origin)) {
+                e.preventDefault();
+                document.body.classList.add('page-leaving');
+                setTimeout(() => {
+                    window.location.href = href;
+                }, 120);
+            }
+        });
+    }
+
+    // =========================================================================
     // 8. INITIALIZE ON DOM READY
     // =========================================================================
     document.addEventListener('DOMContentLoaded', () => {
@@ -687,6 +866,11 @@
         initCounters();
         initCommunityReviews();
         initCrazyTitle();
+        initScrollReveals();
+        initStickyNavScroll();
+        initTickerSnap();
+        initHeroParallax();
+        initPageFadeTransition();
 
         // One-time audio unlock on first interaction
         document.body.addEventListener('click', () => {
