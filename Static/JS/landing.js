@@ -366,17 +366,14 @@
     // =========================================================================
     function initCrazyTitle() {
         const debunkEl = document.getElementById('decode-debunk');
-        const itEl = document.getElementById('decode-it');
         const titleEl = document.getElementById('hero-crazy-title');
         const titleWrap = document.getElementById('hero-title-wrap');
-        const redactEl = document.querySelector('.redact-verdict');
         if (!debunkEl) return;
 
         // Poster headline key word is "TRUST"
         const targetWord = 'TRUST';
         const glyphs = ['?', '!', '#', '※', '§', '¶', 'T', 'R', 'U', 'S'];
 
-        // Check reduced motion
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (prefersReducedMotion) {
             debunkEl.textContent = targetWord;
@@ -386,16 +383,10 @@
         let isDecoding = false;
         let decodeTimer = null;
 
-        function runTrustReveal(stepDuration = 60, playSound = true) {
+        // Letter-only animation: different letters cycle through glyphs and snap into TRUST
+        function runLetterDecode(stepDuration = 55, playSound = true) {
             if (isDecoding) return;
             isDecoding = true;
-
-            // Trigger the redaction sweep overlay effect
-            if (redactEl) {
-                redactEl.classList.remove('sweep-active');
-                void redactEl.offsetWidth; // Force reflow so animation restarts
-                redactEl.classList.add('sweep-active');
-            }
 
             let step = 0;
             if (decodeTimer) clearInterval(decodeTimer);
@@ -416,35 +407,42 @@
                     decodeTimer = null;
                     debunkEl.textContent = targetWord;
                     isDecoding = false;
-                    if (redactEl) {
-                        setTimeout(() => {
-                            redactEl.classList.remove('sweep-active');
-                        }, 250);
-                    }
                 }
             }, stepDuration);
         }
 
-        // 1. Initial reveal on page load/refresh
-        runTrustReveal(110, true);
+        // 1. Initial letter decode animation on page load
+        runLetterDecode(80, true);
 
-        // 2. Mouse hover effect on "TRUST" (and title wrapper)
-        const hoverTargets = [debunkEl, redactEl, titleEl].filter(Boolean);
+        // 2. Mouse cursor hover over TRUST: triggers ONLY the letter animation (no blocks)
+        const hoverTargets = [debunkEl, titleEl, titleWrap].filter(Boolean);
         hoverTargets.forEach(target => {
             target.addEventListener('mouseenter', () => {
                 if (!isDecoding && !prefersReducedMotion) {
-                    runTrustReveal(60, true);
+                    runLetterDecode(50, true);
                 }
             });
         });
 
-        // 3. Click interaction to trigger quick burst
+        // 3. Trigger letter decode every time user scrolls to the hero section
+        if ('IntersectionObserver' in window && titleWrap) {
+            const heroObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        runLetterDecode(65, true);
+                    }
+                });
+            }, {
+                threshold: 0.35
+            });
+            heroObserver.observe(titleWrap);
+        }
+
+        // 4. Click interaction
         if (titleWrap) {
             titleWrap.addEventListener('click', () => {
                 playRadarPing();
-                if (!isDecoding && !prefersReducedMotion) {
-                    runTrustReveal(45, true);
-                }
+                runLetterDecode(40, true);
             });
         }
     }
@@ -608,9 +606,8 @@
     // 9. SIGNATURE MOTION ENGINE: "PRINTED, REDACTED, STAMPED"
     // =========================================================================
 
-    // 9.1 Data-reveal IntersectionObserver
+    // 9.1 Data-reveal IntersectionObserver: triggers EVERY TIME user scrolls down!
     function initScrollReveals() {
-        window.__revealReady = true;
         const revealElements = document.querySelectorAll('[data-reveal]');
         if (!revealElements.length) return;
 
@@ -620,16 +617,18 @@
             return;
         }
 
-        const revealObserver = new IntersectionObserver((entries, obs) => {
+        const revealObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('is-in');
-                    obs.unobserve(entry.target);
+                } else {
+                    // Reset when scrolling out of view so appearing animation runs every time you scroll down!
+                    entry.target.classList.remove('is-in');
                 }
             });
         }, {
-            rootMargin: '-80px 0px',
-            threshold: 0.1
+            rootMargin: '-40px 0px',
+            threshold: 0.12
         });
 
         revealElements.forEach(el => revealObserver.observe(el));

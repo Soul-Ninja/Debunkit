@@ -1701,146 +1701,28 @@
    "Printed, redacted, stamped" motion layer
    ========================================================================== */
 
-/* 1. Redaction reveal (the hero signature) */
-.redact-bar {
-    position: relative;
-    display: inline-block;
+/* 1. Hero Title & Letters: Interactive Decode on Hover & Scroll (No red/black blocks) */
+.headline-line-verdict,
+#decode-debunk {
+    cursor: pointer;
+    user-select: none;
+    transition: transform 180ms var(--ease-out);
 }
 
-.redact-bar::after {
-    content: '';
-    position: absolute;
-    inset: -3px -8px;
-    background: var(--ink);
-    z-index: 4;
-    pointer-events: none;
-    border-radius: var(--radius-sm);
-    clip-path: inset(0 0 0 0);
-}
-
-/* Line 1: CAN WE REALLY (ink-black, wipes away 550ms ease-out, starts at 100ms) */
-.redact-line-1::after {
-    animation: redactWipeLine 550ms var(--ease-out) 100ms forwards;
-}
-
-/* Line 3: THE MEDIA? (ink-black, staggered 70ms after line 1 starts wiping -> at 240ms, 550ms ease-out) */
-.redact-line-3::after {
-    animation: redactWipeLine 550ms var(--ease-out) 240ms forwards;
-}
-
-/* Line 2: TRUST (the punchline: turns brick red, holds ~150ms, wipes off last) */
-.redact-verdict::after {
-    animation: redactWipeTrust 950ms var(--ease-out) 360ms forwards;
-}
-
-@keyframes redactWipeLine {
-    0% {
-        clip-path: inset(0 0 0 0);
-    }
-    100% {
-        clip-path: inset(0 0 0 100%);
-    }
-}
-
-@keyframes redactWipeTrust {
-    0% {
-        clip-path: inset(0 0 0 0);
-        background: var(--ink);
-    }
-    28% {
-        clip-path: inset(0 0 0 0);
-        background: var(--red);
-    }
-    52% {
-        /* Holds brick red for ~150ms */
-        clip-path: inset(0 0 0 0);
-        background: var(--red);
-    }
-    100% {
-        clip-path: inset(0 0 0 100%);
-        background: var(--red);
-    }
-}
-
-/* Redaction sweep on hover over TRUST */
 @media (hover: hover) and (pointer: fine) {
-    .headline-line-verdict,
-    .redact-verdict,
-    #decode-debunk {
-        cursor: pointer;
-    }
-
-    .redact-verdict.sweep-active::after {
-        animation: redactWipeTrustHover 450ms var(--ease-out) forwards !important;
+    .headline-line-verdict:hover,
+    #decode-debunk:hover {
+        transform: perspective(600px) rotateX(0deg) scale(1.02);
     }
 }
 
-@keyframes redactWipeTrustHover {
-    0% {
-        clip-path: inset(0 0 0 0);
-        background: var(--ink);
-        opacity: 0.9;
-    }
-    28% {
-        clip-path: inset(0 0 0 0);
-        background: var(--red);
-        opacity: 1;
-    }
-    52% {
-        /* Brief hold in brick red before peeling off */
-        clip-path: inset(0 0 0 0);
-        background: var(--red);
-        opacity: 1;
-    }
-    100% {
-        clip-path: inset(0 0 0 100%);
-        background: var(--red);
-        opacity: 0;
-    }
-}
-
-/* Sub-headline and paragraph fade up after hero headline reveals */
-.hero-subtitle-punch {
+/* 2. Letterpress ink-in for section titles (triggers every time on scroll down) */
+[data-reveal="ink"] .section-title {
     opacity: 0;
-    transform: translateY(8px);
-    animation: heroFadeUp 300ms var(--ease-out) 1300ms forwards;
-}
-
-.hero-subtitle {
-    opacity: 0;
-    transform: translateY(8px);
-    animation: heroFadeUp 300ms var(--ease-out) 1350ms forwards; /* 50ms stagger */
-}
-
-.hero-cta-group {
-    opacity: 0;
-    transform: translateY(8px);
-    animation: heroFadeUp 300ms var(--ease-out) 1400ms forwards; /* 50ms stagger */
-}
-
-.hero-badges-strip {
-    opacity: 0;
-    transform: translateY(8px);
-    animation: heroFadeUp 300ms var(--ease-out) 1450ms forwards;
-}
-
-@keyframes heroFadeUp {
-    0% {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* 2. Letterpress ink-in for section titles */
-.js-ready [data-reveal="ink"] .section-title {
-    opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
     letter-spacing: 0.05em;
-    transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-out), letter-spacing 400ms var(--ease-out);
+    transition: opacity 350ms var(--ease-out), transform 350ms var(--ease-out), letter-spacing 350ms var(--ease-out);
+    will-change: transform, opacity;
 }
 
 [data-reveal="ink"].is-in .section-title {
@@ -1849,20 +1731,16 @@
     letter-spacing: 0.03em;
 }
 
-/* Hairline rule beneath draws left-to-right */
+/* Hairline rule beneath draws left-to-right every time on scroll down */
 .section-rule {
     display: block;
     width: 64px;
     height: 1.5px;
     background: var(--ink);
     margin: var(--space-3) auto;
-    transform: none;
-    transform-origin: left;
-    transition: transform 500ms var(--ease-out) 150ms;
-}
-
-.js-ready .section-rule {
     transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 450ms var(--ease-out) 80ms;
 }
 
 .is-in .section-rule,
@@ -1873,7 +1751,7 @@
 
 /* 3. Halftone-to-clear hero collage art & settling thumbs */
 .hero-collage-graphic {
-    animation: halftoneReveal 700ms var(--ease-out) 450ms forwards;
+    animation: halftoneReveal 700ms var(--ease-out) 200ms forwards;
     opacity: 0;
     -webkit-mask-image: radial-gradient(circle, #000 2px, transparent 2px);
     mask-image: radial-gradient(circle, #000 2px, transparent 2px);
@@ -1907,13 +1785,13 @@
 .collage-thumb-mint {
     opacity: 0;
     transform-origin: 50px 70px;
-    animation: thumbSettleMint 500ms var(--ease-out) 620ms forwards;
+    animation: thumbSettleMint 500ms var(--ease-out) 350ms forwards;
 }
 
 .collage-thumb-blush {
     opacity: 0;
     transform-origin: 450px 70px;
-    animation: thumbSettleBlush 500ms var(--ease-out) 740ms forwards; /* 120ms apart */
+    animation: thumbSettleBlush 500ms var(--ease-out) 470ms forwards; /* 120ms apart */
 }
 
 @keyframes thumbSettleMint {
@@ -1938,12 +1816,13 @@
     }
 }
 
-/* 4. Numbered columns (01 / 02 / 03) and cards entrance & hover */
-.js-ready [data-reveal="rise"] {
+/* 4. Numbered columns and cards entrance & hover (triggers every time on scroll down) */
+[data-reveal="rise"] {
     opacity: 0;
     transform: translateY(14px);
-    transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-out);
-    transition-delay: calc(var(--i, 0) * 60ms);
+    transition: opacity 350ms var(--ease-out), transform 350ms var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 50ms);
+    will-change: transform, opacity;
 }
 
 [data-reveal="rise"].is-in {
@@ -1978,13 +1857,6 @@
 
 /* 6. Reduced Motion Accessibility */
 @media (prefers-reduced-motion: reduce) {
-    .redact-bar::after {
-        display: none !important;
-    }
-    .hero-subtitle-punch,
-    .hero-subtitle,
-    .hero-cta-group,
-    .hero-badges-strip,
     [data-reveal="ink"] .section-title,
     [data-reveal="rise"],
     .hero-collage-graphic,
