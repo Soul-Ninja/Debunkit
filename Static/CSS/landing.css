@@ -1701,7 +1701,7 @@
    "Printed, redacted, stamped" motion layer
    ========================================================================== */
 
-/* 1. Hero Title & Letters: Dynamic Interactive Decode on Hover, Touch & Scroll */
+/* 1. Hero Title: Dynamic Interactive Decode on Hover, Touch & Scroll */
 .headline-line-verdict,
 #decode-debunk {
     cursor: pointer;
@@ -1711,18 +1711,7 @@
 }
 
 #decode-debunk {
-    display: inline-block;
-    letter-spacing: -0.025em;
-    white-space: nowrap;
-}
-
-.decode-char {
-    display: inline-block;
-    margin: 0;
-    padding: 0;
-    letter-spacing: inherit;
-    transition: transform 90ms var(--ease-out), color 90ms var(--ease-out), text-shadow 90ms var(--ease-out);
-    will-change: transform;
+    display: inline;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -1730,18 +1719,6 @@
     #decode-debunk:hover {
         transform: perspective(600px) rotateX(0deg) scale(1.02);
     }
-
-    .decode-char:hover {
-        transform: translateY(-5px) scale(1.08);
-        color: #ff5247;
-        text-shadow: 2px 2px 0 var(--ink), 0 0 14px rgba(200, 66, 59, 0.4);
-    }
-}
-
-.decode-char.char-active {
-    transform: translateY(-2px) scale(1.04);
-    color: #e64841;
-    text-shadow: 2px 2px 0 var(--ink), 0 0 10px rgba(200, 66, 59, 0.3);
 }
 
 /* 2. Letterpress ink-in for section titles (triggers every time on scroll down) */

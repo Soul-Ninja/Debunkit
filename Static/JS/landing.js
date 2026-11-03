@@ -379,19 +379,7 @@
             return;
         }
 
-        // Ensure each letter has its own interactive span
-        let charEls = Array.from(debunkEl.querySelectorAll('.decode-char'));
-        if (charEls.length !== targetWord.length) {
-            debunkEl.innerHTML = '';
-            for (let i = 0; i < targetWord.length; i++) {
-                const s = document.createElement('span');
-                s.className = 'decode-char';
-                s.dataset.orig = targetWord[i];
-                s.textContent = targetWord[i];
-                debunkEl.appendChild(s);
-            }
-            charEls = Array.from(debunkEl.querySelectorAll('.decode-char'));
-        }
+        debunkEl.textContent = targetWord;
 
         let isHovered = false;
         let hoverLoopTimer = null;
@@ -406,6 +394,18 @@
             }
         }
 
+        function getRandomScramble() {
+            let res = '';
+            for (let i = 0; i < targetWord.length; i++) {
+                if (Math.random() < 0.78) {
+                    res += glyphs[Math.floor(Math.random() * glyphs.length)];
+                } else {
+                    res += targetWord[i];
+                }
+            }
+            return res;
+        }
+
         // Settle letters back to "TRUST" when mouse leaves
         function resolveToWord(instant = false) {
             if (hoverLoopTimer) {
@@ -416,25 +416,29 @@
             resolveTimeouts = [];
 
             if (instant) {
-                charEls.forEach((el, i) => {
-                    el.textContent = targetWord[i];
-                    el.classList.remove('char-active');
-                });
+                debunkEl.textContent = targetWord;
                 return;
             }
 
-            // Sequential crisp lock-in: T -> R -> U -> S -> T
-            charEls.forEach((el, i) => {
+            // Sequential crisp lock-in: T -> TR -> TRU -> TRUS -> TRUST
+            for (let step = 1; step <= targetWord.length; step++) {
                 const t = setTimeout(() => {
                     if (isHovered) return;
-                    el.textContent = targetWord[i];
-                    el.classList.remove('char-active');
-                    if (i === charEls.length - 1 && !isHovered) {
-                        playHoverTick(880);
+                    let locked = targetWord.substring(0, step);
+                    for (let j = step; j < targetWord.length; j++) {
+                        locked += glyphs[Math.floor(Math.random() * glyphs.length)];
                     }
-                }, i * 35);
+                    debunkEl.textContent = locked;
+
+                    if (step === targetWord.length) {
+                        debunkEl.textContent = targetWord;
+                        playHoverTick(880);
+                    } else {
+                        playHoverTick(500 + step * 70);
+                    }
+                }, step * 35);
                 resolveTimeouts.push(t);
-            });
+            }
         }
 
         // Start non-stop flickering: NEVER stops while mouse is over TRUST!
@@ -448,6 +452,10 @@
 
             if (hoverLoopTimer) clearInterval(hoverLoopTimer);
 
+            // Immediately flicker
+            debunkEl.textContent = getRandomScramble();
+            playHoverTick(540);
+
             // High-energy continuous flicker loop at 50ms interval
             hoverLoopTimer = setInterval(() => {
                 if (!isHovered) {
@@ -456,26 +464,14 @@
                     return;
                 }
 
-                // Every tick, ALL letters continuously flicker without stopping!
-                charEls.forEach((el, idx) => {
-                    // 80% cipher glyphs, 20% momentary glimpse of real letter
-                    if (Math.random() < 0.8) {
-                        el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
-                        el.classList.add('char-active');
-                    } else {
-                        el.textContent = targetWord[idx];
-                        el.classList.remove('char-active');
-                    }
-                });
-
+                debunkEl.textContent = getRandomScramble();
                 playHoverTick(480 + Math.random() * 320);
             }, 50);
         }
 
         function stopDynamicHover(e) {
-            // Check if pointer is still inside titleEl or debunkEl
             if (e && e.relatedTarget) {
-                if (titleEl.contains(e.relatedTarget) || debunkEl.contains(e.relatedTarget)) {
+                if (titleEl && titleEl.contains(e.relatedTarget)) {
                     return;
                 }
             }
@@ -483,16 +479,26 @@
             resolveToWord(false);
         }
 
-        // Direct event listeners on titleEl and debunkEl
+        // Interactive mouse movement over the word
+        function handleMouseMove() {
+            if (!isHovered) {
+                startDynamicHover();
+            } else {
+                debunkEl.textContent = getRandomScramble();
+                playHoverTick(620);
+            }
+        }
+
         titleEl.addEventListener('mouseenter', startDynamicHover);
         debunkEl.addEventListener('mouseenter', startDynamicHover);
+        titleEl.addEventListener('mousemove', handleMouseMove);
+        debunkEl.addEventListener('mousemove', handleMouseMove);
         titleEl.addEventListener('mouseleave', stopDynamicHover);
         debunkEl.addEventListener('mouseleave', stopDynamicHover);
 
-        // Global pointermove ensures zero boundary dropouts:
-        // As long as pointer is over titleEl or debunkEl, it MUST stay flickering!
+        // Global pointermove ensures zero boundary dropouts
         window.addEventListener('pointermove', (e) => {
-            const isInside = titleEl.contains(e.target) || debunkEl.contains(e.target);
+            const isInside = (titleEl && titleEl.contains(e.target)) || (debunkEl && debunkEl.contains(e.target));
             if (isInside) {
                 if (!isHovered) {
                     startDynamicHover();
@@ -507,20 +513,16 @@
             let step = 0;
             const introTimer = setInterval(() => {
                 step++;
-                charEls.forEach((el, i) => {
-                    if (i < step) {
-                        el.textContent = targetWord[i];
-                        el.classList.remove('char-active');
-                    } else {
-                        el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
-                        el.classList.add('char-active');
-                    }
-                });
+                let str = targetWord.substring(0, step);
+                for (let i = step; i < targetWord.length; i++) {
+                    str += glyphs[Math.floor(Math.random() * glyphs.length)];
+                }
+                debunkEl.textContent = str;
                 playHoverTick(460 + step * 70);
 
                 if (step >= targetWord.length) {
                     clearInterval(introTimer);
-                    resolveToWord(true);
+                    debunkEl.textContent = targetWord;
                 }
             }, 65);
         }
@@ -545,10 +547,7 @@
         if (titleWrap) {
             titleWrap.addEventListener('click', () => {
                 playRadarPing();
-                charEls.forEach(el => {
-                    el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
-                    el.classList.add('char-active');
-                });
+                debunkEl.textContent = getRandomScramble();
                 setTimeout(() => {
                     if (!isHovered) resolveToWord(false);
                 }, 220);
