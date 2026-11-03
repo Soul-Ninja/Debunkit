@@ -362,7 +362,7 @@
     }
 
     // =========================================================================
-    // 6. POSTER HEADLINE DECODE / REVEAL
+    // 6. POSTER HEADLINE DECODE / REVEAL (DYNAMIC INTERACTIVE CIPHER)
     // =========================================================================
     function initCrazyTitle() {
         const debunkEl = document.getElementById('decode-debunk');
@@ -370,9 +370,8 @@
         const titleWrap = document.getElementById('hero-title-wrap');
         if (!debunkEl) return;
 
-        // Poster headline key word is "TRUST"
         const targetWord = 'TRUST';
-        const glyphs = ['?', '!', '#', '※', '§', '¶', 'T', 'R', 'U', 'S'];
+        const glyphs = ['?', '!', '#', '※', '§', '¶', 'X', 'Ø', '0', '1', 'T', 'R', 'U', 'S'];
 
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (prefersReducedMotion) {
@@ -380,56 +379,182 @@
             return;
         }
 
-        let isDecoding = false;
-        let decodeTimer = null;
-
-        // Letter-only animation: different letters cycle through glyphs and snap into TRUST
-        function runLetterDecode(stepDuration = 55, playSound = true) {
-            if (isDecoding) return;
-            isDecoding = true;
-
-            let step = 0;
-            if (decodeTimer) clearInterval(decodeTimer);
-
-            decodeTimer = setInterval(() => {
-                step++;
-                if (step <= targetWord.length) {
-                    let res = targetWord.substring(0, step);
-                    for (let i = step; i < targetWord.length; i++) {
-                        res += glyphs[Math.floor(Math.random() * glyphs.length)];
-                    }
-                    debunkEl.textContent = res;
-                    if (playSound) {
-                        playTone(480 + (step * 80), 'sine', 0.03, 0.03);
-                    }
-                } else {
-                    clearInterval(decodeTimer);
-                    decodeTimer = null;
-                    debunkEl.textContent = targetWord;
-                    isDecoding = false;
-                }
-            }, stepDuration);
+        // Ensure each letter has its own interactive span
+        let charEls = Array.from(debunkEl.querySelectorAll('.decode-char'));
+        if (charEls.length !== targetWord.length) {
+            debunkEl.innerHTML = '';
+            for (let i = 0; i < targetWord.length; i++) {
+                const s = document.createElement('span');
+                s.className = 'decode-char';
+                s.dataset.orig = targetWord[i];
+                s.textContent = targetWord[i];
+                debunkEl.appendChild(s);
+            }
+            charEls = Array.from(debunkEl.querySelectorAll('.decode-char'));
         }
 
-        // 1. Initial letter decode animation on page load
-        runLetterDecode(80, true);
+        let isHovered = false;
+        let hoverLoopTimer = null;
+        let resolveTimer = null;
+        let lastSoundTime = 0;
 
-        // 2. Mouse cursor hover over TRUST: triggers ONLY the letter animation (no blocks)
-        const hoverTargets = [debunkEl, titleEl, titleWrap].filter(Boolean);
-        hoverTargets.forEach(target => {
-            target.addEventListener('mouseenter', () => {
-                if (!isDecoding && !prefersReducedMotion) {
-                    runLetterDecode(50, true);
+        function playHoverTick(freq = 600) {
+            const now = performance.now();
+            if (now - lastSoundTime > 80) {
+                lastSoundTime = now;
+                playTone(freq, 'sine', 0.025, 0.025);
+            }
+        }
+
+        // Lock in letters cleanly in sequential cascade
+        function resolveToWord(instant = false) {
+            if (hoverLoopTimer) {
+                clearInterval(hoverLoopTimer);
+                hoverLoopTimer = null;
+            }
+            if (resolveTimer) {
+                clearTimeout(resolveTimer);
+                resolveTimer = null;
+            }
+
+            if (instant) {
+                charEls.forEach((el, i) => {
+                    el.textContent = targetWord[i];
+                    el.classList.remove('char-active');
+                });
+                return;
+            }
+
+            charEls.forEach((el, i) => {
+                setTimeout(() => {
+                    if (isHovered) return; // Abort if user re-entered
+                    el.textContent = targetWord[i];
+                    el.classList.remove('char-active');
+                    if (i === charEls.length - 1 && !isHovered) {
+                        playHoverTick(840);
+                    }
+                }, i * 35);
+            });
+        }
+
+        // Dynamic cipher loop while hovering: stays alive as long as mouse is on TRUST!
+        function startDynamicHover() {
+            if (isHovered) return;
+            isHovered = true;
+
+            if (resolveTimer) {
+                clearTimeout(resolveTimer);
+                resolveTimer = null;
+            }
+
+            // Immediately scramble letters on touch
+            charEls.forEach(el => {
+                el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+                el.classList.add('char-active');
+            });
+            playHoverTick(540);
+
+            if (hoverLoopTimer) clearInterval(hoverLoopTimer);
+
+            // Continuously loop while mouse is on TRUST: letters stay dynamic and alive!
+            hoverLoopTimer = setInterval(() => {
+                if (!isHovered) {
+                    clearInterval(hoverLoopTimer);
+                    hoverLoopTimer = null;
+                    return;
                 }
+
+                // Randomly scramble 2 to 3 characters each tick
+                const count = Math.floor(Math.random() * 2) + 2;
+                for (let k = 0; k < count; k++) {
+                    const idx = Math.floor(Math.random() * charEls.length);
+                    const el = charEls[idx];
+                    el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+                    el.classList.add('char-active');
+                }
+
+                // Others occasionally settle or flicker
+                charEls.forEach((el, idx) => {
+                    if (Math.random() > 0.6) {
+                        el.textContent = targetWord[idx];
+                        el.classList.remove('char-active');
+                    }
+                });
+
+                playHoverTick(480 + Math.random() * 320);
+            }, 85);
+        }
+
+        function stopDynamicHover() {
+            if (!isHovered) return;
+            isHovered = false;
+            resolveToWord(false);
+        }
+
+        // Interactive mouse movement over the word: characters dynamically react under cursor!
+        function handleMouseMove(e) {
+            if (!isHovered) {
+                startDynamicHover();
+            }
+
+            const targetChar = e.target.closest('.decode-char');
+            if (targetChar) {
+                targetChar.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+                targetChar.classList.add('char-active');
+                playHoverTick(680);
+                setTimeout(() => {
+                    if (isHovered && targetChar) {
+                        targetChar.classList.remove('char-active');
+                    }
+                }, 140);
+            }
+        }
+
+        // Attach listeners directly to TRUST and verdict line
+        const directTargets = [debunkEl, titleEl].filter(Boolean);
+        directTargets.forEach(target => {
+            target.addEventListener('mouseenter', startDynamicHover);
+            target.addEventListener('mousemove', handleMouseMove);
+            target.addEventListener('mouseleave', (e) => {
+                const related = e.relatedTarget;
+                if (related && (debunkEl.contains(related) || (titleEl && titleEl.contains(related)))) {
+                    return;
+                }
+                stopDynamicHover();
             });
         });
 
-        // 3. Trigger letter decode every time user scrolls to the hero section
+        // 1. Initial letter reveal on page load
+        function runIntroSequence() {
+            let step = 0;
+            const introTimer = setInterval(() => {
+                step++;
+                charEls.forEach((el, i) => {
+                    if (i < step) {
+                        el.textContent = targetWord[i];
+                        el.classList.remove('char-active');
+                    } else {
+                        el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+                        el.classList.add('char-active');
+                    }
+                });
+                playHoverTick(460 + step * 70);
+
+                if (step >= targetWord.length) {
+                    clearInterval(introTimer);
+                    resolveToWord(true);
+                }
+            }, 70);
+        }
+
+        runIntroSequence();
+
+        // 2. Trigger letter decode every time user scrolls to the hero section (if not currently hovered)
         if ('IntersectionObserver' in window && titleWrap) {
             const heroObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        runLetterDecode(65, true);
+                    if (entry.isIntersecting && !isHovered) {
+                        runIntroSequence();
                     }
                 });
             }, {
@@ -438,11 +563,17 @@
             heroObserver.observe(titleWrap);
         }
 
-        // 4. Click interaction
+        // 3. Click interaction for full burst
         if (titleWrap) {
             titleWrap.addEventListener('click', () => {
                 playRadarPing();
-                runLetterDecode(40, true);
+                charEls.forEach(el => {
+                    el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+                    el.classList.add('char-active');
+                });
+                setTimeout(() => {
+                    if (!isHovered) resolveToWord(false);
+                }, 220);
             });
         }
     }
