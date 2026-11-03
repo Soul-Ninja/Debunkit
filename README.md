@@ -1,72 +1,69 @@
 <div align="center">
 
-<img src="Static/Images/debunkit-logo.png" alt="DEBUNK.IT Logo" width="80"/>
+<img src="Static/Images/debunkit-logo.png" alt="DEBUNK.IT logo" width="88"/>
 
 # DEBUNK.IT
 
-**AI-powered misinformation detection platform**
+### Can we really trust the media? Check before you share.
 
-[![Python](https://img.shields.io/badge/Python-3.10+-e8c84a?style=for-the-badge&logo=python&logoColor=black)](https://python.org)
-[![Flask](https://img.shields.io/badge/Flask-3.x-e8c84a?style=for-the-badge&logo=flask&logoColor=black)](https://flask.palletsprojects.com)
-[![Cohere](https://img.shields.io/badge/Cohere_AI-command--r-3ecf7a?style=for-the-badge)](https://cohere.com)
-[![License](https://img.shields.io/badge/License-MIT-6f7890?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/Version-3.0-e05252?style=for-the-badge)](#)
-[![Live Demo](https://img.shields.io/badge/Live-Demo-success?style=for-the-badge&logo=railway)](https://debunkit-production.up.railway.app)
+AI-assisted misinformation detection with live web evidence, transparent verdicts and an editorial-dispatch interface.
 
-*Analyze claims before they spread.*
+<br>
+
+[![Live Demo](https://img.shields.io/badge/LIVE_DEMO-Open_the_scanner-C8423B?style=for-the-badge&logo=railway&logoColor=white)](https://debunkit-production.up.railway.app)
+[![Python](https://img.shields.io/badge/Python-3.10+-1B1B1B?style=for-the-badge&logo=python&logoColor=E4E0D3)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-3.x-1B1B1B?style=for-the-badge&logo=flask&logoColor=E4E0D3)](https://flask.palletsprojects.com)
+[![Cohere](https://img.shields.io/badge/Cohere-command--r-1B1B1B?style=for-the-badge)](https://cohere.com)
+[![Tests](https://img.shields.io/badge/tests-48_passing-4EA874?style=for-the-badge)](tests)
+[![License](https://img.shields.io/badge/License-MIT-A88B4A?style=for-the-badge)](LICENSE)
+
+<br>
+
+<img src="docs/screenshots/landing-hero.jpg" alt="DEBUNK.IT landing page: Can we really trust the media?" width="100%"/>
 
 </div>
 
----
+<br>
 
-## 🚀 Live Demo
+## Contents
 
-**Try DEBUNK.IT right now — no setup required:**
-
-### 👉 [debunkit-production.up.railway.app/dashboard](https://debunkit-production.up.railway.app/dashboard)
-
-> ⏱️ The free Render instance may take **30–60 seconds to wake up** after inactivity. Just wait a moment and it will load.
+[Live demo](#-live-demo) · [What it does](#-what-it-does) · [Screenshots](#-screenshots) · [How it works](#-how-it-works) · [Design](#-design-language) · [Quick start](#-quick-start) · [Security](#-security) · [API](#-api) · [Testing](#-testing) · [Deployment](#-deployment) · [Roadmap](#-roadmap)
 
 ---
 
-## 📸 Overview
+## 🚀 Live demo
 
-![DEBUNK.IT Dashboard](docs/screenshots/ss1_dashboard.png)
+**[debunkit-production.up.railway.app](https://debunkit-production.up.railway.app)**: no sign-up needed to scan a headline. Create an account to keep a searchable history and telemetry.
 
-**DEBUNK.IT** is a full-stack, AI-assisted fact-checking web platform that analyzes **headlines**, **article URLs**, and **full text** for misinformation. It combines:
-
-- 🤖 **Cohere LLM** for source-aware AI reasoning
-- 🌐 **Live web search (RAG)** via DuckDuckGo for real-time context
-- 📊 **TF-IDF + Logistic Regression** as a trained local ML fallback
-- 🔍 **Custom NLP engine** for pattern-based offline analysis
-- 🔒 **Security-first architecture** — CSRF, SSRF, XSS, rate limiting
-
-Built for the modern misinformation landscape — sports claims, political statements, health news, viral videos, and general news across Indian and international sources.
+> The first request after a quiet period can take a few seconds while the instance wakes up.
 
 ---
 
-## 🎯 Motivation
+## 🎯 What it does
 
-Misinformation spreads faster than fact-checking can keep up.
+Misinformation spreads faster than fact-checking can keep up. DEBUNK.IT gives anyone a quick, evidence-backed read on a **headline**, an **article URL** or a block of **full text**, and shows its reasoning instead of just a score.
 
-DEBUNK.IT was built to close that gap — giving anyone the ability to quickly evaluate news headlines, article URLs, and viral claims using AI-assisted reasoning combined with real-time web evidence. No subscriptions, no black boxes — just transparent verdicts with sources, confidence scores, and clear reasoning.
+| | |
+|---|---|
+| 🧠 **Hybrid AI pipeline** | Cohere LLM reasoning, a trained TF-IDF + Logistic Regression model and a local NLP engine, so there is always an assessment, even offline |
+| 🌐 **Live web evidence (RAG)** | Multi-query DuckDuckGo search with fact-check source detection feeds every verdict |
+| 🔗 **URL scraper** | Pulls the article body and uses it as primary evidence |
+| 🧾 **Transparent verdicts** | Verdict stamp, confidence meter, written reasoning and source receipts |
+| 📚 **History and telemetry** | Searchable ledger of past scans plus verdict, confidence and engine-mode breakdowns |
+| 📋 **Export** | Copy a report or download a receipt as `.txt` |
+| 💬 **Community reviews** | Visitors can leave and read reviews on the landing page |
+| 🛡️ **Security first** | CSRF, SSRF blocking, XSS sanitisation, rate limiting, hashed passwords |
+| 🌗 **Light and dark themes** | Newsprint paper by day, warm charcoal by night |
 
----
+### Verdicts
 
-## ✨ Features
-
-| Feature | Description |
-|--------|-------------|
-| 🔍 **Hybrid AI Pipeline** | Cohere LLM + ML model + NLP fallback — designed to always provide an evidence-based assessment |
-| 🌐 **Live RAG Search** | Multi-query DuckDuckGo search with fact-check source detection |
-| 🔗 **URL Article Scraper** | Extracts article content and uses it as primary evidence |
-| 🛡️ **Security-First** | CSRF tokens, SSRF blocking, XSS sanitization, rate limiting, hashed passwords |
-| 📚 **Analysis History** | Full searchable/filterable history with verdict statistics per user |
-| 📊 **Engine Telemetry** | Verdict breakdown, confidence averages, mode usage analytics |
-| 📋 **Report Export** | Copy or download full analysis reports as `.txt` files |
-| 🎨 **Polished Dark UI** | Animated Matrix-style background, dark/light theme, monospace terminal aesthetic |
-| 💾 **Smart Caching** | Results cached per user (6h for URLs, 24h for text) |
-| 👤 **User Accounts** | Register, login, profile management, settings, account deletion |
+| Verdict | Meaning |
+|---|---|
+| ✅ `SUPPORTED` | Credible evidence confirms the central claim |
+| ❌ `REFUTED` | Credible sources contradict the claim |
+| ⚠️ `MISLEADING` | Partly true, but missing context, old media or misrepresented |
+| 🔍 `INSUFFICIENT EVIDENCE` | Sources neither clearly confirm nor deny |
+| 🚩 `LOW CREDIBILITY` | Suspicious language or weak sourcing, but not directly refutable |
 
 ---
 
@@ -74,231 +71,224 @@ DEBUNK.IT was built to close that gap — giving anyone the ability to quickly e
 
 <table>
   <tr>
-    <td align="center">
-      <img src="docs/screenshots/ss5_scanner.png" alt="Live Scanner with REFUTED verdict" width="100%"/>
-      <br><sub><b>Live Scanner — REFUTED verdict at 85% confidence</b></sub>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/scanner-verdict.jpg" alt="Live scanner showing a verdict stamp, confidence meter and reasoning"/>
+      <br><sub><b>Live scanner</b>: verdict stamp, confidence meter and written reasoning</sub>
     </td>
-    <td align="center">
-      <img src="docs/screenshots/ss2_login.png" alt="Login page with animated background" width="100%"/>
-      <br><sub><b>Login page — animated canvas background</b></sub>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/landing-dark.jpg" alt="Landing page in dark mode"/>
+      <br><sub><b>Dark mode</b>: warm charcoal with the same editorial type</sub>
     </td>
   </tr>
   <tr>
-    <td align="center">
-      <img src="docs/screenshots/ss3_history.png" alt="Analysis History Database Ledger" width="100%"/>
-      <br><sub><b>Database Ledger — full analysis history with filters</b></sub>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/history.jpg" alt="Ledger history of past analyses"/>
+      <br><sub><b>Ledger history</b>: every scan, searchable and filterable</sub>
     </td>
-    <td align="center">
-      <img src="docs/screenshots/ss4_analytics.png" alt="Engine Telemetry Analytics" width="100%"/>
-      <br><sub><b>Engine Telemetry — verdict breakdown & stats</b></sub>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/telemetry.jpg" alt="Bureau telemetry with verdict breakdown"/>
+      <br><sub><b>Telemetry</b>: verdict breakdown, average confidence and engine mode</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/login.jpg" alt="Login page with editorial collage"/>
+      <br><sub><b>Sign in</b>: editorial split layout with inline validation</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/mobile.jpg" alt="Landing page on a phone" width="240"/>
+      <br><sub><b>Mobile</b>: stacked layout with 44px touch targets</sub>
     </td>
   </tr>
 </table>
 
+<details>
+<summary><b>See the full landing page</b></summary>
+<br>
+<img src="docs/screenshots/landing-full.jpg" alt="Full DEBUNK.IT landing page" width="100%"/>
+</details>
+
+---
+
+## 🔬 How it works
+
 ```mermaid
 flowchart TD
-    A["USER INPUT"] --> B["INPUT VALIDATION LAYER"]
-    B -- "URL mode only" --> C["ARTICLE SCRAPER"]
-    B -- "Headline or Text mode" --> D["RAG LIVE WEB SEARCH"]
+    A["Headline, URL or text"] --> B["Input validation<br/>length limits, SSRF guard, sanitising"]
+    B -- "URL mode" --> C["Article scraper"]
+    B -- "Headline or text" --> D["Live web search (RAG)"]
     C --> D
-    D --> E["COHERE AI ANALYSIS"]
-    E -- "AI unavailable" --> F["LOCAL NLP / ML FALLBACK"]
-    E --> G["VERDICT + CONFIDENCE SCORE"]
+    D --> E["Cohere reasoning<br/>with source-aware prompts"]
+    E -- "AI unavailable" --> F["Local ML + NLP fallback"]
+    E --> G["Verdict + confidence + receipts"]
     F --> G
-    G --> H[("DATABASE")]
+    G --> H[("Database<br/>history and cache")]
 
-    classDef yellow fill:#e8c84a,stroke:#333,stroke-width:2px,color:#000;
-    classDef red fill:#e05252,stroke:#333,stroke-width:2px,color:#fff;
-    classDef green fill:#3ecf7a,stroke:#333,stroke-width:2px,color:#000;
-    classDef grey fill:#6f7890,stroke:#333,stroke-width:2px,color:#fff;
-
-    class A,G yellow;
+    classDef ink fill:#1B1B1B,stroke:#1B1B1B,color:#E4E0D3;
+    classDef red fill:#C8423B,stroke:#1B1B1B,color:#fff;
+    classDef paper fill:#E4E0D3,stroke:#1B1B1B,color:#1B1B1B;
+    class A,G ink;
     class B red;
-    class C,D,E,F green;
-    class H grey;
+    class C,D,E,F,H paper;
 ```
 
-
-
-
-### Verdict System
-
-| Verdict | Meaning |
-|---------|---------|
-| ✅ `SUPPORTED` | Credible evidence confirms the central claim |
-| ❌ `REFUTED` | Credible sources contradict the claim |
-| ⚠️ `MISLEADING` | Partly true but missing context, old media, or misrepresented |
-| 🔍 `INSUFFICIENT EVIDENCE` | Sources don't clearly confirm or deny |
-| 🚩 `LOW CREDIBILITY` | Suspicious language/weak sourcing, can't be directly refuted |
+Results are cached per user (6 hours for URLs, 24 hours for text) so repeat checks are instant.
 
 ---
 
-## 📈 Project Metrics
+## 🎨 Design language
 
-| Metric | Value |
-|--------|-------|
-| 🐍 Python code | ~2,000+ lines |
-| 🌐 JavaScript | ~1,000+ lines |
-| 📡 API endpoints | 10 endpoints |
-| 🔍 Analysis modes | 3 (Headline / URL / Text) |
-| 🧠 AI verdicts | 5 possible outcomes |
-| 🔒 Security layers | 5 independent layers |
-| 👤 Auth system | Full register / login / settings / delete |
-| 💾 Caching | Smart freshness rules (6h URL / 24h text) |
+**"Quiet luxury meets the front page."** The interface is a printed investigative dispatch: newsprint paper, ink black, a single brick red, hairline rules and hard offset shadows. No glows, no gradients.
 
----
+| Token | Value | Used for |
+|---|---|---|
+| ![paper](https://img.shields.io/badge/-%20%20%20-E4E0D3?style=flat-square) Paper | `#E4E0D3` | Background (dark mode: `#141412`) |
+| ![ink](https://img.shields.io/badge/-%20%20%20-1B1B1B?style=flat-square) Ink | `#1B1B1B` | Text, borders, shadows |
+| ![red](https://img.shields.io/badge/-%20%20%20-C8423B?style=flat-square) Red | `#C8423B` | Brand, "refuted" |
+| ![mint](https://img.shields.io/badge/-%20%20%20-4EA874?style=flat-square) Mint | `#4EA874` | "Supported" |
+| ![gold](https://img.shields.io/badge/-%20%20%20-A88B4A?style=flat-square) Gold | `#A88B4A` | Small luxury accents |
 
-## 🗂️ Project Structure
+**Type:** Anton for headlines, Newsreader for reading, Inter for labels.
 
-```
-Debunkit/
-├── debunkit_app.py          # Flask app — all routes & API endpoints
-├── config.py                # Config classes (Dev / Prod / Test)
-├── requirements.txt         # Python dependencies
-├── training.py              # ML model training (TF-IDF + LogReg)
-├── dataset.py               # Dataset inspection utility
-│
-├── Core/
-│   ├── ai_engine.py         # Cohere AI + hybrid analysis logic
-│   ├── rag_engine.py        # DuckDuckGo live search + article scraper
-│   ├── nlp_engine.py        # Local NLP pattern engine (offline fallback)
-│   ├── database.py          # SQLAlchemy models + DB helpers
-│   └── user_model.py        # User auth model (Flask-Login)
-│
-├── utils/
-│   ├── validators.py        # Input validation + SSRF protection
-│   └── sanitizer.py         # XSS / URL injection prevention
-│
-├── Template/                # Jinja2 HTML templates
-│   ├── index.html           # Main dashboard (scanner, history, analytics)
-│   ├── login.html
-│   ├── register.html
-│   ├── profile.html
-│   └── settings.html
-│
-└── Static/
-    ├── CSS/                 # style.css, auth.css, profile.css
-    ├── Images/              # Logo and assets
-    └── JS/
-        ├── canvas.js        # Animated falling-words background
-        └── main.js          # Full frontend logic (~900 lines)
-```
+**Motion: printed and stamped.** Every animation comes from the newsroom metaphor:
+
+- hover **TRUST** in the hero and it scrambles through glyphs before resolving back
+- section titles ink in on scroll, with a hairline rule drawing beneath, and replay on re-entry
+- verdicts land with a physical **stamp thud**, then the confidence bar fills
+- buttons press down as their hard shadow collapses
+- everything respects `prefers-reduced-motion`, and content stays visible if JavaScript fails
 
 ---
 
-## ⚙️ Tech Stack
-
-**Backend**
-- [Flask](https://flask.palletsprojects.com/) — web framework
-- [Flask-Login](https://flask-login.readthedocs.io/) — user session management
-- [Flask-Limiter](https://flask-limiter.readthedocs.io/) — rate limiting
-- [Flask-SQLAlchemy](https://flask-sqlalchemy.palletsprojects.com/) — ORM (SQLite / PostgreSQL)
-- [Flask-CORS](https://flask-cors.readthedocs.io/) — cross-origin resource sharing
-
-**AI / ML**
-- [Cohere API](https://cohere.com/) (`command-r-08-2024`) — primary AI fact-checker
-- [scikit-learn](https://scikit-learn.org/) — TF-IDF + Logistic Regression local model
-- [DuckDuckGo Search](https://pypi.org/project/duckduckgo-search/) (`ddgs`) — RAG live web context
-- [BeautifulSoup4](https://www.crummy.com/software/BeautifulSoup/) — article scraping
-
-**Frontend**
-- Jinja2 templates + vanilla JS (~900 lines)
-- CSS custom properties — dark/light theme
-- HTML5 Canvas — animated background
-
----
-
-## 🚀 Quick Start
-
-### 1. Clone the repository
+## ⚡ Quick start
 
 ```bash
 git clone https://github.com/Soul-Ninja/Debunkit.git
 cd Debunkit
-```
-
-### 2. Install dependencies
-
-```bash
+python -m venv .venv
+.venv\Scripts\activate          # macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
 ```
-
-### 3. Set up environment variables
 
 Create a `.env` file in the project root:
 
 ```env
-COHERE_API_KEY=your_cohere_api_key_here
-SECRET_KEY=your_flask_secret_key_here
+COHERE_API_KEY=your_cohere_api_key
+SECRET_KEY=a_long_random_string
 DATABASE_URL=sqlite:///debunkit.db
 FLASK_ENV=development
 ```
 
-> Get a free Cohere API key at [cohere.com](https://cohere.com)
-
-### 4. (Optional) Train the local ML model
-
-```bash
-python training.py
-```
-
-> Requires `news_benchmark_200_clean.csv` in the project root.  
-> Skip this step to run with AI-only mode (Cohere).
-
-### 5. Run the app
+> A free Cohere key is available at [cohere.com](https://cohere.com). Without one, DEBUNK.IT falls back to the local ML and NLP engines.
 
 ```bash
 python debunkit_app.py
 ```
 
-Open **http://127.0.0.1:5000** in your browser.
+Open **http://127.0.0.1:5000**.
+
+**Optional: retrain the local model.** Put `WELFake_Dataset.csv` in the project root, then run `python training.py`.
 
 ---
 
-## 🔐 Security Architecture
+## 🗂️ Project structure
 
-DEBUNK.IT is built with a layered security approach:
+```
+Debunkit/
+├── debunkit_app.py        Flask app: routes and API
+├── config.py              Dev / Prod / Test config
+├── serve.py               Waitress production server
+├── training.py            TF-IDF + Logistic Regression training
+├── Dockerfile             Container image (gunicorn)
+│
+├── Core/
+│   ├── ai_engine.py       Cohere reasoning + hybrid pipeline
+│   ├── rag_engine.py      Live search + article scraper
+│   ├── nlp_engine.py      Offline pattern engine
+│   ├── database.py        SQLAlchemy models
+│   └── user_model.py      Auth model (Flask-Login)
+│
+├── utils/                 validators.py (SSRF) · sanitizer.py (XSS)
+├── Template/              landing · index (scanner, ledger, telemetry) · auth · profile · settings
+├── Static/                CSS · JS (landing, main, canvas) · Images
+├── tests/                 pytest suite
+└── docs/screenshots/      README images
+```
+
+---
+
+## 🛠️ Tech stack
+
+| Layer | Tools |
+|---|---|
+| **Backend** | Flask, Flask-Login, Flask-Limiter, Flask-SQLAlchemy, Flask-CORS |
+| **AI / ML** | Cohere `command-r-08-2024`, scikit-learn (TF-IDF + Logistic Regression), DuckDuckGo search (`ddgs`), BeautifulSoup4 |
+| **Frontend** | Jinja2, vanilla JS, CSS custom properties, HTML5 canvas. No framework, no build step |
+| **Data** | SQLite for development, PostgreSQL via `DATABASE_URL` |
+| **Serving** | Gunicorn or Waitress, Docker, GitHub Actions CI |
+
+---
+
+## 🔐 Security
 
 | Layer | Protection |
-|-------|-----------|
-| `validators.py` | Input length limits, null byte stripping, URL scheme enforcement, **SSRF blocking** via DNS resolution |
-| `sanitizer.py` | **XSS prevention** — HTML escaping, script tag removal, dangerous protocol blocking (`javascript:`, `data:`) |
-| `debunkit_app.py` | **CSRF token** validation on every `POST / PUT / PATCH / DELETE` request |
-| `main.js` | Sends CSRF token in `X-CSRFToken` header; blocks non-HTTP source URLs in the DOM |
-| `config.py` | Rate limiting (10/day guests, 20/min users), password complexity regex, secure session cookies |
+|---|---|
+| `validators.py` | Length limits, null-byte stripping, URL scheme enforcement, **SSRF blocking** via DNS resolution |
+| `sanitizer.py` | **XSS prevention**: HTML escaping, script removal, `javascript:` / `data:` blocking |
+| `debunkit_app.py` | **CSRF token** required on every `POST`, `PUT`, `PATCH` and `DELETE` |
+| `main.js` | Sends `X-CSRFToken`; refuses non-HTTP source URLs in the DOM |
+| `config.py` | Rate limiting, password complexity rule, secure session cookies |
 
 ---
 
-## 📡 API Endpoints
+## 📡 API
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/analyze` | Main analysis endpoint |
-| `GET` | `/api/history` | Get user's analysis history |
-| `GET` | `/api/analysis/<id>` | Get specific analysis details |
+|---|---|---|
+| `POST` | `/analyze` | Run an analysis |
+| `GET` | `/api/history` | The signed-in user's history |
+| `GET` | `/api/analysis/<id>` | One analysis in detail |
 | `GET` | `/api/search?q=` | Search past analyses |
-| `GET` | `/api/stats` | Get verdict statistics |
-| `POST` | `/api/clear-database` | Delete all user analyses |
-| `GET/PUT` | `/api/user/profile` | View or update profile |
-| `PUT` | `/api/user/settings` | Update theme, password, preferences |
-| `DELETE` | `/api/user/delete` | Delete account and all data |
+| `GET` | `/api/stats` | Verdict statistics |
+| `POST` | `/api/clear-database` | Delete all of the user's analyses |
+| `GET` `PUT` | `/api/user/profile` | View or update profile |
+| `PUT` | `/api/user/settings` | Theme, password, preferences |
+| `DELETE` | `/api/user/delete` | Delete account and data |
+| `GET` `POST` | `/api/reviews` | Read or submit community reviews |
 | `GET` | `/api/health` | Health check |
+
+---
+
+## 🧪 Testing
+
+```bash
+pip install -r requirements-dev.txt
+pytest -q
+```
+
+48 tests cover the API, the AI engine, input validation and sanitising. They run on every push through GitHub Actions on Python 3.12.
+
+**Local ML baseline:** on 1,000 held-out samples from WELFake, the TF-IDF + Logistic Regression fallback scores about **93% accuracy** at roughly **1.6 ms** per query (see [debunkit_metrics_summary.md](debunkit_metrics_summary.md)). That figure covers the local classifier only, not the full Cohere + RAG pipeline.
 
 ---
 
 ## 🌍 Deployment
 
-### Current Deployment
+The live site runs on **Railway**. Any host that runs a Python web service or a container works.
 
-| Property | Value |
-|----------|-------|
-| 🖥️ **Platform** | [Render](https://render.com) |
-| 🌐 **URL** | [debunkit.onrender.com](https://debunkit.onrender.com) |
-| ⚡ **Status** | ✅ Production Ready |
-| 🗄️ **Database** | SQLite (upgrade to PostgreSQL planned) |
-| 🚀 **Server** | Gunicorn (multi-worker) |
+```bash
+# Gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 debunkit_app:app
 
-### Environment Variables (Production)
+# Waitress (the included serve.py; pair with a tunnel or reverse proxy)
+python serve.py
+
+# Docker
+docker build -t debunkit .
+docker run -p 8080:8080 --env-file .env debunkit
+```
+
+Production environment:
 
 ```env
 FLASK_ENV=production
@@ -309,88 +299,49 @@ SESSION_COOKIE_SECURE=True
 RATELIMIT_ENABLED=True
 ```
 
-### Run with Gunicorn
-
-```bash
-pip install gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 debunkit_app:app
-```
-
-### Docker (coming soon)
-
-```dockerfile
-# Dockerfile support planned for v3.1
-```
-
 ---
 
 ## ⚠️ Limitations
 
-- **Not a final truth authority.** DEBUNK.IT is an AI-assisted tool, not a replacement for human judgment.
-- Breaking news, satire, AI-generated images, and conflicting sources may still require manual verification.
-- The local ML model (`training.py`) is a style classifier — it detects writing patterns, not factual truth.
-- AI analysis requires a valid **Cohere API key**. Without it, the system falls back to local NLP only.
-- Search results depend on DuckDuckGo availability — analysis quality may vary for very recent events.
-
----
-
-## 🏆 Project Highlights
-
-- ✅ Full-stack AI-powered misinformation detection platform
-- ✅ Live public deployment on Render
-- ✅ Cohere-powered source-aware fact-checking with domain-specific prompts
-- ✅ Hybrid architecture — AI + ML + NLP, always provides an assessment
-- ✅ Secure authentication system with CSRF, SSRF, and XSS protection
-- ✅ User analytics, scan history, and report export
-- ✅ Animated Matrix-style UI with dark/light theme support
+- **Not a final authority.** DEBUNK.IT is an assistant, not a replacement for human judgment.
+- Breaking news, satire, AI-generated images and conflicting sources may still need manual checking.
+- The local ML model detects writing patterns, not factual truth.
+- Full AI analysis needs a Cohere API key; without one it falls back to local analysis.
+- Search quality depends on DuckDuckGo availability and can drop for very recent events.
 
 ---
 
 ## 🗺️ Roadmap
 
-### ✅ Completed
-- [x] Core analysis pipeline (AI + ML + NLP)
-- [x] User authentication & accounts
-- [x] Analysis history & Engine Telemetry
+- [x] Hybrid analysis pipeline (AI + ML + NLP)
+- [x] Accounts, history and telemetry
 - [x] Security hardening (CSRF, SSRF, XSS, rate limiting)
-- [x] Live deployment on Render
-
-### 🔜 Planned
-- [ ] Custom domain (`debunkit.tech`)
-- [ ] Docker support
-- [ ] PostgreSQL migration
+- [x] Docker support and CI
+- [x] Editorial redesign with light and dark themes
+- [x] Signature motion layer
+- [ ] Custom domain
 - [ ] Browser extension
-- [ ] Image misinformation detection
-- [ ] Video misinformation detection
+- [ ] Image and video misinformation detection
 - [ ] Multilingual support
-- [ ] Public API with authentication
+- [ ] Public API with keys
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please:
-
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m 'Add: your feature'`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the **[MIT License](LICENSE)**.
+2. Create a branch: `git checkout -b feature/your-feature`
+3. Commit: `git commit -m "feat: your feature"`
+4. Push and open a Pull Request
 
 ---
 
 <div align="center">
 
-Built by **[Soul-Ninja](https://github.com/Soul-Ninja)**
+**MIT License** · Built by **[Soul-Ninja](https://github.com/Soul-Ninja)**
 
-*DEBUNK.IT v3.0 — AI-powered misinformation detection*
+*Analyze claims before they spread.*
 
-⭐ Star this repo if you found it useful!
+⭐ Star the repo if it helped you
 
 </div>
