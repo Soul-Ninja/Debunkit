@@ -213,7 +213,7 @@ Debunkit/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Code-Breaker-Ctrl/Debunkit.git
+git clone https://github.com/Soul-Ninja/Debunkit.git
 cd Debunkit
 ```
 
@@ -387,7 +387,7 @@ This project is licensed under the **[MIT License](LICENSE)**.
 
 <div align="center">
 
-Built by **[Code-Breaker-Ctrl](https://github.com/Code-Breaker-Ctrl)**
+Built by **[Soul-Ninja](https://github.com/Soul-Ninja)**
 
 *DEBUNK.IT v3.0 — AI-powered misinformation detection*
 
