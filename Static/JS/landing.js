@@ -362,7 +362,7 @@
     }
 
     // =========================================================================
-    // 6. POSTER HEADLINE DECODE / REVEAL (DYNAMIC INTERACTIVE CIPHER)
+    // 6. POSTER HEADLINE DECODE / REVEAL (NON-STOP CONTINUOUS FLICKER ON HOVER)
     // =========================================================================
     function initCrazyTitle() {
         const debunkEl = document.getElementById('decode-debunk');
@@ -371,7 +371,7 @@
         if (!debunkEl) return;
 
         const targetWord = 'TRUST';
-        const glyphs = ['?', '!', '#', '※', '§', '¶', 'X', 'Ø', '0', '1', 'T', 'R', 'U', 'S'];
+        const glyphs = ['?', '!', '#', '※', '§', '¶', 'X', 'Ø', '0', '1', 'T', 'R', 'U', 'S', 'Z', '9', '7', '¥', '¢', '&'];
 
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (prefersReducedMotion) {
@@ -395,27 +395,25 @@
 
         let isHovered = false;
         let hoverLoopTimer = null;
-        let resolveTimer = null;
+        let resolveTimeouts = [];
         let lastSoundTime = 0;
 
         function playHoverTick(freq = 600) {
             const now = performance.now();
-            if (now - lastSoundTime > 80) {
+            if (now - lastSoundTime > 75) {
                 lastSoundTime = now;
-                playTone(freq, 'sine', 0.025, 0.025);
+                playTone(freq, 'sine', 0.02, 0.025);
             }
         }
 
-        // Lock in letters cleanly in sequential cascade
+        // Settle letters back to "TRUST" when mouse leaves
         function resolveToWord(instant = false) {
             if (hoverLoopTimer) {
                 clearInterval(hoverLoopTimer);
                 hoverLoopTimer = null;
             }
-            if (resolveTimer) {
-                clearTimeout(resolveTimer);
-                resolveTimer = null;
-            }
+            resolveTimeouts.forEach(t => clearTimeout(t));
+            resolveTimeouts = [];
 
             if (instant) {
                 charEls.forEach((el, i) => {
@@ -425,38 +423,32 @@
                 return;
             }
 
+            // Sequential crisp lock-in: T -> R -> U -> S -> T
             charEls.forEach((el, i) => {
-                setTimeout(() => {
-                    if (isHovered) return; // Abort if user re-entered
+                const t = setTimeout(() => {
+                    if (isHovered) return;
                     el.textContent = targetWord[i];
                     el.classList.remove('char-active');
                     if (i === charEls.length - 1 && !isHovered) {
-                        playHoverTick(840);
+                        playHoverTick(880);
                     }
                 }, i * 35);
+                resolveTimeouts.push(t);
             });
         }
 
-        // Dynamic cipher loop while hovering: stays alive as long as mouse is on TRUST!
+        // Start non-stop flickering: NEVER stops while mouse is over TRUST!
         function startDynamicHover() {
-            if (isHovered) return;
+            if (isHovered && hoverLoopTimer) return;
             isHovered = true;
 
-            if (resolveTimer) {
-                clearTimeout(resolveTimer);
-                resolveTimer = null;
-            }
-
-            // Immediately scramble letters on touch
-            charEls.forEach(el => {
-                el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
-                el.classList.add('char-active');
-            });
-            playHoverTick(540);
+            // Cancel any pending resolve timeouts
+            resolveTimeouts.forEach(t => clearTimeout(t));
+            resolveTimeouts = [];
 
             if (hoverLoopTimer) clearInterval(hoverLoopTimer);
 
-            // Continuously loop while mouse is on TRUST: letters stay dynamic and alive!
+            // High-energy continuous flicker loop at 50ms interval
             hoverLoopTimer = setInterval(() => {
                 if (!isHovered) {
                     clearInterval(hoverLoopTimer);
@@ -464,64 +456,50 @@
                     return;
                 }
 
-                // Randomly scramble 2 to 3 characters each tick
-                const count = Math.floor(Math.random() * 2) + 2;
-                for (let k = 0; k < count; k++) {
-                    const idx = Math.floor(Math.random() * charEls.length);
-                    const el = charEls[idx];
-                    el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
-                    el.classList.add('char-active');
-                }
-
-                // Others occasionally settle or flicker
+                // Every tick, ALL letters continuously flicker without stopping!
                 charEls.forEach((el, idx) => {
-                    if (Math.random() > 0.6) {
+                    // 80% cipher glyphs, 20% momentary glimpse of real letter
+                    if (Math.random() < 0.8) {
+                        el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+                        el.classList.add('char-active');
+                    } else {
                         el.textContent = targetWord[idx];
                         el.classList.remove('char-active');
                     }
                 });
 
                 playHoverTick(480 + Math.random() * 320);
-            }, 85);
+            }, 50);
         }
 
-        function stopDynamicHover() {
-            if (!isHovered) return;
+        function stopDynamicHover(e) {
+            // Check if pointer is still inside titleEl or debunkEl
+            if (e && e.relatedTarget) {
+                if (titleEl.contains(e.relatedTarget) || debunkEl.contains(e.relatedTarget)) {
+                    return;
+                }
+            }
             isHovered = false;
             resolveToWord(false);
         }
 
-        // Interactive mouse movement over the word: characters dynamically react under cursor!
-        function handleMouseMove(e) {
-            if (!isHovered) {
-                startDynamicHover();
-            }
+        // Direct event listeners on titleEl and debunkEl
+        titleEl.addEventListener('mouseenter', startDynamicHover);
+        debunkEl.addEventListener('mouseenter', startDynamicHover);
+        titleEl.addEventListener('mouseleave', stopDynamicHover);
+        debunkEl.addEventListener('mouseleave', stopDynamicHover);
 
-            const targetChar = e.target.closest('.decode-char');
-            if (targetChar) {
-                targetChar.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
-                targetChar.classList.add('char-active');
-                playHoverTick(680);
-                setTimeout(() => {
-                    if (isHovered && targetChar) {
-                        targetChar.classList.remove('char-active');
-                    }
-                }, 140);
-            }
-        }
-
-        // Attach listeners directly to TRUST and verdict line
-        const directTargets = [debunkEl, titleEl].filter(Boolean);
-        directTargets.forEach(target => {
-            target.addEventListener('mouseenter', startDynamicHover);
-            target.addEventListener('mousemove', handleMouseMove);
-            target.addEventListener('mouseleave', (e) => {
-                const related = e.relatedTarget;
-                if (related && (debunkEl.contains(related) || (titleEl && titleEl.contains(related)))) {
-                    return;
+        // Global pointermove ensures zero boundary dropouts:
+        // As long as pointer is over titleEl or debunkEl, it MUST stay flickering!
+        window.addEventListener('pointermove', (e) => {
+            const isInside = titleEl.contains(e.target) || debunkEl.contains(e.target);
+            if (isInside) {
+                if (!isHovered) {
+                    startDynamicHover();
                 }
-                stopDynamicHover();
-            });
+            } else if (isHovered) {
+                stopDynamicHover(e);
+            }
         });
 
         // 1. Initial letter reveal on page load
@@ -544,7 +522,7 @@
                     clearInterval(introTimer);
                     resolveToWord(true);
                 }
-            }, 70);
+            }, 65);
         }
 
         runIntroSequence();
