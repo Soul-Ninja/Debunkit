@@ -136,30 +136,6 @@ Results are cached per user (6 hours for URLs, 24 hours for text) so repeat chec
 
 ---
 
-## 🎨 Design language
-
-**"Quiet luxury meets the front page."** The interface is a printed investigative dispatch: newsprint paper, ink black, a single brick red, hairline rules and hard offset shadows. No glows, no gradients.
-
-| Token | Value | Used for |
-|---|---|---|
-| ![paper](https://img.shields.io/badge/-%20%20%20-E4E0D3?style=flat-square) Paper | `#E4E0D3` | Background (dark mode: `#141412`) |
-| ![ink](https://img.shields.io/badge/-%20%20%20-1B1B1B?style=flat-square) Ink | `#1B1B1B` | Text, borders, shadows |
-| ![red](https://img.shields.io/badge/-%20%20%20-C8423B?style=flat-square) Red | `#C8423B` | Brand, "refuted" |
-| ![mint](https://img.shields.io/badge/-%20%20%20-4EA874?style=flat-square) Mint | `#4EA874` | "Supported" |
-| ![gold](https://img.shields.io/badge/-%20%20%20-A88B4A?style=flat-square) Gold | `#A88B4A` | Small luxury accents |
-
-**Type:** Anton for headlines, Newsreader for reading, Inter for labels.
-
-**Motion: printed and stamped.** Every animation comes from the newsroom metaphor:
-
-- hover **TRUST** in the hero and it scrambles through glyphs before resolving back
-- section titles ink in on scroll, with a hairline rule drawing beneath, and replay on re-entry
-- verdicts land with a physical **stamp thud**, then the confidence bar fills
-- buttons press down as their hard shadow collapses
-- everything respects `prefers-reduced-motion`, and content stays visible if JavaScript fails
-
----
-
 ## ⚡ Quick start
 
 ```bash
