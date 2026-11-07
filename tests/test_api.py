@@ -1,5 +1,7 @@
 import pytest
 import json
+from sqlalchemy import create_engine
+from sqlalchemy.pool import StaticPool
 from debunkit_app import app
 from Core.database import db
 from Core.user_model import User
@@ -8,8 +10,15 @@ from Core.user_model import User
 @pytest.fixture
 def client():
     app.config["TESTING"] = True
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
     app.config["WTF_CSRF_ENABLED"] = False
+
+    orig_engines = db._app_engines.get(app)
+    test_engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool
+    )
+    db._app_engines[app] = {None: test_engine}
 
     with app.test_client() as client:
         with app.app_context():
@@ -17,6 +26,9 @@ def client():
             yield client
             db.session.remove()
             db.drop_all()
+
+    if orig_engines:
+        db._app_engines[app] = orig_engines
 
 
 class TestHealthAndPages:
