@@ -4,6 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <script>
+        // Apply saved theme immediately to prevent any flash of mismatched mode
+        (function () {
+            var saved = localStorage.getItem('debunkit_theme');
+            if (saved) {
+                document.documentElement.setAttribute('data-theme', saved);
+            }
+        })();
         // Hidden reveal states apply only once JS runs; if landing.js never starts, show everything after 2.5s.
         document.documentElement.classList.add('js-ready');
         setTimeout(function () {
@@ -63,6 +70,19 @@
                         </svg>
                         <span class="gh-text">★ GitHub</span>
                     </a>
+
+                    <!-- Editorial Edition Slider (Day: Paper / Night: Charcoal) -->
+                    <div class="edition-slider" id="edition-slider" role="switch" aria-checked="false" aria-label="Toggle dark and light edition" tabindex="0" title="Switch Edition: Day (Paper) / Night (Charcoal)">
+                        <span class="edition-slider-thumb" aria-hidden="true"></span>
+                        <button type="button" class="edition-btn edition-day active" data-edition="light" aria-label="Switch to Day Edition">
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                            <span class="edition-label">DAY</span>
+                        </button>
+                        <button type="button" class="edition-btn edition-night" data-edition="dark" aria-label="Switch to Night Edition">
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                            <span class="edition-label">NIGHT</span>
+                        </button>
+                    </div>
 
                     <button id="sfx-toggle-btn" class="sfx-toggle" title="Toggle Sound Effects" aria-pressed="false">
                         <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>

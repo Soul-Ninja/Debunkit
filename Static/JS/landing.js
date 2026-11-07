@@ -860,6 +860,124 @@
         });
     }
 
+    // 9.6 Editorial Edition Switcher (Day: Paper / Night: Charcoal) with Ink-Wipe Transition
+    function initThemeToggle() {
+        const slider = document.getElementById('edition-slider');
+        if (!slider) return;
+
+        const dayBtn = slider.querySelector('.edition-day');
+        const nightBtn = slider.querySelector('.edition-night');
+
+        function getCurrentTheme() {
+            const attr = document.documentElement.getAttribute('data-theme');
+            if (attr === 'dark') return 'dark';
+            if (attr === 'light') return 'light';
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function updateSliderUI(theme) {
+            const isDark = (theme === 'dark');
+            slider.setAttribute('aria-checked', isDark ? 'true' : 'false');
+            if (dayBtn) dayBtn.classList.toggle('active', !isDark);
+            if (nightBtn) nightBtn.classList.toggle('active', isDark);
+        }
+
+        function applyTheme(newTheme, triggerEl = null) {
+            const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            // Subtle tactile switch tone if SFX enabled
+            if (typeof playTone === 'function') {
+                playTone(newTheme === 'dark' ? 520 : 760, 'triangle', 0.035, 0.04);
+            }
+
+            function commitTheme() {
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('debunkit_theme', newTheme);
+                updateSliderUI(newTheme);
+
+                // Sync with authenticated user settings endpoint in background
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+                fetch('/api/user/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ theme: newTheme })
+                }).catch(() => { /* silent fail for unauthenticated guests */ });
+            }
+
+            // View Transition circular ink wipe across the page
+            if (document.startViewTransition && !isReducedMotion && triggerEl) {
+                const rect = triggerEl.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+                const endRadius = Math.hypot(
+                    Math.max(x, window.innerWidth - x),
+                    Math.max(y, window.innerHeight - y)
+                );
+
+                const transition = document.startViewTransition(() => {
+                    commitTheme();
+                });
+
+                transition.ready.then(() => {
+                    document.documentElement.animate(
+                        {
+                            clipPath: [
+                                `circle(0px at ${x}px ${y}px)`,
+                                `circle(${endRadius}px at ${x}px ${y}px)`
+                            ]
+                        },
+                        {
+                            duration: 460,
+                            easing: 'cubic-bezier(0.23, 1, 0.32, 1)',
+                            pseudoElement: '::view-transition-new(root)'
+                        }
+                    );
+                });
+            } else {
+                // Fallback smooth CSS transition
+                document.documentElement.classList.add('theme-transitioning');
+                commitTheme();
+                setTimeout(() => {
+                    document.documentElement.classList.remove('theme-transitioning');
+                }, 420);
+            }
+        }
+
+        // Initialize state from localStorage or system
+        const savedTheme = localStorage.getItem('debunkit_theme') || getCurrentTheme();
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateSliderUI(savedTheme);
+
+        // Click to toggle or pick specific edition
+        slider.addEventListener('click', (e) => {
+            const current = getCurrentTheme();
+            const btn = e.target.closest('.edition-btn');
+            let nextTheme;
+            if (btn && btn.dataset.edition) {
+                nextTheme = btn.dataset.edition;
+            } else {
+                nextTheme = (current === 'dark') ? 'light' : 'dark';
+            }
+            if (nextTheme !== current) {
+                applyTheme(nextTheme, slider);
+            }
+        });
+
+        // Keyboard accessibility (Space / Enter)
+        slider.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const current = getCurrentTheme();
+                const nextTheme = (current === 'dark') ? 'light' : 'dark';
+                applyTheme(nextTheme, slider);
+            }
+        });
+    }
+
     // =========================================================================
     // 8. INITIALIZE ON DOM READY
     // =========================================================================
@@ -978,6 +1096,7 @@
         initTickerSnap();
         initHeroParallax();
         initPageFadeTransition();
+        initThemeToggle();
 
         // One-time audio unlock on first interaction
         document.body.addEventListener('click', () => {

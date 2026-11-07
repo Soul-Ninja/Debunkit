@@ -1557,3 +1557,34 @@ body.page-leaving {
         transition: none !important;
     }
 }
+
+/* ==========================================================================
+   VIEW TRANSITION / EDITION SWITCH TRANSITIONS
+   ========================================================================== */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+    z-index: 1;
+}
+
+::view-transition-new(root) {
+    z-index: 2;
+}
+
+/* Fallback smooth transition when View Transition API is not active */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+    transition: background-color 420ms cubic-bezier(0.23, 1, 0.32, 1),
+                color 350ms cubic-bezier(0.23, 1, 0.32, 1),
+                border-color 350ms cubic-bezier(0.23, 1, 0.32, 1),
+                box-shadow 350ms cubic-bezier(0.23, 1, 0.32, 1),
+                fill 350ms cubic-bezier(0.23, 1, 0.32, 1),
+                stroke 350ms cubic-bezier(0.23, 1, 0.32, 1) !important;
+    transition-delay: 0s !important;
+}
