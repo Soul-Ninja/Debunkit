@@ -427,9 +427,11 @@ def api_delete_account():
 @limiter.limit("10/minute", methods=["POST"])
 def api_reviews():
     if request.method == "POST":
+        if not current_user.is_authenticated:
+            return jsonify({"error": "Sign in to post a dispatch."}), 401
         try:
             data = request.get_json(silent=True) or request.form
-            author = (data.get("author") or data.get("author_name") or "").strip()
+            author = current_user.username
             role = (data.get("role") or data.get("author_role") or "Truth Seeker").strip()
             rating = int(data.get("rating", 5))
             content = (data.get("content") or "").strip()

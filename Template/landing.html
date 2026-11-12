@@ -161,7 +161,7 @@
                     <div class="hero-headline-stack">
                         <div class="headline-line-top">CAN WE REALLY</div>
                         <div class="headline-line-verdict" id="hero-crazy-title">
-                            <span class="title-debunk" id="decode-debunk">TRUST</span><span class="title-dot" id="decode-dot" style="display:none;">.</span><span class="title-it" id="decode-it" style="display:none;">IT</span>
+                            <span class="title-debunk" id="decode-debunk">TRUST<span class="trust-q" aria-hidden="true">?</span></span><span class="title-dot" id="decode-dot" style="display:none;">.</span><span class="title-it" id="decode-it" style="display:none;">IT</span>
                         </div>
                         <div class="headline-line-bottom">THE MEDIA?</div>
                     </div>
@@ -658,9 +658,13 @@
                     Observations from journalists, researchers, and everyday readers verifying digital claims.
                 </p>
                 <div class="reviews-action-buttons">
+                    {% if current_user.is_authenticated %}
                     <button id="btn-open-review-modal" class="btn btn-primary btn-sm">
                         SUBMIT A DISPATCH
                     </button>
+                    {% else %}
+                    <a href="/login" class="btn btn-primary btn-sm">SIGN IN TO POST A DISPATCH</a>
+                    {% endif %}
                     <a href="https://github.com/Soul-Ninja/Debunkit/discussions" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm">
                         DISCUSS ON GITHUB
                     </a>
@@ -668,59 +672,9 @@
             </div>
 
             <div class="quotes-grid" id="quotes-grid">
-                <!-- Review 1 -->
-                <div class="quote-card">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                        <div class="quote-stars">★★★★★</div>
-                        <span class="community-verified-badge">VERIFIED</span>
-                    </div>
-                    <p class="quote-body">
-                        "DEBUNK.IT prevented an elderly relative from liquidating their retirement savings into an unverified offshore crypto vehicle. The citations were definitive."
-                    </p>
-                    <div class="quote-author">
-                        <div class="author-avatar">T</div>
-                        <div class="author-info">
-                            <h4>Tyler M.</h4>
-                            <p>Private Investor</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Review 2 -->
-                <div class="quote-card">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                        <div class="quote-stars">★★★★★</div>
-                        <span class="community-verified-badge">VERIFIED</span>
-                    </div>
-                    <p class="quote-body">
-                        "I pasted a widely circulated political document into the scanner. Within three seconds, it highlighted two fabricated paragraphs with the original source transcript."
-                    </p>
-                    <div class="quote-author">
-                        <div class="author-avatar">M</div>
-                        <div class="author-info">
-                            <h4>Maya S.</h4>
-                            <p>Policy Analyst</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Review 3 -->
-                <div class="quote-card">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                        <div class="quote-stars">★★★★★</div>
-                        <span class="community-verified-badge">VERIFIED</span>
-                    </div>
-                    <p class="quote-body">
-                        "As an investigative journalist, this tool reduces hours of manual fact-checking down to seconds. An AI tool that delivers verifiable receipts rather than hallucinations."
-                    </p>
-                    <div class="quote-author">
-                        <div class="author-avatar">A</div>
-                        <div class="author-info">
-                            <h4>Alex K.</h4>
-                            <p>Independent Reporter</p>
-                        </div>
-                    </div>
-                </div>
+                <p class="quotes-empty" id="quotes-empty">
+                    No dispatches yet. Run a scan, then tell us how it went.
+                </p>
             </div>
         </section>
 
@@ -797,10 +751,7 @@
             <p class="review-modal-subtitle">Share how DEBUNK.IT assisted your investigative verification or preserved truth.</p>
             
             <form id="community-review-form" class="review-form">
-                <div class="form-group">
-                    <label for="review-author">Full Name or Pen Name</label>
-                    <input type="text" id="review-author" class="form-input" placeholder="e.g. Alex Montgomery or @TruthDispatch" required maxlength="60">
-                </div>
+                {% if current_user.is_authenticated %}<p class="review-as">Posting as <strong>{{ current_user.username }}</strong></p>{% endif %}
 
                 <div class="form-group">
                     <label for="review-role">Professional Title or Affiliation</label>

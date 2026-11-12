@@ -362,197 +362,27 @@
     }
 
     // =========================================================================
-    // 6. POSTER HEADLINE DECODE / REVEAL (NON-STOP CONTINUOUS FLICKER ON HOVER)
+    // 6. HERO "TRUST" -> "TRUST?": hand-struck line plus a question mark
+    //    (hover on a mouse, tap to toggle on touch; the word stays readable)
     // =========================================================================
     function initCrazyTitle() {
-        const debunkEl = document.getElementById('decode-debunk');
-        const titleEl = document.getElementById('hero-crazy-title');
-        const titleWrap = document.getElementById('hero-title-wrap');
-        if (!debunkEl) return;
+        const wrap = document.getElementById('hero-title-wrap');
+        const word = document.getElementById('decode-debunk');
+        if (!wrap || !word) return;
 
-        const targetWord = 'TRUST';
-        const glyphs = ['?', '!', '#', '※', '§', '¶', 'X', 'Ø', '0', '1', 'T', 'R', 'U', 'S', 'Z', '9', '7', '¥', '¢', '&'];
+        const setDoubt = (on) => word.classList.toggle('is-doubted', on);
+        const canHover = window.matchMedia('(hover: hover) and (pointer: fine)');
 
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (prefersReducedMotion) {
-            debunkEl.textContent = targetWord;
-            return;
-        }
-
-        debunkEl.textContent = targetWord;
-
-        let isHovered = false;
-        let hoverLoopTimer = null;
-        let resolveTimeouts = [];
-        let lastSoundTime = 0;
-
-        function playHoverTick(freq = 600) {
-            const now = performance.now();
-            if (now - lastSoundTime > 75) {
-                lastSoundTime = now;
-                playTone(freq, 'sine', 0.02, 0.025);
-            }
-        }
-
-        function getRandomScramble() {
-            let res = '';
-            for (let i = 0; i < targetWord.length; i++) {
-                if (Math.random() < 0.78) {
-                    res += glyphs[Math.floor(Math.random() * glyphs.length)];
-                } else {
-                    res += targetWord[i];
-                }
-            }
-            return res;
-        }
-
-        // Settle letters back to "TRUST" when mouse leaves
-        function resolveToWord(instant = false) {
-            if (hoverLoopTimer) {
-                clearInterval(hoverLoopTimer);
-                hoverLoopTimer = null;
-            }
-            resolveTimeouts.forEach(t => clearTimeout(t));
-            resolveTimeouts = [];
-
-            if (instant) {
-                debunkEl.textContent = targetWord;
-                return;
-            }
-
-            // Sequential crisp lock-in: T -> TR -> TRU -> TRUS -> TRUST
-            for (let step = 1; step <= targetWord.length; step++) {
-                const t = setTimeout(() => {
-                    if (isHovered) return;
-                    let locked = targetWord.substring(0, step);
-                    for (let j = step; j < targetWord.length; j++) {
-                        locked += glyphs[Math.floor(Math.random() * glyphs.length)];
-                    }
-                    debunkEl.textContent = locked;
-
-                    if (step === targetWord.length) {
-                        debunkEl.textContent = targetWord;
-                        playHoverTick(880);
-                    } else {
-                        playHoverTick(500 + step * 70);
-                    }
-                }, step * 35);
-                resolveTimeouts.push(t);
-            }
-        }
-
-        // Start non-stop flickering: NEVER stops while mouse is over TRUST!
-        function startDynamicHover() {
-            if (isHovered && hoverLoopTimer) return;
-            isHovered = true;
-
-            // Cancel any pending resolve timeouts
-            resolveTimeouts.forEach(t => clearTimeout(t));
-            resolveTimeouts = [];
-
-            if (hoverLoopTimer) clearInterval(hoverLoopTimer);
-
-            // Immediately flicker
-            debunkEl.textContent = getRandomScramble();
-            playHoverTick(540);
-
-            // High-energy continuous flicker loop at 50ms interval
-            hoverLoopTimer = setInterval(() => {
-                if (!isHovered) {
-                    clearInterval(hoverLoopTimer);
-                    hoverLoopTimer = null;
-                    return;
-                }
-
-                debunkEl.textContent = getRandomScramble();
-                playHoverTick(480 + Math.random() * 320);
-            }, 50);
-        }
-
-        function stopDynamicHover(e) {
-            if (e && e.relatedTarget) {
-                if (titleEl && titleEl.contains(e.relatedTarget)) {
-                    return;
-                }
-            }
-            isHovered = false;
-            resolveToWord(false);
-        }
-
-        // Interactive mouse movement over the word
-        function handleMouseMove() {
-            if (!isHovered) {
-                startDynamicHover();
-            } else {
-                debunkEl.textContent = getRandomScramble();
-                playHoverTick(620);
-            }
-        }
-
-        titleEl.addEventListener('mouseenter', startDynamicHover);
-        debunkEl.addEventListener('mouseenter', startDynamicHover);
-        titleEl.addEventListener('mousemove', handleMouseMove);
-        debunkEl.addEventListener('mousemove', handleMouseMove);
-        titleEl.addEventListener('mouseleave', stopDynamicHover);
-        debunkEl.addEventListener('mouseleave', stopDynamicHover);
-
-        // Global pointermove ensures zero boundary dropouts
-        window.addEventListener('pointermove', (e) => {
-            const isInside = (titleEl && titleEl.contains(e.target)) || (debunkEl && debunkEl.contains(e.target));
-            if (isInside) {
-                if (!isHovered) {
-                    startDynamicHover();
-                }
-            } else if (isHovered) {
-                stopDynamicHover(e);
-            }
+        wrap.addEventListener('pointerenter', (e) => {
+            if (e.pointerType === 'mouse') setDoubt(true);
         });
-
-        // 1. Initial letter reveal on page load
-        function runIntroSequence() {
-            let step = 0;
-            const introTimer = setInterval(() => {
-                step++;
-                let str = targetWord.substring(0, step);
-                for (let i = step; i < targetWord.length; i++) {
-                    str += glyphs[Math.floor(Math.random() * glyphs.length)];
-                }
-                debunkEl.textContent = str;
-                playHoverTick(460 + step * 70);
-
-                if (step >= targetWord.length) {
-                    clearInterval(introTimer);
-                    debunkEl.textContent = targetWord;
-                }
-            }, 65);
-        }
-
-        runIntroSequence();
-
-        // 2. Trigger letter decode every time user scrolls to the hero section (if not currently hovered)
-        if ('IntersectionObserver' in window && titleWrap) {
-            const heroObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting && !isHovered) {
-                        runIntroSequence();
-                    }
-                });
-            }, {
-                threshold: 0.35
-            });
-            heroObserver.observe(titleWrap);
-        }
-
-        // 3. Click interaction for full burst
-        if (titleWrap) {
-            titleWrap.addEventListener('click', () => {
-                playRadarPing();
-                debunkEl.textContent = getRandomScramble();
-                setTimeout(() => {
-                    if (!isHovered) resolveToWord(false);
-                }, 220);
-            });
-        }
+        wrap.addEventListener('pointerleave', (e) => {
+            if (e.pointerType === 'mouse') setDoubt(false);
+        });
+        wrap.addEventListener('click', () => {
+            playRadarPing();
+            if (!canHover.matches) setDoubt(!word.classList.contains('is-doubted'));
+        });
     }
 
     // =========================================================================
@@ -574,7 +404,7 @@
             modalBackdrop.classList.add('open');
             modalBackdrop.setAttribute('aria-hidden', 'false');
             playChime();
-            const firstInput = document.getElementById('review-author');
+            const firstInput = document.getElementById('review-role');
             if (firstInput) firstInput.focus();
         }
 
@@ -617,16 +447,19 @@
             });
         }
 
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
         function createReviewCard(author, role, rating, content, isNew = false) {
             const card = document.createElement('div');
             card.className = `quote-card ${isNew ? 'new-community-review' : ''}`;
-            const starsStr = '★'.repeat(rating) + '☆'.repeat(Math.max(0, 5 - rating));
+            const starsStr = '\u2605'.repeat(rating) + '\u2606'.repeat(Math.max(0, 5 - rating));
 
             card.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <div class="quote-stars">${starsStr}</div>
-                    <span class="community-verified-badge">VERIFIED</span>
-                </div>
+                <div class="quote-stars" aria-label="${rating} out of 5 stars">${starsStr}</div>
                 <p class="quote-body">"${escapeHtml(content)}"</p>
                 <div class="quote-author">
                     <div class="author-avatar">${escapeHtml(author.charAt(0).toUpperCase())}</div>
@@ -639,30 +472,22 @@
             return card;
         }
 
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str || '';
-            return div.innerHTML;
+        const emptyState = document.getElementById('quotes-empty');
+        function addReviewCard(card, atTop) {
+            if (emptyState) emptyState.hidden = true;
+            if (atTop) quotesGrid.insertBefore(card, quotesGrid.firstChild);
+            else quotesGrid.appendChild(card);
         }
 
+        // Only reviews stored on the server are shown: nothing is seeded or kept in localStorage.
         function loadCommunityReviews() {
             if (!quotesGrid) return;
-            try {
-                const saved = JSON.parse(localStorage.getItem('debunkit_community_reviews') || '[]');
-                saved.reverse().forEach(r => {
-                    const card = createReviewCard(r.author, r.role, r.rating, r.content);
-                    quotesGrid.insertBefore(card, quotesGrid.firstChild);
-                });
-            } catch (e) {}
-
             fetch('/api/reviews')
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.status === 'success' && Array.isArray(data.reviews)) {
-                        data.reviews.forEach(r => {
-                            const card = createReviewCard(r.author_name, r.author_role, r.rating, r.content);
-                            quotesGrid.insertBefore(card, quotesGrid.firstChild);
-                        });
+                        data.reviews.forEach(r => addReviewCard(
+                            createReviewCard(r.author_name, r.author_role, r.rating, r.content), false));
                     }
                 })
                 .catch(() => {});
@@ -673,39 +498,38 @@
         if (form) {
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const authorInput = document.getElementById('review-author');
                 const roleInput = document.getElementById('review-role');
                 const contentInput = document.getElementById('review-content');
-
-                const author = authorInput ? authorInput.value.trim() : '';
-                const role = roleInput ? roleInput.value.trim() : 'Reader';
+                const role = roleInput ? roleInput.value.trim() : '';
                 const content = contentInput ? contentInput.value.trim() : '';
                 const rating = parseInt(ratingVal ? ratingVal.value : '5', 10);
+                if (!content) return;
 
-                if (!author || !content) return;
-
-                if (quotesGrid) {
-                    const newCard = createReviewCard(author, role, rating, content, true);
-                    quotesGrid.insertBefore(newCard, quotesGrid.firstChild);
-                    newCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }
-
-                try {
-                    const existing = JSON.parse(localStorage.getItem('debunkit_community_reviews') || '[]');
-                    existing.push({ author, role, rating, content, date: new Date().toISOString() });
-                    localStorage.setItem('debunkit_community_reviews', JSON.stringify(existing));
-                } catch (e) {}
-
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
                 fetch('/api/reviews', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ author, role, rating, content })
-                }).catch(() => {});
-
-                playSuccessChime();
-                showLandingToast('Review added to the community wall.');
-                closeModal();
-                form.reset();
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfMeta ? csrfMeta.getAttribute('content') : ''
+                    },
+                    body: JSON.stringify({ role, rating, content })
+                })
+                    .then(res => res.json().then(body => ({ ok: res.ok, body })))
+                    .then(({ ok, body }) => {
+                        if (!ok || !body.review) {
+                            showLandingToast((body && body.error) || 'Could not post your dispatch. Please try again.');
+                            return;
+                        }
+                        const r = body.review;
+                        const card = createReviewCard(r.author_name, r.author_role, r.rating, r.content, true);
+                        addReviewCard(card, true);
+                        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        playSuccessChime();
+                        showLandingToast('Dispatch published. Thank you.');
+                        closeModal();
+                        form.reset();
+                    })
+                    .catch(() => showLandingToast('Network error. Please try again.'));
             });
         }
     }

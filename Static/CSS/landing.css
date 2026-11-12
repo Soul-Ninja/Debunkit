@@ -1798,7 +1798,77 @@
 }
 
 #decode-debunk {
-    display: inline;
+    display: inline-block;
+    animation: trustStamp 320ms var(--ease-out) both;
+}
+
+/* "TRUST" gets struck through and questioned: exit is faster than enter */
+#decode-debunk::after {
+    content: '';
+    position: absolute;
+    left: -3%;
+    right: -3%;
+    top: 54%;
+    height: 0.085em;
+    background: var(--ink);
+    transform: scaleX(0) rotate(-2deg);
+    transform-origin: left center;
+    transition: transform 140ms var(--ease-out);
+    pointer-events: none;
+}
+
+.trust-q {
+    position: absolute;
+    left: 100%;
+    top: -0.02em;
+    margin-left: 0.04em;
+    color: var(--ink);
+    text-shadow: none;
+    opacity: 0;
+    transform: translateY(-0.12em) rotate(-10deg);
+    transition: opacity 120ms var(--ease-out), transform 140ms var(--ease-out);
+}
+
+#decode-debunk.is-doubted::after {
+    transform: scaleX(1) rotate(-2deg);
+    transition-duration: 260ms;
+}
+
+#decode-debunk.is-doubted .trust-q {
+    opacity: 1;
+    transform: translateY(0) rotate(6deg);
+    transition-duration: 220ms;
+    transition-delay: 140ms;
+}
+
+@keyframes trustStamp {
+    from { transform: scale(1.07); }
+    to { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #decode-debunk { animation: none; }
+    #decode-debunk::after,
+    .trust-q { transition: none; }
+}
+
+/* Reviews: honest empty state and signed-in label */
+.quotes-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--space-6, 48px) var(--space-4, 16px);
+    font-family: var(--font-serif, inherit);
+    font-style: italic;
+    color: var(--ink-muted, inherit);
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+}
+
+.review-as {
+    margin: 0 0 var(--space-3, 12px);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    color: var(--ink-muted, inherit);
 }
 
 @media (hover: hover) and (pointer: fine) {

@@ -181,3 +181,18 @@ class TestUrlAnalysis:
         assert isinstance(data["confidence"], (int, float))
         assert len(data["sources"]) > 0
         assert any("example.com" in s.get("url", "") or "Submitted" in s.get("title", "") for s in data["sources"])
+
+
+class TestReviews:
+    def test_guest_cannot_post_review(self, client):
+        res = client.post("/api/reviews", json={"role": "Reader", "rating": 5, "content": "Helpful tool"})
+        assert res.status_code == 401
+        assert client.get("/api/reviews").get_json()["reviews"] == []
+
+    def test_signed_in_review_uses_account_name(self, client):
+        client.post("/register", json={"username": "realreader", "email": "rr@example.com", "password": "StrongPassword123!"})
+        client.post("/login", json={"email": "rr@example.com", "password": "StrongPassword123!"})
+        res = client.post("/api/reviews", json={"author": "Spoofed Name", "role": "Reader", "rating": 4, "content": "Caught a fake headline."})
+        assert res.status_code == 201
+        assert res.get_json()["review"]["author_name"] == "realreader"
+        assert len(client.get("/api/reviews").get_json()["reviews"]) == 1
