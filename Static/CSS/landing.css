@@ -849,7 +849,7 @@
 
 .gauge-needle {
     transform-origin: 130px 130px;
-    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.6s cubic-bezier(0.34, 1.32, 0.64, 1);
 }
 
 .gauge-readout {
@@ -1149,14 +1149,76 @@
     color: var(--ink-muted);
 }
 
+/* Rubber Stamp: Dossier Verdict Stamp (Part A.2) */
 .rubber-stamp {
     font-family: var(--font-display);
     font-size: 0.85rem;
-    color: var(--red-text);
-    border: 1px solid var(--red);
-    padding: 1px 6px;
+    padding: 1px 7px;
     text-transform: uppercase;
-    transform: rotate(-2deg);
+    transform: scale(1) rotate(-2deg);
+    border: 1.5px solid var(--verdict-refuted);
+    color: var(--verdict-refuted-text);
+    background: var(--verdict-refuted-tint);
+    border-radius: var(--radius-sm);
+    box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.12);
+    display: inline-block;
+}
+
+.rubber-stamp.stamp-refuted {
+    border-color: var(--verdict-refuted);
+    color: var(--verdict-refuted-text);
+    background: var(--verdict-refuted-tint);
+}
+
+.rubber-stamp.stamp-misleading {
+    border-color: var(--verdict-misleading);
+    color: var(--verdict-misleading-text);
+    background: var(--verdict-misleading-tint);
+}
+
+.rubber-stamp.stamp-supported {
+    border-color: var(--verdict-supported);
+    color: var(--verdict-supported-text);
+    background: var(--verdict-supported-tint);
+}
+
+/* Stamped entrance animation: starts at scale(1.15) rotate(-6deg) opacity 0, lands at scale(1) rotate(-2deg) in 220ms, then 1px paper bump (Part A.2) */
+html.js-ready .dossier-card:not(.is-stamped) .rubber-stamp {
+    opacity: 0;
+    transform: scale(1.15) rotate(-6deg);
+}
+
+html.js-ready .dossier-card.is-stamped .rubber-stamp {
+    animation: dossierStampThud 260ms var(--ease-out) forwards;
+    animation-delay: calc(var(--stagger, 0) * 70ms);
+}
+
+@keyframes dossierStampThud {
+    0% {
+        opacity: 0;
+        transform: scale(1.15) rotate(-6deg);
+    }
+    84% {
+        opacity: 1;
+        transform: scale(1) rotate(-2deg) translateY(0);
+    }
+    92% {
+        opacity: 1;
+        transform: scale(1) rotate(-2deg) translateY(1px); /* paper bump */
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(-2deg) translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.js-ready .dossier-card:not(.is-stamped) .rubber-stamp,
+    html.js-ready .dossier-card.is-stamped .rubber-stamp {
+        opacity: 1;
+        transform: scale(1) rotate(-2deg);
+        animation: none;
+    }
 }
 
 .dossier-icon {

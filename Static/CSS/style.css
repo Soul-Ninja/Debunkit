@@ -34,6 +34,30 @@
     --gold: #A88B4A;            /* Tiny luxury accents / hairline rules */
     --gold-text: #786028;       /* Accessible text on paper (4.8:1 contrast) */
 
+    /* Highlighter Marker Token (Part A.3) */
+    --highlight: #F2D45C;
+
+    /* Canonical Verdict System Tokens (Part B.1) */
+    --verdict-supported: var(--mint);
+    --verdict-supported-text: var(--mint-text);
+    --verdict-supported-tint: var(--mint-tint);
+
+    --verdict-refuted: var(--red);
+    --verdict-refuted-text: var(--red-text);
+    --verdict-refuted-tint: var(--red-tint);
+
+    --verdict-misleading: var(--blush);
+    --verdict-misleading-text: var(--blush-text);
+    --verdict-misleading-tint: var(--blush-tint);
+
+    --verdict-low-cred: var(--gold);
+    --verdict-low-cred-text: var(--gold-text);
+    --verdict-low-cred-tint: rgba(168, 139, 74, 0.16);
+
+    --verdict-insufficient: var(--ink-muted);
+    --verdict-insufficient-text: var(--ink);
+    --verdict-insufficient-tint: rgba(27, 27, 27, 0.08);
+
     /* Motion Easing Tokens (Non-negotiable) */
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -109,6 +133,30 @@ html[data-theme="dark"] {
     --gold: #D4B26F;            /* 7.4:1 contrast */
     --gold-text: #D4B26F;
 
+    /* Highlighter Marker Token Dark (Part A.3) */
+    --highlight: #B89B2E;
+
+    /* Canonical Verdict System Tokens Dark (Part B.1) */
+    --verdict-supported: var(--mint);
+    --verdict-supported-text: var(--mint-text);
+    --verdict-supported-tint: var(--mint-tint);
+
+    --verdict-refuted: var(--red);
+    --verdict-refuted-text: var(--red-text);
+    --verdict-refuted-tint: var(--red-tint);
+
+    --verdict-misleading: var(--blush);
+    --verdict-misleading-text: var(--blush-text);
+    --verdict-misleading-tint: var(--blush-tint);
+
+    --verdict-low-cred: var(--gold);
+    --verdict-low-cred-text: var(--gold-text);
+    --verdict-low-cred-tint: rgba(212, 178, 111, 0.20);
+
+    --verdict-insufficient: var(--ink-muted);
+    --verdict-insufficient-text: var(--ink);
+    --verdict-insufficient-tint: rgba(228, 224, 211, 0.12);
+
     --border: rgba(228, 224, 211, 0.18);
     --border-hairline: rgba(228, 224, 211, 0.10);
     --border-strong: rgba(228, 224, 211, 0.85);
@@ -152,6 +200,30 @@ html[data-theme="dark"] {
         --blush-tint: rgba(240, 181, 172, 0.15);
         --gold: #D4B26F;
         --gold-text: #D4B26F;
+
+        /* Highlighter Marker Token Dark (Part A.3) */
+        --highlight: #B89B2E;
+
+        /* Canonical Verdict System Tokens Dark (Part B.1) */
+        --verdict-supported: var(--mint);
+        --verdict-supported-text: var(--mint-text);
+        --verdict-supported-tint: var(--mint-tint);
+
+        --verdict-refuted: var(--red);
+        --verdict-refuted-text: var(--red-text);
+        --verdict-refuted-tint: var(--red-tint);
+
+        --verdict-misleading: var(--blush);
+        --verdict-misleading-text: var(--blush-text);
+        --verdict-misleading-tint: var(--blush-tint);
+
+        --verdict-low-cred: var(--gold);
+        --verdict-low-cred-text: var(--gold-text);
+        --verdict-low-cred-tint: rgba(212, 178, 111, 0.20);
+
+        --verdict-insufficient: var(--ink-muted);
+        --verdict-insufficient-text: var(--ink);
+        --verdict-insufficient-tint: rgba(228, 224, 211, 0.12);
         --border: rgba(228, 224, 211, 0.18);
         --border-hairline: rgba(228, 224, 211, 0.10);
         --border-strong: rgba(228, 224, 211, 0.85);
@@ -580,22 +652,32 @@ a:hover {
     background: var(--paper-2);
 }
 
-/* Hero Stat Cards */
+/* Hero Stat Cards — Dark Ink Focal Panel (Part B.2) */
 .hero-stats {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--space-2);
     align-content: center;
+    background: #111110;
+    color: #E4E0D3;
+    padding: var(--space-4);
+    border: 1px solid rgba(0, 0, 0, 0.6);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-press);
 }
 
 .hero-stat-card {
-    background: var(--paper);
-    border: 1px solid var(--border-hairline);
-    border-left: 3px solid var(--ink);
-    padding: var(--space-2) var(--space-3);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(228, 224, 211, 0.14);
+    padding: var(--space-2) 0;
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+}
+
+.hero-stat-card:last-child {
+    border-bottom: none;
 }
 
 .hero-stat-card .stat-label {
@@ -604,13 +686,14 @@ a:hover {
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--ink-muted);
+    color: #ABA698;
 }
 
 .hero-stat-card strong {
     font-family: var(--font-display);
     font-size: 1.5rem;
-    color: var(--ink);
+    color: #E4E0D3;
+    font-variant-numeric: tabular-nums;
 }
 
 /* Quick Action Strip */
@@ -916,12 +999,17 @@ a:hover {
     overflow: hidden;
 }
 
+/* Verdict Report Header — Dark Ink Focal Panel (Part B.2) */
 .result-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid var(--ink);
-    padding-bottom: var(--space-4);
+    background: #111110;
+    color: #E4E0D3;
+    border: 1px solid rgba(0, 0, 0, 0.6);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-press);
+    padding: var(--space-4);
     margin-bottom: var(--space-4);
     flex-wrap: wrap;
     gap: var(--space-4);
@@ -934,7 +1022,7 @@ a:hover {
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--ink-muted);
+    color: #ABA698;
     margin-bottom: var(--space-1);
 }
 
@@ -971,25 +1059,82 @@ a:hover {
     }
 }
 
-/* Verdict Stamp Colors */
+/* Verdict Stamp Colors — Canonical System (Part B.1) */
 .verdict-SUPPORTED {
-    color: var(--mint-text);
-    border-color: var(--mint);
-    background: var(--mint-tint);
+    color: var(--verdict-supported-text);
+    border-color: var(--verdict-supported);
+    background: var(--verdict-supported-tint);
 }
 
 .verdict-REFUTED {
-    color: var(--red-text);
-    border-color: var(--red);
-    background: var(--red-tint);
+    color: var(--verdict-refuted-text);
+    border-color: var(--verdict-refuted);
+    background: var(--verdict-refuted-tint);
 }
 
-.verdict-MISLEADING,
-.verdict-LOW-CREDIBILITY,
+.verdict-MISLEADING {
+    color: var(--verdict-misleading-text);
+    border-color: var(--verdict-misleading);
+    background: var(--verdict-misleading-tint);
+}
+
+.verdict-LOW-CREDIBILITY {
+    color: var(--verdict-low-cred-text);
+    border-color: var(--verdict-low-cred);
+    background: var(--verdict-low-cred-tint);
+}
+
 .verdict-INSUFFICIENT-EVIDENCE {
-    color: var(--blush-text);
-    border-color: var(--blush);
-    background: var(--blush-tint);
+    color: var(--verdict-insufficient-text);
+    border-color: var(--verdict-insufficient);
+    background: var(--verdict-insufficient-tint);
+}
+
+/* Verdict History Tags — Small filled tags with top rules (Part B.1) */
+.verdict-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: var(--radius-sm);
+    border: 1px solid currentColor;
+    border-top: 2px solid currentColor;
+    line-height: 1.3;
+}
+
+.verdict-tag.verdict-SUPPORTED {
+    color: var(--verdict-supported-text);
+    border-color: var(--verdict-supported);
+    background: var(--verdict-supported-tint);
+}
+
+.verdict-tag.verdict-REFUTED {
+    color: var(--verdict-refuted-text);
+    border-color: var(--verdict-refuted);
+    background: var(--verdict-refuted-tint);
+}
+
+.verdict-tag.verdict-MISLEADING {
+    color: var(--verdict-misleading-text);
+    border-color: var(--verdict-misleading);
+    background: var(--verdict-misleading-tint);
+}
+
+.verdict-tag.verdict-LOW-CREDIBILITY {
+    color: var(--verdict-low-cred-text);
+    border-color: var(--verdict-low-cred);
+    background: var(--verdict-low-cred-tint);
+}
+
+.verdict-tag.verdict-INSUFFICIENT-EVIDENCE {
+    color: var(--verdict-insufficient-text);
+    border-color: var(--verdict-insufficient);
+    background: var(--verdict-insufficient-tint);
 }
 
 /* Confidence Card: Hairline ruled bar + serif percentage */
@@ -1002,16 +1147,18 @@ a:hover {
     font-family: var(--font-serif);
     font-size: 1.15rem;
     font-weight: 600;
-    color: var(--ink);
+    color: #E4E0D3;
     display: block;
     margin-bottom: var(--space-2);
+    font-variant-numeric: tabular-nums;
 }
 
 .confidence-track {
     width: 100%;
-    height: 6px;
-    background: var(--paper-3);
-    border: 1px solid var(--border-hairline);
+    height: 7px;
+    background: rgba(228, 224, 211, 0.22);
+    border: 1px solid rgba(228, 224, 211, 0.3);
+    border-radius: var(--radius-sm);
     overflow: hidden;
 }
 
@@ -1304,12 +1451,19 @@ a:hover {
     color: var(--ink-muted);
 }
 
-/* History Ledger Table */
+/* History Ledger Table — Ruled-Paper Feel & Row Stagger (Part B.4) */
 .history-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: var(--space-3);
     font-family: var(--font-serif);
+    background-image: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 39px,
+        var(--border-hairline) 39px,
+        var(--border-hairline) 40px
+    );
 }
 
 .history-table th {
@@ -1322,17 +1476,269 @@ a:hover {
     text-align: left;
     padding: var(--space-2) var(--space-3);
     border-bottom: 2px solid var(--ink);
+    background: var(--paper-2);
 }
 
 .history-table td {
     padding: var(--space-3);
     border-bottom: 1px solid var(--border-hairline);
     font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
 }
 
 .history-table tr:hover td {
     background: var(--paper);
     cursor: pointer;
+}
+
+.ledger-row-enter {
+    opacity: 0;
+    transform: translateY(4px);
+    animation: ledgerRowIn 220ms var(--ease-out) forwards;
+    animation-delay: var(--row-delay, 0ms);
+}
+
+@keyframes ledgerRowIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   TELEMETRY VISUALS (Part B.2 & B.3)
+   -------------------------------------------------------------------------- */
+.telemetry-summary {
+    background: #111110;
+    color: #E4E0D3;
+    border: 1px solid rgba(0, 0, 0, 0.6);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-press);
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-3);
+}
+
+.telemetry-summary-item {
+    border-left: 2px solid rgba(228, 224, 211, 0.2);
+    padding-left: var(--space-3);
+}
+
+.telemetry-summary-label {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #ABA698;
+    margin-bottom: var(--space-1);
+}
+
+.telemetry-summary-value {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    line-height: 1;
+    color: #E4E0D3;
+    font-variant-numeric: tabular-nums;
+}
+
+.telemetry-visual-card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+.telemetry-card-title {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin: 0 0 var(--space-3) 0;
+}
+
+.telemetry-bar {
+    width: 100%;
+    height: 32px;
+    background: var(--paper-3);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    display: flex;
+    border: 1.5px solid var(--ink);
+    box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.telemetry-seg {
+    height: 100%;
+    transform-origin: left center;
+    transition: transform 500ms var(--ease-out);
+    position: relative;
+    border-right: 1px solid rgba(27, 27, 27, 0.25);
+}
+
+.telemetry-seg.seg-supported {
+    background: var(--verdict-supported);
+}
+
+.telemetry-seg.seg-refuted {
+    background: var(--verdict-refuted);
+}
+
+.telemetry-seg.seg-misleading {
+    background: var(--verdict-misleading);
+}
+
+.telemetry-seg.seg-low-credibility {
+    background: var(--verdict-low-cred);
+}
+
+.telemetry-seg.seg-insufficient-evidence {
+    background: var(--verdict-insufficient);
+}
+
+.telemetry-ledger-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--space-4);
+    font-family: var(--font-serif);
+}
+
+.telemetry-ledger-table th {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    text-align: left;
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 2px solid var(--ink);
+}
+
+.telemetry-ledger-table td {
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--border-hairline);
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.telemetry-legend-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.telemetry-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    display: inline-block;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+/* --------------------------------------------------------------------------
+   EDITORIAL EMPTY & LOADING STATES (Part B.5)
+   -------------------------------------------------------------------------- */
+.editorial-state-card {
+    padding: var(--space-6) var(--space-4);
+    text-align: center;
+    border: 1px dashed var(--border);
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: var(--radius-sm);
+    margin: var(--space-3) 0;
+}
+
+.editorial-instruction {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    color: var(--ink-muted);
+    margin: 0;
+}
+
+.ruled-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin: var(--space-3) auto 0;
+    width: 64px;
+    opacity: 0.55;
+}
+
+.ruled-line {
+    display: block;
+    height: 1px;
+    background: var(--ink-dim);
+    width: 100%;
+}
+
+.ruled-line:nth-child(2) {
+    width: 75%;
+}
+
+.ruled-line:nth-child(3) {
+    width: 48%;
+}
+
+/* --------------------------------------------------------------------------
+   HIGHLIGHTER SWIPE MARKS (Part A.3)
+   -------------------------------------------------------------------------- */
+mark.hl {
+    background-color: transparent;
+    background-image: linear-gradient(var(--highlight), var(--highlight));
+    background-repeat: no-repeat;
+    background-position: left bottom;
+    background-size: 100% 88%;
+    color: inherit;
+    padding: 0.1em 0.28em;
+    margin: 0 -0.05em;
+    clip-path: polygon(0% 6%, 100% 1%, 99% 94%, 1% 99%);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+html.js-ready mark.hl {
+    background-size: 0% 88%;
+    transition: background-size 500ms var(--ease-out);
+}
+
+html.js-ready mark.hl.is-highlighted {
+    background-size: 100% 88%;
+}
+
+html[data-theme="dark"] mark.hl,
+@media (prefers-color-scheme: dark) {
+    html[data-theme="system"] mark.hl {
+        color: #141412 !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.js-ready mark.hl {
+        background-size: 100% 88%;
+        transition: none;
+    }
+    .ledger-row-enter {
+        opacity: 1;
+        transform: none;
+        animation: none;
+    }
+    .telemetry-seg {
+        transform: none !important;
+        transition: none !important;
+    }
 }
 
 /* --------------------------------------------------------------------------

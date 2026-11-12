@@ -245,17 +245,27 @@
                             </div>
                         </div>
 
-                        <!-- Empty State -->
-                        <div class="result-empty glass-panel" id="result-empty">
-                            <div class="empty-icon">
-                                <svg viewBox="0 0 24 24" width="40" height="40" stroke="var(--ink-muted)" stroke-width="1.8" fill="none"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                        <!-- Empty State (Part B.5) -->
+                        <div class="result-empty glass-panel editorial-state-card" id="result-empty">
+                            <p class="editorial-instruction">
+                                Submit an assertion, headline, or article URL above to initiate forensic inspection.
+                            </p>
+                            <div class="ruled-placeholder" aria-hidden="true">
+                                <span class="ruled-line"></span>
+                                <span class="ruled-line"></span>
+                                <span class="ruled-line"></span>
                             </div>
-                            <div>
-                                <h3>Ready for Forensic Inspection</h3>
-                                <p>
-                                    Submit a headline, URL, or paragraph. Your verdict stamp, confidence bar,
-                                    fact-check synthesis, red flags, and primary receipts will appear here.
-                                </p>
+                        </div>
+
+                        <!-- Scanner Loading State (Part B.5) -->
+                        <div class="result-loading glass-panel editorial-state-card" id="scanner-loading" style="display: none;" aria-live="polite">
+                            <p class="editorial-instruction">
+                                Cross-referencing wire reports, primary receipts, and neural inference layers...
+                            </p>
+                            <div class="ruled-placeholder" aria-hidden="true">
+                                <span class="ruled-line"></span>
+                                <span class="ruled-line"></span>
+                                <span class="ruled-line"></span>
                             </div>
                         </div>
 
@@ -419,7 +429,16 @@
                         </div>
                     </div>
 
-                    <div id="history-content">Loading analysis history ledger...</div>
+                    <div id="history-content">
+                        <div class="editorial-state-card">
+                            <p class="editorial-instruction">Retrieving investigative records from the secure archive...</p>
+                            <div class="ruled-placeholder" aria-hidden="true">
+                                <span class="ruled-line"></span>
+                                <span class="ruled-line"></span>
+                                <span class="ruled-line"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -430,7 +449,16 @@
                 <h2 class="view-title">BUREAU TELEMETRY</h2>
 
                 <div class="glass-panel">
-                    <div id="analytics-content">Compiling system telemetry records...</div>
+                    <div id="analytics-content">
+                        <div class="editorial-state-card">
+                            <p class="editorial-instruction">Compiling system telemetry and verdict distribution records...</p>
+                            <div class="ruled-placeholder" aria-hidden="true">
+                                <span class="ruled-line"></span>
+                                <span class="ruled-line"></span>
+                                <span class="ruled-line"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

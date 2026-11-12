@@ -21,11 +21,24 @@ function setStatusMessage(container, message, color = 'var(--text)') {
 
     clearElement(container);
 
-    const p = document.createElement('p');
-    p.textContent = message;
-    p.style.color = color;
+    const card = document.createElement('div');
+    card.className = 'editorial-state-card';
 
-    container.appendChild(p);
+    const p = document.createElement('p');
+    p.className = 'editorial-instruction';
+    p.textContent = message;
+    if (color && color !== 'var(--text)') {
+        p.style.color = color;
+    }
+
+    const ruled = document.createElement('div');
+    ruled.className = 'ruled-placeholder';
+    ruled.setAttribute('aria-hidden', 'true');
+    ruled.innerHTML = '<span class="ruled-line"></span><span class="ruled-line"></span><span class="ruled-line"></span>';
+
+    card.appendChild(p);
+    card.appendChild(ruled);
+    container.appendChild(card);
 }
 
 function createCell(text, align = 'left') {
@@ -116,13 +129,13 @@ function verdictClass(verdict) {
 function getVerdictColor(verdict) {
     const normalized = normalizeVerdict(verdict);
 
-    if (normalized === 'SUPPORTED') return 'var(--success)';
-    if (normalized === 'REFUTED') return 'var(--danger)';
-    if (normalized === 'MISLEADING') return 'var(--warn)';
-    if (normalized === 'LOW CREDIBILITY') return 'var(--warn)';
-    if (normalized === 'INSUFFICIENT EVIDENCE') return 'var(--muted)';
+    if (normalized === 'SUPPORTED') return 'var(--verdict-supported)';
+    if (normalized === 'REFUTED') return 'var(--verdict-refuted)';
+    if (normalized === 'MISLEADING') return 'var(--verdict-misleading)';
+    if (normalized === 'LOW CREDIBILITY') return 'var(--verdict-low-cred)';
+    if (normalized === 'INSUFFICIENT EVIDENCE') return 'var(--verdict-insufficient)';
 
-    return 'var(--warn)';
+    return 'var(--verdict-misleading)';
 }
 
 function mergeBreakdown(rawBreakdown, normalizer) {
@@ -587,8 +600,10 @@ function displayError(errorMessage) {
 
     const resPanel = document.getElementById('result-panel');
     const resultEmpty = document.getElementById('result-empty');
+    const scannerLoading = document.getElementById('scanner-loading');
     const vSpan = document.getElementById('res-verdict');
 
+    if (scannerLoading) scannerLoading.style.display = 'none';
     if (resultEmpty) resultEmpty.style.display = 'none';
     if (resPanel) resPanel.style.display = 'block';
 
@@ -695,8 +710,10 @@ async function startScan(retryCount = 0) {
 
     lastAnalysisReport = null;
 
+    const scannerLoading = document.getElementById('scanner-loading');
     if (resultEmpty) resultEmpty.style.display = 'none';
     if (resPanel) resPanel.style.display = 'none';
+    if (scannerLoading) scannerLoading.style.display = 'block';
     if (scanner) scanner.style.display = 'block';
 
     if (btn) {
@@ -719,6 +736,8 @@ async function startScan(retryCount = 0) {
         });
 
         const data = await response.json();
+
+        if (scannerLoading) scannerLoading.style.display = 'none';
 
         if (!response.ok) {
             const errorMsg = data.error || `HTTP ${response.status}`;
@@ -791,6 +810,9 @@ async function startScan(retryCount = 0) {
         }
     } catch (error) {
         console.error('[Error]', error);
+
+        const scannerLoading = document.getElementById('scanner-loading');
+        if (scannerLoading) scannerLoading.style.display = 'none';
 
         if (resPanel) resPanel.style.display = 'block';
         if (resultEmpty) resultEmpty.style.display = 'none';
@@ -1043,13 +1065,15 @@ function resetHistoryFilters() {
     applyHistoryFilters();
 }
 
+let hasHistoryLoadedOnce = false;
+
 function renderHistoryTable(analyses) {
     const contentDiv = document.getElementById('history-content');
 
     if (!contentDiv) return;
 
     if (!analyses || analyses.length === 0) {
-        setStatusMessage(contentDiv, 'No analyses match your filters.', 'var(--muted)');
+        setStatusMessage(contentDiv, 'No inquiries match the current filter parameters.', 'var(--ink-muted)');
         return;
     }
 
@@ -1065,8 +1089,8 @@ function renderHistoryTable(analyses) {
     const headerRow = document.createElement('tr');
 
     const headers = [
-        { text: 'Text', align: 'left' },
-        { text: 'Verdict', align: 'center' },
+        { text: 'Inquiry Text', align: 'left' },
+        { text: 'Verdict Stamp', align: 'center' },
         { text: 'Confidence', align: 'center' },
         { text: 'Mode', align: 'center' },
         { text: 'Date', align: 'center' }
@@ -1083,9 +1107,14 @@ function renderHistoryTable(analyses) {
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    analyses.forEach(analysis => {
+    analyses.forEach((analysis, index) => {
         const row = document.createElement('tr');
+        if (!hasHistoryLoadedOnce && !prefersReduced) {
+            row.classList.add('ledger-row-enter');
+            row.style.setProperty('--row-delay', `${index * 40}ms`);
+        }
         row.addEventListener('click', () => showAnalysisDetail(analysis.id));
 
         const rawText = String(analysis.text_analyzed || '');
@@ -1094,9 +1123,14 @@ function renderHistoryTable(analyses) {
         const textCell = createCell(previewText, 'left');
 
         const verdict = normalizeVerdict(analysis.verdict);
-        const verdictCell = createCell(verdict, 'center');
-        verdictCell.style.color = getVerdictColor(verdict);
-        verdictCell.style.fontWeight = 'bold';
+        const verdictCell = document.createElement('td');
+        verdictCell.style.padding = '10px';
+        verdictCell.style.textAlign = 'center';
+
+        const tag = document.createElement('span');
+        tag.className = `verdict-tag ${verdictClass(verdict)}`;
+        tag.textContent = verdict;
+        verdictCell.appendChild(tag);
 
         const confidenceValue = Number.isFinite(Number(analysis.confidence))
             ? `${analysis.confidence}%`
@@ -1130,6 +1164,8 @@ function renderHistoryTable(analyses) {
         tbody.appendChild(row);
     });
 
+    hasHistoryLoadedOnce = true;
+
     table.appendChild(tbody);
     tableWrapper.appendChild(table);
     contentDiv.appendChild(tableWrapper);
@@ -1137,9 +1173,11 @@ function renderHistoryTable(analyses) {
 
 // ===== ANALYTICS =====
 
+let hasTelemetryLoadedOnce = false;
+
 async function loadSystemAnalytics() {
     const contentDiv = document.getElementById('analytics-content');
-    setStatusMessage(contentDiv, 'Loading system analytics.');
+    setStatusMessage(contentDiv, 'Compiling system telemetry and verdict distribution records...');
 
     try {
         const response = await fetch('/api/stats', {
@@ -1188,118 +1226,150 @@ async function loadSystemAnalytics() {
             ...mergeBreakdown(data.mode_breakdown || {}, normalizeModeLabel)
         };
 
-        const grid = document.createElement('div');
-        grid.style.display = 'grid';
-        grid.style.gridTemplateColumns = '1fr 1fr';
-        grid.style.gap = '20px';
+        const totalVerdicts = Object.values(normalizedVerdictBreakdown).reduce((sum, val) => sum + val, 0);
 
-        const summaryCard = document.createElement('div');
-        summaryCard.style.background = 'rgba(62, 207, 122, 0.1)';
-        summaryCard.style.border = '1px solid rgba(62, 207, 122, 0.3)';
-        summaryCard.style.padding = '15px';
-        summaryCard.style.borderRadius = '6px';
+        // 1. Dark "Ink" Focal Panel for Telemetry Summary (Part B.2)
+        const summaryPanel = document.createElement('div');
+        summaryPanel.className = 'telemetry-summary';
+        summaryPanel.innerHTML = `
+            <div class="telemetry-summary-item">
+                <span class="telemetry-summary-label">TOTAL INQUIRIES COMPILED</span>
+                <span class="telemetry-summary-value">${Number(data.total_analyses || totalVerdicts || 0).toLocaleString()}</span>
+            </div>
+            <div class="telemetry-summary-item">
+                <span class="telemetry-summary-label">AVERAGE INQUIRY CONFIDENCE</span>
+                <span class="telemetry-summary-value">${Number(data.average_confidence || 0).toFixed(1)}%</span>
+            </div>
+            <div class="telemetry-summary-item">
+                <span class="telemetry-summary-label">SYSTEM PERIMETER</span>
+                <span class="telemetry-summary-value" style="font-size: 1.15rem; letter-spacing: 0.05em;">ACTIVE // DUAL-RAG</span>
+            </div>
+        `;
+        contentDiv.appendChild(summaryPanel);
 
-        const summaryTitle = document.createElement('h3');
-        summaryTitle.textContent = 'Summary';
-        summaryTitle.style.margin = '0 0 10px 0';
-        summaryTitle.style.color = 'var(--success)';
-        summaryCard.appendChild(summaryTitle);
+        // 2. Telemetry Visuals: Segmented Proportion Bar + Ledger Table (Part B.3)
+        const visualCard = document.createElement('div');
+        visualCard.className = 'telemetry-visual-card';
 
-        const totalP = document.createElement('p');
-        totalP.style.margin = '5px 0';
-        totalP.style.color = 'var(--text)';
-        totalP.textContent = `Total Analyses: ${data.total_analyses || 0}`;
-        summaryCard.appendChild(totalP);
+        const barTitle = document.createElement('h3');
+        barTitle.className = 'telemetry-card-title';
+        barTitle.textContent = 'VERDICT DISTRIBUTION & PROPORTION BAR';
+        visualCard.appendChild(barTitle);
 
-        const avgP = document.createElement('p');
-        avgP.style.margin = '5px 0';
-        avgP.style.color = 'var(--text)';
-        avgP.textContent = `Average Confidence: ${data.average_confidence || 0}%`;
-        summaryCard.appendChild(avgP);
+        const barTrack = document.createElement('div');
+        barTrack.className = 'telemetry-bar';
+        barTrack.setAttribute('role', 'progressbar');
+        barTrack.setAttribute('aria-label', 'Verdict Distribution Proportions');
 
-        grid.appendChild(summaryCard);
-
-        const verdictCard = document.createElement('div');
-        verdictCard.style.background = 'rgba(232, 200, 74, 0.1)';
-        verdictCard.style.border = '1px solid rgba(232, 200, 74, 0.3)';
-        verdictCard.style.padding = '15px';
-        verdictCard.style.borderRadius = '6px';
-
-        const verdictTitle = document.createElement('h3');
-        verdictTitle.textContent = 'Verdict Breakdown';
-        verdictTitle.style.margin = '0 0 10px 0';
-        verdictTitle.style.color = 'var(--accent)';
-        verdictCard.appendChild(verdictTitle);
-
-        const verdictOrder = [
-            'SUPPORTED',
-            'REFUTED',
-            'MISLEADING',
-            'LOW CREDIBILITY',
-            'INSUFFICIENT EVIDENCE'
+        const verdictMeta = [
+            { name: 'SUPPORTED', slug: 'supported', symbol: '✓', colorVar: 'var(--verdict-supported)' },
+            { name: 'REFUTED', slug: 'refuted', symbol: '✕', colorVar: 'var(--verdict-refuted)' },
+            { name: 'MISLEADING', slug: 'misleading', symbol: '⚠', colorVar: 'var(--verdict-misleading)' },
+            { name: 'LOW CREDIBILITY', slug: 'low-credibility', symbol: '◆', colorVar: 'var(--verdict-low-cred)' },
+            { name: 'INSUFFICIENT EVIDENCE', slug: 'insufficient-evidence', symbol: '?', colorVar: 'var(--verdict-insufficient)' }
         ];
 
-        verdictOrder.forEach(verdict => {
-            const count = normalizedVerdictBreakdown[verdict] || 0;
-            const p = document.createElement('p');
-            p.style.margin = '5px 0';
-            p.style.color = getVerdictColor(verdict);
+        const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-            const strong = document.createElement('strong');
-            strong.textContent = verdict;
+        verdictMeta.forEach(meta => {
+            const count = normalizedVerdictBreakdown[meta.name] || 0;
+            const pct = totalVerdicts > 0 ? (count / totalVerdicts) * 100 : 0;
+            if (pct > 0) {
+                const seg = document.createElement('div');
+                seg.className = `telemetry-seg seg-${meta.slug}`;
+                seg.style.width = `${pct}%`;
+                seg.title = `${meta.name}: ${count} (${pct.toFixed(1)}%)`;
 
-            p.appendChild(strong);
-            p.appendChild(document.createTextNode(`: ${count}`));
-
-            verdictCard.appendChild(p);
-        });
-
-        Object.keys(normalizedVerdictBreakdown).forEach(verdict => {
-            if (!verdictOrder.includes(verdict)) {
-                const count = normalizedVerdictBreakdown[verdict];
-                const p = document.createElement('p');
-                p.style.margin = '5px 0';
-                p.style.color = getVerdictColor(verdict);
-                const strong = document.createElement('strong');
-                strong.textContent = verdict;
-                p.appendChild(strong);
-                p.appendChild(document.createTextNode(`: ${count}`));
-                verdictCard.appendChild(p);
+                if (!hasTelemetryLoadedOnce && !prefersReduced) {
+                    seg.style.transform = 'scaleX(0)';
+                }
+                barTrack.appendChild(seg);
             }
         });
 
-        grid.appendChild(verdictCard);
+        visualCard.appendChild(barTrack);
 
+        // Animate segment entrance on first view (Part B.3)
+        if (!hasTelemetryLoadedOnce && !prefersReduced) {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    barTrack.querySelectorAll('.telemetry-seg').forEach(seg => {
+                        seg.style.transform = 'scaleX(1)';
+                    });
+                });
+            });
+        }
+
+        // Ledger Table with Legend (symbol + color swatch + verdict name)
+        const table = document.createElement('table');
+        table.className = 'telemetry-ledger-table';
+
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+            <tr>
+                <th style="width: 45%;">Verdict Stamp & Legend</th>
+                <th style="text-align: right; width: 25%;">Recorded Inquiries</th>
+                <th style="text-align: right; width: 30%;">Proportion / Share</th>
+            </tr>
+        `;
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        verdictMeta.forEach(meta => {
+            const count = normalizedVerdictBreakdown[meta.name] || 0;
+            const pct = totalVerdicts > 0 ? ((count / totalVerdicts) * 100).toFixed(1) : '0.0';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <span class="telemetry-legend-badge">
+                        <span class="telemetry-swatch" style="background: ${meta.colorVar};" aria-hidden="true"></span>
+                        <span style="color: ${meta.colorVar}; font-weight: bold;">${meta.symbol} ${meta.name}</span>
+                    </span>
+                </td>
+                <td style="text-align: right; font-weight: 600;">${Number(count).toLocaleString()}</td>
+                <td style="text-align: right; color: var(--ink-muted);">${pct}%</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        visualCard.appendChild(table);
+        contentDiv.appendChild(visualCard);
+
+        // 3. Inspection Pipeline Mode Breakdown Ledger Table
         const modeCard = document.createElement('div');
-        modeCard.style.background = 'rgba(100, 100, 200, 0.1)';
-        modeCard.style.border = '1px solid rgba(100, 100, 200, 0.3)';
-        modeCard.style.padding = '15px';
-        modeCard.style.borderRadius = '6px';
+        modeCard.className = 'telemetry-visual-card';
 
         const modeTitle = document.createElement('h3');
-        modeTitle.textContent = 'Analysis Mode';
-        modeTitle.style.margin = '0 0 10px 0';
-        modeTitle.style.color = 'var(--text)';
+        modeTitle.className = 'telemetry-card-title';
+        modeTitle.textContent = 'INSPECTION PIPELINE INVOCATIONS';
         modeCard.appendChild(modeTitle);
 
-        Object.entries(normalizedModeBreakdown)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .forEach(([modeLabel, count]) => {
-                const p = document.createElement('p');
-                p.style.margin = '5px 0';
-                p.style.color = 'var(--text)';
+        const modeTable = document.createElement('table');
+        modeTable.className = 'telemetry-ledger-table';
+        modeTable.innerHTML = `
+            <thead>
+                <tr>
+                    <th style="width: 60%;">Inspection Mode</th>
+                    <th style="text-align: right; width: 40%;">Recorded Executions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${Object.entries(normalizedModeBreakdown)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([modeLabel, count]) => `
+                        <tr>
+                            <td style="font-family: var(--font-sans); font-size: 0.82rem; font-weight: 600;">${modeLabel}</td>
+                            <td style="text-align: right; font-weight: 600;">${Number(count).toLocaleString()}</td>
+                        </tr>
+                    `).join('')}
+            </tbody>
+        `;
+        modeCard.appendChild(modeTable);
+        contentDiv.appendChild(modeCard);
 
-                const strong = document.createElement('strong');
-                strong.textContent = modeLabel;
-
-                p.appendChild(strong);
-                p.appendChild(document.createTextNode(`: ${count}`));
-
-                modeCard.appendChild(p);
-            });
-
-        grid.appendChild(modeCard);
-        contentDiv.appendChild(grid);
+        hasTelemetryLoadedOnce = true;
 
     } catch (error) {
         console.error('[Error]', error);
@@ -1659,13 +1729,15 @@ function clearUI() {
     const titleInput = document.getElementById('val-title');
     const resultPanel = document.getElementById('result-panel');
     const resultEmpty = document.getElementById('result-empty');
+    const scannerLoading = document.getElementById('scanner-loading');
 
     if (textInput) textInput.value = '';
     if (urlInput) urlInput.value = '';
     if (titleInput) titleInput.value = '';
 
+    if (scannerLoading) scannerLoading.style.display = 'none';
     if (resultPanel) resultPanel.style.display = 'none';
-    if (resultEmpty) resultEmpty.style.display = 'grid';
+    if (resultEmpty) resultEmpty.style.display = 'block';
 
     updateConfidenceVisual(0);
 

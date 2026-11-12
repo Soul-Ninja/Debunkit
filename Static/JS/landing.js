@@ -171,8 +171,36 @@
     // 3. BS-O-METER UI CONTROLLER
     // =========================================================================
     let currentActivePreset = null;
+    let hasGaugeSwung = false;
+    let gaugeCountRaf = null;
 
-    function renderMeterPreset(preset) {
+    function animateGaugeCount(startVal, endVal, durationMs) {
+        if (gaugeCountRaf) {
+            cancelAnimationFrame(gaugeCountRaf);
+            gaugeCountRaf = null;
+        }
+        const scoreEl = document.getElementById('gauge-score');
+        if (!scoreEl) return;
+
+        const startTime = performance.now();
+        function tick(now) {
+            const elapsed = now - startTime;
+            const progress = Math.min(1, elapsed / durationMs);
+            // Cubic ease-out matching the needle overshoot transition
+            const ease = 1 - Math.pow(1 - progress, 3);
+            const current = startVal + (endVal - startVal) * ease;
+            scoreEl.textContent = current.toFixed(1) + '%';
+            if (progress < 1) {
+                gaugeCountRaf = requestAnimationFrame(tick);
+            } else {
+                scoreEl.textContent = endVal.toFixed(1) + '%';
+                gaugeCountRaf = null;
+            }
+        }
+        gaugeCountRaf = requestAnimationFrame(tick);
+    }
+
+    function renderMeterPreset(preset, isUserAction = true) {
         initAudio();
 
         currentActivePreset = preset;
@@ -185,16 +213,34 @@
         const scanFullBtn = document.getElementById('btn-scan-full');
         const customInput = document.getElementById('custom-claim-input');
 
+        if (isUserAction) {
+            if (gaugeCountRaf) {
+                cancelAnimationFrame(gaugeCountRaf);
+                gaugeCountRaf = null;
+            }
+            hasGaugeSwung = true;
+        }
+
         if (customInput) {
             customInput.value = preset.claim;
         }
 
+        const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
         if (needle) {
-            needle.style.transform = `rotate(${preset.angle}deg)`;
+            if (!isUserAction && !prefersReduced && !hasGaugeSwung) {
+                needle.style.transform = 'rotate(0deg)';
+            } else {
+                needle.style.transform = `rotate(${preset.angle}deg)`;
+            }
         }
 
         if (score) {
-            score.textContent = preset.score;
+            if (!isUserAction && !prefersReduced && !hasGaugeSwung) {
+                score.textContent = '0.0%';
+            } else {
+                score.textContent = preset.score;
+            }
             score.className = `gauge-score ${preset.tone}`;
         }
 
@@ -243,6 +289,12 @@
             showLandingToast('Please enter at least 5 characters to analyze.');
             return;
         }
+
+        if (gaugeCountRaf) {
+            cancelAnimationFrame(gaugeCountRaf);
+            gaugeCountRaf = null;
+        }
+        hasGaugeSwung = true;
 
         initAudio();
         playRadarPing();
@@ -540,6 +592,7 @@
 
     // 9.1 Data-reveal IntersectionObserver: triggers EVERY TIME user scrolls down!
     function initScrollReveals() {
+        window.__revealReady = true;
         const revealElements = document.querySelectorAll('[data-reveal]');
         if (!revealElements.length) return;
 
@@ -564,6 +617,90 @@
         });
 
         revealElements.forEach(el => revealObserver.observe(el));
+    }
+
+    // 9.1a Scroll-driven Forensic Gauge (Part A.1)
+    function initScrollDrivenGauge() {
+        const meterSection = document.getElementById('meter');
+        const needle = document.getElementById('gauge-needle');
+        const score = document.getElementById('gauge-score');
+        if (!meterSection || !needle || !score) return;
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+            hasGaugeSwung = true;
+            needle.style.transform = 'rotate(78deg)';
+            score.textContent = '99.9%';
+            return;
+        }
+
+        const gaugeObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !hasGaugeSwung) {
+                    hasGaugeSwung = true;
+                    needle.style.transform = 'rotate(78deg)';
+                    animateGaugeCount(0, 99.9, 600);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.25,
+            rootMargin: '0px 0px -40px 0px'
+        });
+
+        gaugeObserver.observe(meterSection);
+    }
+
+    // 9.1b Stamped Dossier Cards (Part A.2)
+    function initStampedDossiers() {
+        const cards = document.querySelectorAll('.dossier-card');
+        if (!cards.length) return;
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+            cards.forEach(c => c.classList.add('is-stamped'));
+            return;
+        }
+
+        const dossierObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-stamped');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.15,
+            rootMargin: '0px 0px -40px 0px'
+        });
+
+        cards.forEach(c => dossierObserver.observe(c));
+    }
+
+    // 9.1c Highlighter Marker Swipes (Part A.3)
+    function initHighlighterSwipe() {
+        const marks = document.querySelectorAll('mark.hl');
+        if (!marks.length) return;
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+            marks.forEach(m => m.classList.add('is-highlighted'));
+            return;
+        }
+
+        const hlObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-highlighted');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.2,
+            rootMargin: '0px 0px -30px 0px'
+        });
+
+        marks.forEach(m => hlObserver.observe(m));
     }
 
     // 9.2 Sticky Nav hairline and backdrop toggle past 8px
@@ -881,7 +1018,7 @@
             });
         }
 
-        renderMeterPreset(VIRAL_PRESETS[0]);
+        renderMeterPreset(VIRAL_PRESETS[0], false);
 
         // Custom Claim Input
         const testBtn = document.getElementById('btn-test-custom');
@@ -916,6 +1053,9 @@
         initCommunityReviews();
         initCrazyTitle();
         initScrollReveals();
+        initScrollDrivenGauge();
+        initStampedDossiers();
+        initHighlighterSwipe();
         initStickyNavScroll();
         initTickerSnap();
         initHeroParallax();

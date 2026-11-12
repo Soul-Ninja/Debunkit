@@ -14,7 +14,11 @@
         // Hidden reveal states apply only once JS runs; if landing.js never starts, show everything after 2.5s.
         document.documentElement.classList.add('js-ready');
         setTimeout(function () {
-            if (!window.__revealReady) document.querySelectorAll('[data-reveal]').forEach(function (el) { el.classList.add('is-in'); });
+            if (!window.__revealReady) {
+                document.querySelectorAll('[data-reveal]').forEach(function (el) { el.classList.add('is-in'); });
+                document.querySelectorAll('mark.hl').forEach(function (el) { el.classList.add('is-highlighted'); });
+                document.querySelectorAll('.dossier-card').forEach(function (el) { el.classList.add('is-stamped'); });
+            }
         }, 2500);
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -174,9 +178,9 @@
             </p>
 
             <p class="hero-subtitle">
-                An uncompromising investigative truth-checking instrument. Before forwarding unverified claims
+                An uncompromising <mark class="hl">investigative truth-checking instrument</mark>. Before forwarding unverified claims
                 or trading critical thought for panic, submit articles, claims, and links to <strong>DEBUNK.IT</strong>
-                for transparent verdicts, live web receipts, and forensic AI reasoning.
+                for transparent verdicts, <mark class="hl">live web receipts</mark>, and forensic AI reasoning.
             </p>
 
             <!-- Single Primary CTA ("Check an article") -->
@@ -335,7 +339,7 @@
                 <h2 class="section-title">THE BULLSHIT-O-METER GAUGE</h2>
                 <div class="section-rule" data-reveal="rule"></div>
                 <p class="section-desc">
-                    Select a documented internet fabrication below or enter a custom claim to examine our real-time heuristic response.
+                    Select a documented internet fabrication below or enter a custom claim to examine our <mark class="hl">real-time heuristic response</mark>.
                 </p>
             </div>
 
@@ -449,7 +453,7 @@
                     <div class="step-number">01</div>
                     <h3 class="pipeline-title">Primary Source Retrieval</h3>
                     <p class="pipeline-desc">
-                        Our real-time crawler queries verified news archives, wire reports, and indexed public records to locate context, original transcripts, and primary reporting.
+                        Our real-time crawler queries <mark class="hl">verified news archives</mark>, wire reports, and indexed public records to locate context, original transcripts, and primary reporting.
                     </p>
                     <div class="tech-tag">
                         Live RAG Web Crawler
@@ -473,7 +477,7 @@
                     <div class="step-number">03</div>
                     <h3 class="pipeline-title">Indisputable Receipt Drop</h3>
                     <p class="pipeline-desc">
-                        Issues a standardized verdict stamp (Supported, Refuted, or Insufficient Evidence) accompanied by a confidence percentage and direct source hyperlinks.
+                        Issues a <mark class="hl">standardized verdict stamp</mark> (Supported, Refuted, or Insufficient Evidence) accompanied by a confidence percentage and direct source hyperlinks.
                     </p>
                     <div class="tech-tag">
                         Cited Evidence Ledger
@@ -491,16 +495,16 @@
                 <h2 class="section-title">INVESTIGATIVE DOSSIERS</h2>
                 <div class="section-rule" data-reveal="rule"></div>
                 <p class="section-desc">
-                    Representative inquiries into viral claims that circulated through digital networks before being systematically debunked.
+                    Representative inquiries into viral claims that circulated through digital networks before being <mark class="hl">systematically debunked</mark>.
                 </p>
             </div>
 
             <div class="shame-grid">
                 <!-- Dossier 1 -->
-                <div class="dossier-card" data-reveal="rise" style="--i: 0;">
+                <div class="dossier-card" data-reveal="rise" style="--i: 0; --stagger: 0;">
                     <div class="dossier-top">
                         <span class="dossier-id">CASE #001 // HEALTH</span>
-                        <span class="rubber-stamp">REFUTED</span>
+                        <span class="rubber-stamp stamp-refuted">REFUTED</span>
                     </div>
                     <div class="dossier-icon">
                         <svg viewBox="0 0 24 24" width="28" height="28" stroke="var(--ink)" stroke-width="1.8" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
@@ -524,10 +528,10 @@
                 </div>
 
                 <!-- Dossier 2 -->
-                <div class="dossier-card" data-reveal="rise" style="--i: 1;">
+                <div class="dossier-card" data-reveal="rise" style="--i: 1; --stagger: 1;">
                     <div class="dossier-top">
                         <span class="dossier-id">CASE #002 // FINANCE</span>
-                        <span class="rubber-stamp">TAX AUDIT</span>
+                        <span class="rubber-stamp stamp-refuted">REFUTED</span>
                     </div>
                     <div class="dossier-icon">
                         <svg viewBox="0 0 24 24" width="28" height="28" stroke="var(--ink)" stroke-width="1.8" fill="none"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
@@ -551,10 +555,10 @@
                 </div>
 
                 <!-- Dossier 3 -->
-                <div class="dossier-card" data-reveal="rise" style="--i: 2;">
+                <div class="dossier-card" data-reveal="rise" style="--i: 2; --stagger: 2;">
                     <div class="dossier-top">
                         <span class="dossier-id">CASE #003 // GEOGRAPHY</span>
-                        <span class="rubber-stamp">ABSURD</span>
+                        <span class="rubber-stamp stamp-refuted">REFUTED</span>
                     </div>
                     <div class="dossier-icon">
                         <svg viewBox="0 0 24 24" width="28" height="28" stroke="var(--ink)" stroke-width="1.8" fill="none"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><line x1="2" y1="12" x2="22" y2="12"></line></svg>
@@ -578,10 +582,10 @@
                 </div>
 
                 <!-- Dossier 4 -->
-                <div class="dossier-card" data-reveal="rise" style="--i: 3;">
+                <div class="dossier-card" data-reveal="rise" style="--i: 3; --stagger: 3;">
                     <div class="dossier-top">
                         <span class="dossier-id">CASE #004 // TECH</span>
-                        <span class="rubber-stamp">SURVEILLANCE</span>
+                        <span class="rubber-stamp stamp-misleading">MISLEADING</span>
                     </div>
                     <div class="dossier-icon">
                         <svg viewBox="0 0 24 24" width="28" height="28" stroke="var(--ink)" stroke-width="1.8" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
@@ -615,7 +619,7 @@
                 <h2 class="section-title">THE WAR ON MISINFORMATION IN NUMBERS</h2>
                 <div class="section-rule" data-reveal="rule"></div>
                 <p class="section-desc">
-                    Aggregated audit statistics across global investigative monitors.
+                    Aggregated audit statistics across <mark class="hl">global investigative monitors</mark>.
                 </p>
             </div>
 
@@ -655,7 +659,7 @@
                 <h2 class="section-title">DISPATCHES FROM THE FRONTLINE</h2>
                 <div class="section-rule" data-reveal="rule"></div>
                 <p class="section-desc">
-                    Observations from journalists, researchers, and everyday readers verifying digital claims.
+                    Observations from journalists, researchers, and everyday readers <mark class="hl">verifying digital claims</mark>.
                 </p>
                 <div class="reviews-action-buttons">
                     {% if current_user.is_authenticated %}
@@ -685,7 +689,7 @@
             <div class="cta-banner-card">
                 <h2>INOCULATE YOUR SENSES AGAINST DIGITAL FABRICATIONS</h2>
                 <p>
-                    Verify headlines, links, and documents through an investigative truth scanner backed by transparent sources.
+                    Verify headlines, links, and documents through an investigative truth scanner backed by <mark class="hl">transparent sources</mark>.
                     Open guest access is immediately available.
                 </p>
 
