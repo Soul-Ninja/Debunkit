@@ -134,7 +134,7 @@ html[data-theme="dark"] {
     --gold-text: #D4B26F;
 
     /* Highlighter Marker Token Dark (Part A.3) */
-    --highlight: #B89B2E;
+    --highlight: #C8A232;
 
     /* Canonical Verdict System Tokens Dark (Part B.1) */
     --verdict-supported: var(--mint);
@@ -202,7 +202,7 @@ html[data-theme="dark"] {
         --gold-text: #D4B26F;
 
         /* Highlighter Marker Token Dark (Part A.3) */
-        --highlight: #B89B2E;
+        --highlight: #C8A232;
 
         /* Canonical Verdict System Tokens Dark (Part B.1) */
         --verdict-supported: var(--mint);
@@ -1701,27 +1701,43 @@ mark.hl {
     background-repeat: no-repeat;
     background-position: left bottom;
     background-size: 100% 88%;
-    color: inherit;
-    padding: 0.1em 0.28em;
-    margin: 0 -0.05em;
+    color: var(--ink);
+    padding: 0.08em 0.22em;
+    margin: 0;
     clip-path: polygon(0% 6%, 100% 1%, 99% 94%, 1% 99%);
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
+    border-radius: var(--radius-sm);
 }
 
 html.js-ready mark.hl {
     background-size: 0% 88%;
-    transition: background-size 500ms var(--ease-out);
+    transition: background-size 500ms var(--ease-out), color 200ms var(--ease-out);
 }
 
 html.js-ready mark.hl.is-highlighted {
     background-size: 100% 88%;
 }
 
-html[data-theme="dark"] mark.hl,
+/* In dark mode: ensure dark carbon ink on top of highlight with high contrast (>= 7:1) */
+html[data-theme="dark"] mark.hl {
+    color: inherit;
+}
+
+html[data-theme="dark"] mark.hl.is-highlighted,
+html[data-theme="dark"]:not(.js-ready) mark.hl {
+    color: #111110 !important;
+    font-weight: 600;
+}
+
 @media (prefers-color-scheme: dark) {
     html[data-theme="system"] mark.hl {
-        color: #141412 !important;
+        color: inherit;
+    }
+    html[data-theme="system"] mark.hl.is-highlighted,
+    html[data-theme="system"]:not(.js-ready) mark.hl {
+        color: #111110 !important;
+        font-weight: 600;
     }
 }
 
