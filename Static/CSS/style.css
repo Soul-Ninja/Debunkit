@@ -2010,3 +2010,117 @@ html.theme-transitioning *::after {
                 stroke 350ms cubic-bezier(0.23, 1, 0.32, 1) !important;
     transition-delay: 0s !important;
 }
+
+/* ==========================================================================
+   APP MOTION: scan progress, result reveal, telemetry spotlight
+   ========================================================================== */
+
+/* Scan progress: a light sweeps the card while the stages tick over */
+.result-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.scan-sweep {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 28%;
+    background: linear-gradient(90deg, transparent, rgba(27, 27, 27, 0.09), transparent);
+    animation: scanSweep 1.8s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes scanSweep {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(360%); }
+}
+
+.scan-stages {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2) var(--space-4);
+    list-style: none;
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+}
+
+.scan-stages li {
+    opacity: 0.45;
+    transition: opacity 200ms var(--ease-out), color 200ms var(--ease-out);
+}
+
+.scan-stages li.is-done {
+    opacity: 0.7;
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+}
+
+.scan-stages li.is-current {
+    opacity: 1;
+    color: var(--ink);
+}
+
+.scan-stages li.is-current::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: stagePulse 900ms ease-in-out infinite alternate;
+}
+
+@keyframes stagePulse {
+    from { opacity: 0.35; }
+    to { opacity: 1; }
+}
+
+/* Result reveal: header stamps first, then the report builds beneath it */
+.result-panel.reveal-run .result-actions-row,
+.result-panel.reveal-run .result-card,
+.result-panel.reveal-run .sources-card {
+    animation: resultRise 300ms var(--ease-out) both;
+}
+
+.result-panel.reveal-run .result-actions-row { animation-delay: 280ms; }
+.result-panel.reveal-run .result-card:nth-child(1) { animation-delay: 340ms; }
+.result-panel.reveal-run .result-card:nth-child(2) { animation-delay: 400ms; }
+.result-panel.reveal-run .result-card:nth-child(3) { animation-delay: 460ms; }
+.result-panel.reveal-run .sources-card { animation-delay: 520ms; }
+
+@keyframes resultRise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Telemetry: hover a legend row or segment to spotlight that verdict */
+.telemetry-seg,
+.telemetry-visual-card tbody tr {
+    transition: transform 500ms var(--ease-out), opacity 160ms var(--ease-out);
+}
+
+.telemetry-visual-card.has-focus .telemetry-seg:not(.is-focus),
+.telemetry-visual-card.has-focus tbody tr:not(.is-focus) {
+    opacity: 0.35;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .nav-btn svg { transition: transform 160ms var(--ease-out); }
+    .nav-btn:hover svg { transform: translateX(2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scan-sweep { display: none; }
+    .scan-stages li.is-current::before { animation: none; }
+    .result-panel.reveal-run .result-actions-row,
+    .result-panel.reveal-run .result-card,
+    .result-panel.reveal-run .sources-card { animation: none; }
+}

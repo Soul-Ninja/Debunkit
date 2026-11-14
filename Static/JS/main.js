@@ -354,12 +354,59 @@ function fillExampleClaim(text, mode = 'title') {
     showNotification('Example claim loaded. Click Analyze Data to scan it.', 'info');
 }
 
+const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Ease-out count from `from` to `to`; always ends on the exact final text.
+function countUp(el, to, { from = 0, duration = 600, delay = 0, prefix = '', suffix = '' } = {}) {
+    cancelAnimationFrame(el._countRaf);
+    const render = (n) => { el.textContent = prefix + n + suffix; };
+    if (prefersReducedMotion() || from === to) {
+        render(to);
+        return;
+    }
+    render(from);
+    let start = null;
+    const step = (now) => {
+        if (start === null) start = now + delay;
+        const t = Math.min(Math.max((now - start) / duration, 0), 1);
+        render(Math.round(from + (to - from) * (1 - Math.pow(1 - t, 3))));
+        if (t < 1) el._countRaf = requestAnimationFrame(step);
+    };
+    el._countRaf = requestAnimationFrame(step);
+}
+
 function setDashboardMetric(id, value) {
     const el = document.getElementById(id);
+    if (!el) return;
 
-    if (el) {
+    if (typeof value === 'number') {
+        const from = parseInt(el.textContent, 10);
+        countUp(el, value, { from: Number.isNaN(from) ? 0 : from });
+    } else {
         el.textContent = value;
     }
+}
+
+// Scan progress strip. shortcut: stages are time-based, the server reports no progress; upgrade if /analyze streams stages.
+let scanStageTimer = null;
+function startScanStages() {
+    const items = document.querySelectorAll('#scanner-loading .scan-stages li');
+    if (!items.length) return;
+    let i = 0;
+    const paint = () => items.forEach((li, idx) => {
+        li.classList.toggle('is-done', idx < i);
+        li.classList.toggle('is-current', idx === i);
+    });
+    paint();
+    clearInterval(scanStageTimer);
+    scanStageTimer = setInterval(() => {
+        if (i < items.length - 1) { i++; paint(); }
+    }, 2600);
+}
+
+function stopScanStages() {
+    clearInterval(scanStageTimer);
+    scanStageTimer = null;
 }
 
 function updateConfidenceVisual(confidence) {
@@ -715,6 +762,7 @@ async function startScan(retryCount = 0) {
     if (resPanel) resPanel.style.display = 'none';
     if (scannerLoading) scannerLoading.style.display = 'block';
     if (scanner) scanner.style.display = 'block';
+    startScanStages();
 
     if (btn) {
         btn.disabled = true;
@@ -759,7 +807,12 @@ async function startScan(retryCount = 0) {
                 displayError('Error: ' + errorMsg);
             }
         } else {
-            if (resPanel) resPanel.style.display = 'block';
+            if (resPanel) {
+                resPanel.style.display = 'block';
+                resPanel.classList.remove('reveal-run');
+                void resPanel.offsetWidth;
+                resPanel.classList.add('reveal-run');
+            }
             if (resultEmpty) resultEmpty.style.display = 'none';
 
             const vSpan = document.getElementById('res-verdict');
@@ -785,7 +838,11 @@ async function startScan(retryCount = 0) {
             const factcheckEl = document.getElementById('res-factcheck');
             const flagsEl = document.getElementById('res-flags');
 
-            if (confidenceEl) confidenceEl.innerText = 'CONFIDENCE: ' + data.confidence + '%';
+            if (confidenceEl) {
+                const conf = Number(data.confidence);
+                if (Number.isFinite(conf)) countUp(confidenceEl, Math.round(conf), { prefix: 'CONFIDENCE: ', suffix: '%', delay: 240 });
+                else confidenceEl.innerText = 'CONFIDENCE: ' + data.confidence + '%';
+            }
             if (reasonEl) reasonEl.textContent = data.reason || 'N/A';
             if (factcheckEl) factcheckEl.textContent = data.fact_check || 'N/A';
 
@@ -835,6 +892,7 @@ async function startScan(retryCount = 0) {
             displayError('Failed to connect to the Core Engine. Please check your connection.');
         }
     } finally {
+        stopScanStages();
         if (scanner) scanner.style.display = 'none';
 
         if (btn) {
@@ -1277,6 +1335,7 @@ async function loadSystemAnalytics() {
             if (pct > 0) {
                 const seg = document.createElement('div');
                 seg.className = `telemetry-seg seg-${meta.slug}`;
+                seg.dataset.slug = meta.slug;
                 seg.style.width = `${pct}%`;
                 seg.title = `${meta.name}: ${count} (${pct.toFixed(1)}%)`;
 
@@ -1320,6 +1379,7 @@ async function loadSystemAnalytics() {
             const pct = totalVerdicts > 0 ? ((count / totalVerdicts) * 100).toFixed(1) : '0.0';
 
             const tr = document.createElement('tr');
+            tr.dataset.slug = meta.slug;
             tr.innerHTML = `
                 <td>
                     <span class="telemetry-legend-badge">
@@ -1336,6 +1396,16 @@ async function loadSystemAnalytics() {
         table.appendChild(tbody);
         visualCard.appendChild(table);
         contentDiv.appendChild(visualCard);
+
+        // Hovering a legend row or a bar segment spotlights that verdict in both.
+        const focusVerdict = (slug) => {
+            visualCard.classList.toggle('has-focus', !!slug);
+            visualCard.querySelectorAll('[data-slug]').forEach(el => el.classList.toggle('is-focus', el.dataset.slug === slug));
+        };
+        visualCard.querySelectorAll('[data-slug]').forEach(el => {
+            el.addEventListener('pointerenter', () => focusVerdict(el.dataset.slug));
+            el.addEventListener('pointerleave', () => focusVerdict(''));
+        });
 
         // 3. Inspection Pipeline Mode Breakdown Ledger Table
         const modeCard = document.createElement('div');
