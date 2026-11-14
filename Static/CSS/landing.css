@@ -1813,6 +1813,42 @@ html.js-ready .dossier-card.is-stamped .rubber-stamp {
     }
 }
 
+/* Phone header: keep the brand, theme switch, sign-in and menu inside the viewport.
+   GitHub and "Check an article" move into the open menu. */
+.nav-mobile-only {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .nav-container {
+        padding: 0 var(--space-3);
+        gap: var(--space-2);
+    }
+    .nav-actions {
+        gap: 6px;
+        min-width: 0;
+    }
+    .nav-gh-star,
+    .nav-actions .btn-primary {
+        display: none;
+    }
+    .nav-mobile-only {
+        display: list-item;
+    }
+}
+
+@media (max-width: 480px) {
+    .brand-text {
+        display: none;
+    }
+}
+
+@media (max-width: 360px) {
+    .sfx-toggle {
+        display: none;
+    }
+}
+
 @media (max-width: 768px) {
     .shame-grid {
         grid-template-columns: 1fr;
