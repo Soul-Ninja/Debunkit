@@ -1704,7 +1704,6 @@ mark.hl {
     color: var(--ink);
     padding: 0.08em 0.22em;
     margin: 0;
-    clip-path: polygon(0% 6%, 100% 1%, 99% 94%, 1% 99%);
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
     border-radius: var(--radius-sm);
