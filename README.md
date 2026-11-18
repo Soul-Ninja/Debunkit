@@ -1,12 +1,3 @@
----
-title: Debunkit
-emoji: 🕵️
-colorFrom: red
-colorTo: gray
-sdk: docker
-app_port: 7860
----
-
 <div align="center">
 
 <img src="Static/Images/debunkit-logo.png" alt="DEBUNK.IT logo" width="88"/>
