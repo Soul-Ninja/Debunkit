@@ -170,6 +170,12 @@ FLASK_ENV=development
 python debunkit_app.py
 ```
 
+### Database migrations
+```bash
+flask db migrate -m "description"  # create a migration from model changes
+flask db upgrade                   # apply pending migrations to database
+```
+
 Open **http://127.0.0.1:5000**.
 
 ---

@@ -1,10 +1,12 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from sqlalchemy import func
 from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
 db = SQLAlchemy()
+migrate = Migrate()
 
 class Analysis(db.Model):
     """Store fact-check analyses performed by users."""
@@ -54,10 +56,9 @@ class Review(db.Model):
         }
 
 def init_db(app):
-    """Initialize database with Flask app."""
+    """Initialize database and migrations with Flask app."""
     db.init_app(app)
-    with app.app_context():
-        db.create_all()
+    migrate.init_app(app, db)
 
 def save_analysis(text, verdict, confidence, reason, fact_check, red_flags, sources, mode, user, request):
     """Save analysis result to database."""

@@ -15,7 +15,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 
 from config import config
 from Core.database import (
-    db, init_db, save_review, get_recent_reviews,
+    db, init_db, migrate, save_review, get_recent_reviews,
     save_analysis, get_analysis_history, get_analysis_by_id,
     search_analyses, get_statistics, Analysis
 )
