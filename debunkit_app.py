@@ -54,7 +54,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__, template_folder="Template", static_folder="Static")
+app = Flask(__name__, template_folder="Template", static_folder="Static", static_url_path="/static")
 app.config.from_object(config)
 # Trust one proxy hop so rate limits and cookies use the real client IP/scheme, not the ingress proxy's.
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
@@ -170,6 +170,10 @@ def unauthorized():
     return redirect("/login")
 
 # ===== FRONTEND VIEWS =====
+@app.route("/Static/<path:filename>")
+def static_case_insensitive_redirect(filename):
+    return redirect(url_for("static", filename=filename), code=301)
+
 @app.route("/")
 @app.route("/api/index")
 def index():

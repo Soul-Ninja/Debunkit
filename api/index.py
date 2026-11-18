@@ -1,6 +1,6 @@
-import json
 import os
 import sys
+import urllib.parse
 
 # Ensure project root is in sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -10,32 +10,28 @@ from debunkit_app import app as flask_app
 
 class VercelPathFixMiddleware:
     """
-    Vercel serverless rewrites route requests to /api/index, which sets
-    PATH_INFO to '/api/index' inside the WSGI environment.
-    This middleware extracts the true browser path from Vercel's headers
-    so Flask routes ('/', '/scanner', '/api/stats', etc.) resolve correctly.
+    Vercel serverless rewrites route requests to /api/index?__vercel_path=/<path>.
+    This middleware extracts the true browser path from the query string or headers
+    and restores PATH_INFO and QUERY_STRING so Flask routes resolve correctly.
     """
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        if environ.get("HTTP_X_DEBUG_ENV") == "1":
-            start_response("200 OK", [("Content-Type", "application/json")])
-            safe_env = {
-                k: str(v) for k, v in environ.items()
-                if not any(s in k.upper() for s in ["KEY", "SECRET", "PASS", "AUTH", "TOKEN", "COOKIE"])
-            }
-            return [json.dumps(safe_env, indent=2).encode("utf-8")]
-
-        raw_uri = (
-            environ.get("HTTP_X_FORWARDED_URI")
-            or environ.get("HTTP_X_MATCHED_PATH")
-            or environ.get("HTTP_X_NOW_ROUTE_MATCHES")
-        )
-        if raw_uri:
-            path = raw_uri.split("?")[0]
-            if path:
-                environ["PATH_INFO"] = path
+        query_string = environ.get("QUERY_STRING", "")
+        if "__vercel_path=" in query_string:
+            params = urllib.parse.parse_qs(query_string, keep_blank_values=True)
+            if "__vercel_path" in params:
+                raw_path = params.pop("__vercel_path")[0]
+                if not raw_path.startswith("/"):
+                    raw_path = "/" + raw_path
+                while "//" in raw_path:
+                    raw_path = raw_path.replace("//", "/")
+                if not raw_path:
+                    raw_path = "/"
+                environ["PATH_INFO"] = raw_path
+                # Reconstruct QUERY_STRING without the routing helper parameter
+                environ["QUERY_STRING"] = urllib.parse.urlencode(params, doseq=True)
         elif environ.get("PATH_INFO") in ("/api/index", "/api/index.py", "/api"):
             environ["PATH_INFO"] = "/"
 
@@ -43,4 +39,5 @@ class VercelPathFixMiddleware:
 
 
 app = VercelPathFixMiddleware(flask_app)
+
 
