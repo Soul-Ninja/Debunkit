@@ -35,7 +35,7 @@ class Config:
     # API Configuration
     COHERE_API_KEY = os.getenv("COHERE_API_KEY")
     COHERE_URL = "https://api.cohere.com/v2/chat"
-    COHERE_TIMEOUT = int(os.getenv("COHERE_TIMEOUT", "30")) 
+    COHERE_TIMEOUT = int(os.getenv("COHERE_TIMEOUT", "12")) 
     COHERE_MODEL = "command-r-08-2024"
     
     # Rate Limiting
@@ -49,13 +49,13 @@ class Config:
     MIN_WORDS_FOR_ANALYSIS = 4
     
     # Web Scraping
-    SCRAPER_TIMEOUT = int(os.getenv("SCRAPER_TIMEOUT", "10"))
+    SCRAPER_TIMEOUT = int(os.getenv("SCRAPER_TIMEOUT", "8"))
     SCRAPER_MAX_CHARS = 3000
     SCRAPER_MIN_WORDS = 20
     
     # RAG Engine
     RAG_SEARCH_RESULTS = 3
-    RAG_TIMEOUT = int(os.getenv("RAG_TIMEOUT", "15"))
+    RAG_TIMEOUT = int(os.getenv("RAG_TIMEOUT", "8"))
     RAG_CACHE_TTL_SECONDS = int(os.getenv("RAG_CACHE_TTL_SECONDS", "3600"))
     
     # CORS Configuration
