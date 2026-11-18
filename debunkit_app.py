@@ -29,14 +29,28 @@ from Core.rag_engine import scrape_article
 from utils.validators import validate_text_input, validate_url_input, ValidationError
 
 # ===== LOGGING & APP INITIALIZATION =====
-log_dir = os.path.dirname(config.LOG_FILE)
+handlers = [logging.StreamHandler()]
+log_file = config.LOG_FILE
+if os.getenv("VERCEL"):
+    log_file = "/tmp/debunkit.log"
+
+log_dir = os.path.dirname(log_file)
 if log_dir and not os.path.exists(log_dir):
-    os.makedirs(log_dir, exist_ok=True)
+    try:
+        os.makedirs(log_dir, exist_ok=True)
+    except OSError:
+        pass
+
+try:
+    if log_file:
+        handlers.append(logging.FileHandler(log_file))
+except OSError:
+    pass
 
 logging.basicConfig(
-    level=getattr(logging, config.LOG_LEVEL),
+    level=getattr(logging, config.LOG_LEVEL, "INFO"),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler(config.LOG_FILE), logging.StreamHandler()]
+    handlers=handlers
 )
 logger = logging.getLogger(__name__)
 

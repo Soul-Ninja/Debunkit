@@ -68,7 +68,12 @@ class Config:
     LOG_BACKUP_COUNT = 5
 
     # Database Configuration
-    DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL") or os.getenv("DATABASE_PUBLIC_URL") or "sqlite:///debunkit.db"
+    DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL") or os.getenv("DATABASE_PUBLIC_URL")
+    if not DATABASE_URL:
+        if os.getenv("VERCEL"):
+            DATABASE_URL = "sqlite:////tmp/debunkit.db"
+        else:
+            DATABASE_URL = "sqlite:///debunkit.db"
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
