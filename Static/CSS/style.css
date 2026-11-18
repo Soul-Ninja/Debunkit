@@ -1006,13 +1006,16 @@ a:hover {
     align-items: center;
     background: #111110;
     color: #E4E0D3;
-    border: 1px solid rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(228, 224, 211, 0.14);
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-press);
     padding: var(--space-4);
     margin-bottom: var(--space-4);
     flex-wrap: wrap;
     gap: var(--space-4);
+    --success: #6FCF97;
+    --warn: #F0B5AC;
+    --danger: #FF6B64;
 }
 
 .result-kicker {
@@ -1026,7 +1029,7 @@ a:hover {
     margin-bottom: var(--space-1);
 }
 
-/* Physical Verdict Stamp styling */
+/* Physical Verdict Stamp styling (Physical Rubber Stamp on Dark Ink Focal Header) */
 .res-verdict {
     display: inline-block;
     font-family: var(--font-display);
@@ -1035,8 +1038,10 @@ a:hover {
     letter-spacing: 0.06em;
     text-transform: uppercase;
     padding: 6px 16px;
-    border: 3px solid currentColor;
+    border: 3px solid rgba(228, 224, 211, 0.4);
     border-radius: var(--radius-sm);
+    color: #E4E0D3;
+    background: rgba(228, 224, 211, 0.08);
     transform: rotate(-2deg);
     animation: stampThud 220ms var(--ease-out) forwards;
 }
@@ -1059,7 +1064,44 @@ a:hover {
     }
 }
 
-/* Verdict Stamp Colors — Canonical System (Part B.1) */
+/* Verdict Stamp Colors in Focal Ink Header — High-contrast print stamps (Part B.1) */
+.res-verdict.verdict-SUPPORTED {
+    color: #6FCF97;
+    border-color: #4EA874;
+    background: rgba(111, 207, 151, 0.16);
+}
+
+.res-verdict.verdict-REFUTED {
+    color: #FF6B64;
+    border-color: #E05D56;
+    background: rgba(224, 93, 86, 0.16);
+}
+
+.res-verdict.verdict-MISLEADING {
+    color: #F0B5AC;
+    border-color: #C76E62;
+    background: rgba(240, 181, 172, 0.16);
+}
+
+.res-verdict.verdict-LOW-CREDIBILITY {
+    color: #E2BF72;
+    border-color: #A88B4A;
+    background: rgba(212, 178, 111, 0.16);
+}
+
+.res-verdict.verdict-INSUFFICIENT-EVIDENCE {
+    color: #E4E0D3;
+    border-color: #ABA698;
+    background: rgba(228, 224, 211, 0.14);
+}
+
+.res-verdict.res-error {
+    color: #FF6B64;
+    border-color: #E05D56;
+    background: rgba(224, 93, 86, 0.16);
+}
+
+/* Fallback canonical tokens for generic .verdict-* classes */
 .verdict-SUPPORTED {
     color: var(--verdict-supported-text);
     border-color: var(--verdict-supported);
@@ -1211,8 +1253,9 @@ a:hover {
 
 .result-card {
     background: var(--paper-2);
-    border: 1px solid var(--border-hairline);
-    border-left: 3px solid var(--ink);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--ink);
+    border-radius: var(--radius-sm);
     padding: var(--space-3) var(--space-4);
 }
 
