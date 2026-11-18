@@ -10,7 +10,7 @@ AI-assisted misinformation detection with live web evidence, transparent verdict
 
 <br>
 
-[![Live Demo](https://img.shields.io/badge/LIVE_DEMO-debunk--it.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://debunk-it.vercel.app)
+[![Live Demo](https://img.shields.io/badge/LIVE_DEMO-Open_Scanner-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://debunk-it.vercel.app)
 [![Python](https://img.shields.io/badge/Python-3.12-1B1B1B?style=for-the-badge&logo=python&logoColor=E4E0D3)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-3.x-1B1B1B?style=for-the-badge&logo=flask&logoColor=E4E0D3)](https://flask.palletsprojects.com)
 [![Cohere](https://img.shields.io/badge/Cohere-command--r-1B1B1B?style=for-the-badge)](https://cohere.com)
