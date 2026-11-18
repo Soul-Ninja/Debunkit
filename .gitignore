@@ -44,6 +44,7 @@ venv.bak/
 .idea/
 .claude/
 .agents/
+.codex/
 *.swp
 *.swo
 *~
