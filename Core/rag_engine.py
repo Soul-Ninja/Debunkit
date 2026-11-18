@@ -13,8 +13,19 @@ from utils.validators import validate_url_input, ValidationError, _is_ip_unsafe
 
 logger = logging.getLogger(__name__)
 
+MAX_SEARCH_CACHE_ENTRIES = 500
 _SEARCH_CACHE = {}
 _CACHE_LOCK = threading.Lock()
+
+def _put_search_cache(key, val):
+    """Store entry in search cache, evicting oldest entry if size exceeds MAX_SEARCH_CACHE_ENTRIES."""
+    with _CACHE_LOCK:
+        if key in _SEARCH_CACHE:
+            del _SEARCH_CACHE[key]
+        elif len(_SEARCH_CACHE) >= MAX_SEARCH_CACHE_ENTRIES:
+            oldest_key = next(iter(_SEARCH_CACHE))
+            del _SEARCH_CACHE[oldest_key]
+        _SEARCH_CACHE[key] = val
 
 def get_live_context(query):
     """Search the internet for live context with caching and parallel requests."""
@@ -91,8 +102,7 @@ def get_live_context(query):
                 sources.append({"title": title, "url": url})
             context_block += f"\n{i}. [{title}]\n   URL: {url}\n   Snippet: {body}\n   SearchQuery: {res.get('_query', '')}\n"
 
-        with _CACHE_LOCK:
-            _SEARCH_CACHE[cache_key] = (now, context_block, sources)
+        _put_search_cache(cache_key, (now, context_block, sources))
         return context_block, sources
 
     except Exception as e:

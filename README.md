@@ -285,6 +285,7 @@ COHERE_API_KEY=<your-key>
 DATABASE_URL=postgresql://user:pass@host/dbname
 SESSION_COOKIE_SECURE=True
 RATELIMIT_ENABLED=True
+RATELIMIT_STORAGE_URI=redis://:password@redis-host:6379/0  # Shared rate limiting across multiple gunicorn workers
 ```
 
 ---

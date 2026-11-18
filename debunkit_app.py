@@ -126,11 +126,15 @@ def _mask_email(email):
 init_db(app)
 CORS(app, origins=config.CORS_ORIGINS)
 
+storage_uri = getattr(config, "RATELIMIT_STORAGE_URI", "memory://")
+if (os.getenv("FLASK_ENV") == "production" or getattr(config, "ENV", None) == "production") and storage_uri.startswith("memory://"):
+    logger.warning("Production rate limiter is using in-memory storage ('memory://'). Set RATELIMIT_STORAGE_URI='redis://...' for shared multi-worker rate limiting.")
+
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
     default_limits=[config.RATELIMIT_DEFAULT],
-    storage_uri=getattr(config, "RATELIMIT_STORAGE_URI", "memory://")
+    storage_uri=storage_uri
 )
 
 login_manager = LoginManager(app)
