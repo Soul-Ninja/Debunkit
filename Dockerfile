@@ -34,5 +34,8 @@ USER user
 
 EXPOSE 7860
 
-# Run the web service on container startup using Gunicorn
-CMD exec gunicorn --bind 0.0.0.0:${PORT:-7860} --workers 1 --threads 8 --timeout 0 debunkit_app:app
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request, os; urllib.request.urlopen(f'http://127.0.0.1:{os.environ.get(\"PORT\", 7860)}/api/health')" || exit 1
+
+# Run migrations and start web service with 60s timeout
+CMD ["sh", "-c", "flask db upgrade && exec gunicorn --bind 0.0.0.0:${PORT:-7860} --workers 1 --threads 8 --timeout 60 debunkit_app:app"]

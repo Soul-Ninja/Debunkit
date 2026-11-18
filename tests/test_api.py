@@ -43,6 +43,20 @@ class TestHealthAndPages:
         data = response.get_json()
         assert data["status"] == "healthy"
 
+    def test_readiness_check(self, client):
+        response = client.get("/api/ready")
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data["status"] == "ready"
+        assert data["database"] == "connected"
+
+    def test_readiness_check_db_failure(self, client):
+        with patch("debunkit_app.db.session.execute", side_effect=Exception("DB connection dropped")):
+            response = client.get("/api/ready")
+            assert response.status_code == 503
+            data = response.get_json()
+            assert data["status"] == "not_ready"
+
     def test_landing_page(self, client):
         response = client.get("/")
         assert response.status_code == 200

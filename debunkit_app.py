@@ -15,6 +15,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+from sqlalchemy import text
 
 from config import config
 from Core.database import (
@@ -458,6 +459,15 @@ def api_stats():
 @app.route("/api/health", methods=["GET"])
 def health_check():
     return jsonify({"status": "healthy", "mode": "debug" if app.debug else "production"}), 200
+
+@app.route("/api/ready", methods=["GET"])
+def readiness_check():
+    try:
+        db.session.execute(text("SELECT 1"))
+        return jsonify({"status": "ready", "database": "connected"}), 200
+    except Exception as e:
+        logger.error(f"Readiness check failed: {e}")
+        return jsonify({"status": "not_ready", "error": "Database unreachable"}), 503
 
 @app.route("/api/clear-database", methods=["POST"])
 @limiter.limit("5 per minute")
