@@ -6,7 +6,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
-from flask import Flask, request, jsonify, render_template, redirect, session
+from flask import Flask, request, jsonify, render_template, redirect, session, g
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -41,13 +41,30 @@ app.config.from_object(config)
 # Trust one proxy hop so rate limits and cookies use the real client IP/scheme, not the ingress proxy's.
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
+def generate_csp_nonce():
+    if not hasattr(g, "csp_nonce"):
+        g.csp_nonce = secrets.token_urlsafe(16)
+    return g.csp_nonce
+
 @app.after_request
 def set_security_headers(resp):
     resp.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
     resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-    # shortcut: only framing/base/object are locked; templates use inline scripts, so no script-src until they're externalised.
-    resp.headers.setdefault("Content-Security-Policy", "frame-ancestors 'self'; base-uri 'self'; object-src 'none'")
+    nonce = getattr(g, "csp_nonce", None)
+    script_src = f"script-src 'self' 'nonce-{nonce}'" if nonce else "script-src 'self'"
+    csp = (
+        f"default-src 'self'; "
+        f"{script_src}; "
+        f"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        f"font-src 'self' https://fonts.gstatic.com; "
+        f"img-src 'self' data: https:; "
+        f"connect-src 'self'; "
+        f"frame-ancestors 'self'; "
+        f"base-uri 'self'; "
+        f"object-src 'none'"
+    )
+    resp.headers.setdefault("Content-Security-Policy", csp)
     return resp
 
 # ===== CSRF PROTECTION =====
@@ -60,8 +77,8 @@ def generate_csrf_token():
     return session[CSRF_SESSION_KEY]
 
 @app.context_processor
-def inject_csrf_token():
-    return dict(csrf_token=generate_csrf_token)
+def inject_security_tokens():
+    return dict(csrf_token=generate_csrf_token, csp_nonce=generate_csp_nonce)
 
 @app.before_request
 def csrf_protect():

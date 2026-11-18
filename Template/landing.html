@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         // Apply saved theme immediately to prevent any flash of mismatched mode
         (function () {
             var saved = localStorage.getItem('debunkit_theme');

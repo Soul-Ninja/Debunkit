@@ -524,7 +524,7 @@
     </div>
 
     <div id="message-box" class="message-box"></div>
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         (function () {
             const savedTheme = localStorage.getItem('debunkit_theme')
                 || document.documentElement.getAttribute('data-theme')
@@ -556,7 +556,7 @@
 
     <script src="{{ url_for('static', filename='JS/canvas.js') }}"></script>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         const I18N = {
             en: {
                 settings_title: 'Settings',

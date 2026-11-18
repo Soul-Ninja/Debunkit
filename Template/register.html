@@ -140,7 +140,7 @@
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         (function () {
             const savedTheme = localStorage.getItem('debunkit_theme')
                 || document.documentElement.getAttribute('data-theme')
@@ -150,7 +150,7 @@
     </script>
 
     <script src="{{ url_for('static', filename='JS/canvas.js') }}"></script>
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         function togglePasswordVisibility(fieldId) {
             const field = document.getElementById(fieldId);
             if (!field) return;

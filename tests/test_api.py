@@ -55,6 +55,13 @@ class TestHealthAndPages:
         res_a = client.get("/analytics")
         assert res_a.status_code == 200
 
+    def test_content_security_policy_header(self, client):
+        response = client.get("/")
+        assert response.status_code == 200
+        csp = response.headers.get("Content-Security-Policy", "")
+        assert "script-src" in csp
+        assert "style-src" in csp
+
 
 class TestAnalyzeValidation:
     def test_analyze_empty_body(self, client):

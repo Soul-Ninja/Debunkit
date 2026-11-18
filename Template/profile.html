@@ -126,7 +126,7 @@
         </main>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         (function () {
             const savedTheme = localStorage.getItem('debunkit_theme')
                 || document.documentElement.getAttribute('data-theme')
@@ -136,7 +136,7 @@
     </script>
 
     <script src="{{ url_for('static', filename='JS/canvas.js') }}"></script>
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         function getCSRFToken() {
             const meta = document.querySelector('meta[name="csrf-token"]');
             return meta ? meta.getAttribute('content') : '';
