@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
 from flask import Flask, request, jsonify, render_template, redirect, session
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -37,6 +38,17 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__, template_folder="Template", static_folder="Static")
 app.config.from_object(config)
+# Trust one proxy hop so rate limits and cookies use the real client IP/scheme, not the ingress proxy's.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+@app.after_request
+def set_security_headers(resp):
+    resp.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    # shortcut: only framing/base/object are locked; templates use inline scripts, so no script-src until they're externalised.
+    resp.headers.setdefault("Content-Security-Policy", "frame-ancestors 'self'; base-uri 'self'; object-src 'none'")
+    return resp
 
 # ===== CSRF PROTECTION =====
 UNSAFE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}

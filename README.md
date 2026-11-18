@@ -172,8 +172,6 @@ python debunkit_app.py
 
 Open **http://127.0.0.1:5000**.
 
-**Optional: retrain the local model.** Put `WELFake_Dataset.csv` in the project root, then run `python training.py`.
-
 ---
 
 ## 🗂️ Project structure
@@ -183,7 +181,6 @@ Debunkit/
 ├── debunkit_app.py        Flask app: routes and API
 ├── config.py              Dev / Prod / Test config
 ├── serve.py               Waitress production server
-├── training.py            TF-IDF + Logistic Regression training
 ├── Dockerfile             Container image (gunicorn)
 │
 ├── Core/

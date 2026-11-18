@@ -2,7 +2,7 @@ import re
 import time
 import logging
 import threading
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from bs4 import BeautifulSoup
@@ -113,6 +113,18 @@ def get_article_context_from_search(url):
         logger.warning(f"Fallback search context failed for {url}: {e}")
     return None, []
 
+def _safe_get(url, headers, max_redirects=5):
+    """GET that validates every redirect hop before connecting (blocks redirect-based SSRF)."""
+    # shortcut: DNS is resolved again by requests, so DNS rebinding is not covered; pin the resolved IP to upgrade.
+    for _ in range(max_redirects + 1):
+        validate_url_input(url)
+        resp = requests.get(url, headers=headers, timeout=config.SCRAPER_TIMEOUT, allow_redirects=False)
+        if resp.is_redirect and resp.headers.get("Location"):
+            url = urljoin(url, resp.headers["Location"])
+            continue
+        return resp
+    raise requests.TooManyRedirects(f"More than {max_redirects} redirects")
+
 def scrape_article(url):
     """Scrape article content from URL with browser headers, 404 slash retries, and search fallback."""
     try:
@@ -128,11 +140,10 @@ def scrape_article(url):
 
     resp = None
     try:
-        resp = requests.get(url, headers=headers, timeout=config.SCRAPER_TIMEOUT, allow_redirects=True)
-        validate_url_input(resp.url)
+        resp = _safe_get(url, headers)
         if resp.status_code == 404:
             alt_url = url[:-1] if url.endswith('/') else url + '/'
-            alt_resp = requests.get(alt_url, headers=headers, timeout=config.SCRAPER_TIMEOUT, allow_redirects=True)
+            alt_resp = _safe_get(alt_url, headers)
             if alt_resp.status_code == 200:
                 resp = alt_resp
     except ValidationError as e:

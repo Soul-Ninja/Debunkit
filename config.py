@@ -88,8 +88,8 @@ class ProductionConfig(Config):
     """Production configuration"""
     DEBUG = False
     TESTING = False
-    # In production, ensure COHERE_API_KEY is set
-    
+    SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "True") == "True"
+
 class TestingConfig(Config):
     """Testing configuration"""
     DEBUG = False
@@ -102,6 +102,8 @@ class TestingConfig(Config):
 # Select config based on environment
 ENV = os.getenv("FLASK_ENV", "development").lower()
 if ENV == "production":
+    if Config.SECRET_KEY == "dev-key-change-in-production":
+        raise RuntimeError("SECRET_KEY must be set in production")
     config = ProductionConfig()
 elif ENV == "testing":
     config = TestingConfig()

@@ -1,5 +1,6 @@
 import pytest
 import json
+from unittest.mock import patch
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 from debunkit_app import app
@@ -164,12 +165,14 @@ class TestHistoryEndpoints:
 
 class TestUrlAnalysis:
     def test_analyze_url_claim_returns_source_based_report(self, client):
-        # Even with a non-existent URL or 404 target, URL analysis returns a full report
+        # Even when scraping and search fail, URL analysis returns a full report
         payload = {
             "text": "https://example.com/article",
             "type": "url"
         }
-        response = client.post("/analyze", json=payload)
+        with patch("debunkit_app.scrape_article", return_value=(None, "Failed to fetch URL.")), \
+             patch("Core.ai_engine.get_live_context", return_value=("No results.", [])),              patch("Core.ai_engine.urllib.request.urlopen", side_effect=OSError("offline")):
+            response = client.post("/analyze", json=payload)
         assert response.status_code == 200
         assert response.is_json
         data = response.get_json()
