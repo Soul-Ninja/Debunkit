@@ -3,15 +3,18 @@ import re
 import secrets
 import hmac
 import logging
+import smtplib
+from email.message import EmailMessage
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
-from flask import Flask, request, jsonify, render_template, redirect, session, g
+from flask import Flask, request, jsonify, render_template, redirect, session, g, url_for
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 from config import config
 from Core.database import (
@@ -230,6 +233,111 @@ def logout():
     logger.info(f"User logged out: {current_user.username}")
     logout_user()
     return jsonify({"status": "success", "redirect": "/"}), 200
+
+# ===== PASSWORD RESET =====
+def generate_password_reset_token(user: User) -> str:
+    s = URLSafeTimedSerializer(app.config["SECRET_KEY"])
+    return s.dumps({"user_id": user.id, "pw_hash": user.password_hash}, salt="password-reset")
+
+def verify_password_reset_token(token: str, max_age: int = 3600):
+    s = URLSafeTimedSerializer(app.config["SECRET_KEY"])
+    try:
+        data = s.loads(token, salt="password-reset", max_age=max_age)
+    except (SignatureExpired, BadSignature, Exception):
+        return None
+    user_id = data.get("user_id")
+    pw_hash = data.get("pw_hash")
+    if not user_id or not pw_hash:
+        return None
+    user = db.session.get(User, user_id)
+    if not user or user.password_hash != pw_hash:
+        return None
+    return user
+
+def send_password_reset_email(to_email: str, reset_url: str):
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    mail_from = os.getenv("MAIL_FROM") or smtp_user or "noreply@debunkit.org"
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+
+    if smtp_host:
+        try:
+            msg = EmailMessage()
+            msg.set_content(
+                f"Hello,\n\n"
+                f"You requested a password reset for your Debunkit account.\n"
+                f"Click the link below to set a new password (valid for 1 hour):\n\n"
+                f"{reset_url}\n\n"
+                f"If you did not request this reset, you can safely ignore this email.\n"
+            )
+            msg["Subject"] = "Debunkit — Password Reset"
+            msg["From"] = mail_from
+            msg["To"] = to_email
+
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
+                try:
+                    server.starttls()
+                except Exception:
+                    pass
+                if smtp_user and smtp_password:
+                    server.login(smtp_user, smtp_password)
+                server.send_message(msg)
+            logger.info(f"Password reset email dispatched to {_mask_email(to_email)}")
+        except Exception as e:
+            logger.error(f"Failed to dispatch password reset email to {_mask_email(to_email)}: {e}")
+    else:
+        # If unset, log the reset link at INFO level in development only and never in production
+        is_prod = (
+            app.config.get("ENV") == "production"
+            or os.getenv("FLASK_ENV") == "production"
+            or getattr(config, "ENV", None) == "production"
+        )
+        if not is_prod:
+            logger.info(f"Password reset link for {to_email}: {reset_url}")
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+@limiter.limit("5/hour", methods=["POST"])
+def forgot_password():
+    if request.method == "POST":
+        data = request.get_json(silent=True) or request.form or {}
+        email = data.get("email", "").strip()
+        if email:
+            user = User.query.filter_by(email=email).first()
+            if user:
+                token = generate_password_reset_token(user)
+                reset_url = url_for("reset_password", token=token, _external=True)
+                send_password_reset_email(user.email, reset_url)
+        return jsonify({
+            "status": "success",
+            "message": "If that email is registered, password reset instructions have been sent."
+        }), 200
+    return render_template("forgot_password.html")
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    user = verify_password_reset_token(token)
+    if request.method == "POST":
+        if not user:
+            return jsonify({"error": "Invalid or expired reset token"}), 400
+        data = request.get_json(silent=True) or request.form or {}
+        new_password = data.get("password", "")
+        is_valid, err = validate_password_strength(new_password)
+        if not is_valid:
+            return jsonify({"error": err}), 400
+        user.set_password(new_password)
+        try:
+            db.session.commit()
+            logger.info(f"Password reset successfully for user: {user.username}")
+            return jsonify({
+                "status": "success",
+                "message": "Password updated successfully. You may now log in."
+            }), 200
+        except Exception as e:
+            logger.error(f"Password reset commit failed: {e}")
+            db.session.rollback()
+            return jsonify({"error": "Failed to update password. Please try again."}), 500
+    return render_template("reset_password.html", token=token, valid_token=bool(user))
 
 # ===== API VIEWS =====
 def analyze_limit():
