@@ -102,7 +102,8 @@ class TestingConfig(Config):
     WTF_CSRF_ENABLED = False
     COHERE_API_KEY = "test-key"
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-    RATELIMIT_ENABLED = False
+    RATELIMIT_ENABLED = True
+    RATELIMIT_DEFAULT = "1000 per minute"
 
 # Select config based on environment
 ENV = os.getenv("FLASK_ENV", "development").lower()
