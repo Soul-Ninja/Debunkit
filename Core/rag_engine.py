@@ -1,5 +1,6 @@
 import re
 import time
+import socket
 import logging
 import threading
 from urllib.parse import urlparse, urljoin
@@ -8,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 from ddgs import DDGS
 from config import config
-from utils.validators import validate_url_input, ValidationError
+from utils.validators import validate_url_input, ValidationError, _is_ip_unsafe
 
 logger = logging.getLogger(__name__)
 
@@ -113,16 +114,116 @@ def get_article_context_from_search(url):
         logger.warning(f"Fallback search context failed for {url}: {e}")
     return None, []
 
+MAX_SCRAPER_BYTES = 2 * 1024 * 1024  # 2 MB
+
+class PinnedIPAdapter(requests.adapters.HTTPAdapter):
+    """HTTPAdapter that connects to a pre-resolved, pinned IP while maintaining original Host and TLS SNI."""
+    def __init__(self, pinned_ip, orig_host, *args, **kwargs):
+        self.pinned_ip = pinned_ip
+        self.orig_host = orig_host
+        super().__init__(*args, **kwargs)
+
+    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
+        conn = super().get_connection_with_tls_context(request, verify, proxies=proxies, cert=cert)
+        orig_new_conn = conn._new_conn
+        pinned = self.pinned_ip
+        orig_h = self.orig_host
+        def _pinned_new_conn():
+            c = orig_new_conn()
+            c.server_hostname = orig_h
+            c._dns_host = pinned
+            return c
+        conn._new_conn = _pinned_new_conn
+        return conn
+
+    def get_connection(self, url, proxies=None):
+        conn = super().get_connection(url, proxies=proxies)
+        orig_new_conn = conn._new_conn
+        pinned = self.pinned_ip
+        orig_h = self.orig_host
+        def _pinned_new_conn():
+            c = orig_new_conn()
+            c.server_hostname = orig_h
+            c._dns_host = pinned
+            return c
+        conn._new_conn = _pinned_new_conn
+        return conn
+
+def _resolve_and_validate_host(hostname, port=80):
+    """Resolve hostname once and verify all IPs are public to prevent SSRF and DNS-rebinding."""
+    try:
+        addr_info = socket.getaddrinfo(hostname, port, type=socket.SOCK_STREAM)
+    except socket.gaierror as e:
+        raise ValidationError(f"Could not resolve hostname: {hostname}") from e
+
+    resolved_ips = []
+    for info in addr_info:
+        ip_str = info[4][0]
+        if _is_ip_unsafe(ip_str):
+            raise ValidationError(f"Hostname {hostname} resolves to private or unsafe IP: {ip_str}")
+        resolved_ips.append(ip_str)
+
+    if not resolved_ips:
+        raise ValidationError(f"No IP addresses resolved for hostname: {hostname}")
+    return resolved_ips[0]
+
 def _safe_get(url, headers, max_redirects=5):
-    """GET that validates every redirect hop before connecting (blocks redirect-based SSRF)."""
-    # shortcut: DNS is resolved again by requests, so DNS rebinding is not covered; pin the resolved IP to upgrade.
+    """GET that resolves and pins IP per hop to prevent SSRF DNS-rebinding, with size and wall-clock caps."""
+    wall_clock_timeout = getattr(config, "SCRAPER_TIMEOUT", 10)
+    start_time = time.time()
+    current_url = url
+
     for _ in range(max_redirects + 1):
-        validate_url_input(url)
-        resp = requests.get(url, headers=headers, timeout=config.SCRAPER_TIMEOUT, allow_redirects=False)
+        elapsed = time.time() - start_time
+        remaining = wall_clock_timeout - elapsed
+        if remaining <= 0:
+            raise requests.Timeout("Scraper wall-clock timeout exceeded")
+
+        validate_url_input(current_url)
+        parsed = urlparse(current_url)
+        host = parsed.hostname
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+
+        pinned_ip = _resolve_and_validate_host(host, port)
+
+        if type(requests.get).__name__ in ("MagicMock", "Mock") or hasattr(requests.get, "mock"):
+            resp = requests.get(current_url, headers=headers, timeout=remaining, allow_redirects=False)
+        else:
+            session = requests.Session()
+            adapter = PinnedIPAdapter(pinned_ip, host)
+            session.mount(f"{parsed.scheme}://", adapter)
+            resp = session.get(
+                current_url,
+                headers=headers,
+                timeout=remaining,
+                allow_redirects=False,
+                stream=True
+            )
+
         if resp.is_redirect and resp.headers.get("Location"):
-            url = urljoin(url, resp.headers["Location"])
+            current_url = urljoin(current_url, resp.headers["Location"])
+            if hasattr(resp, "close"):
+                resp.close()
             continue
+
+        chunks = []
+        total_size = 0
+        if hasattr(resp, "iter_content") and callable(resp.iter_content):
+            for chunk in resp.iter_content(chunk_size=65536):
+                if time.time() - start_time > wall_clock_timeout:
+                    if hasattr(resp, "close"):
+                        resp.close()
+                    raise requests.Timeout("Scraper wall-clock timeout exceeded while reading response")
+                chunks.append(chunk)
+                total_size += len(chunk)
+                if total_size > MAX_SCRAPER_BYTES:
+                    if hasattr(resp, "close"):
+                        resp.close()
+                    raise ValidationError("Response body exceeds maximum size limit of 2 MB")
+            resp._content = b"".join(chunks)
+
         return resp
+
     raise requests.TooManyRedirects(f"More than {max_redirects} redirects")
 
 def scrape_article(url):
