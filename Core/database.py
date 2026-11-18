@@ -1,3 +1,4 @@
+import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy import func
@@ -57,6 +58,12 @@ class Review(db.Model):
 
 def init_db(app):
     """Initialize database and migrations with Flask app."""
+    db_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+    if db_uri.startswith("sqlite:///"):
+        db_path = db_uri.replace("sqlite:///", "")
+        db_dir = os.path.dirname(db_path)
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
     db.init_app(app)
     migrate.init_app(app, db)
 

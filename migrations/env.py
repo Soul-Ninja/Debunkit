@@ -1,3 +1,4 @@
+import os
 import logging
 from logging.config import fileConfig
 
@@ -95,6 +96,10 @@ def run_migrations_online():
         conf_args["process_revision_directives"] = process_revision_directives
 
     connectable = get_engine()
+    if connectable.url.drivername.startswith("sqlite") and connectable.url.database:
+        db_dir = os.path.dirname(connectable.url.database)
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
 
     with connectable.connect() as connection:
         context.configure(
