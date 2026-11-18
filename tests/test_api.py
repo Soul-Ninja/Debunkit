@@ -10,8 +10,11 @@ from Core.user_model import User
 
 @pytest.fixture
 def client():
+    from debunkit_app import limiter
     app.config["TESTING"] = True
     app.config["WTF_CSRF_ENABLED"] = False
+    orig_limiter_state = limiter.enabled
+    limiter.enabled = False
 
     orig_engines = db._app_engines.get(app)
     test_engine = create_engine(
@@ -30,6 +33,7 @@ def client():
 
     if orig_engines:
         db._app_engines[app] = orig_engines
+    limiter.enabled = orig_limiter_state
 
 
 class TestHealthAndPages:
@@ -120,6 +124,26 @@ class TestAuthEndpoints:
         res = client.post("/register", json=weak_payload)
         assert res.status_code == 400
         assert "Password must contain" in res.get_json()["error"]
+
+    def test_delete_account_requires_password_confirmation(self, client):
+        client.post("/register", json={
+            "username": "deleteuser",
+            "email": "delete@example.com",
+            "password": "StrongPassword123!"
+        })
+        client.post("/login", json={
+            "email": "delete@example.com",
+            "password": "StrongPassword123!"
+        })
+        # Wrong password -> 403 and user is kept
+        res_wrong = client.delete("/api/user/delete", json={"password": "WrongPassword123!"})
+        assert res_wrong.status_code == 403
+        assert User.query.filter_by(username="deleteuser").first() is not None
+
+        # Right password -> deleted
+        res_right = client.delete("/api/user/delete", json={"password": "StrongPassword123!"})
+        assert res_right.status_code == 200
+        assert User.query.filter_by(username="deleteuser").first() is None
 
 
 class TestAnalyticsEndpoints:

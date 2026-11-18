@@ -17,7 +17,7 @@ from config import config
 from Core.database import (
     db, init_db, migrate, save_review, get_recent_reviews,
     save_analysis, get_analysis_history, get_analysis_by_id,
-    search_analyses, get_statistics, Analysis
+    search_analyses, get_statistics, Analysis, Review
 )
 from Core.user_model import User
 from Core.ai_engine import hybrid_analyze
@@ -439,9 +439,15 @@ def api_user_settings():
 @app.route("/api/user/delete", methods=["DELETE"])
 @login_required
 def api_delete_account():
+    data = request.get_json(silent=True) or {}
+    password = data.get("password") or data.get("current_password") or ""
+    if not password or not current_user.check_password(password):
+        return jsonify({"error": "Incorrect password. Account deletion requires password confirmation."}), 403
+
     try:
         user = current_user._get_current_object()
         Analysis.query.filter_by(user_id=user.id).delete()
+        Review.query.filter_by(author_name=user.username).delete()
         db.session.delete(user)
         db.session.commit()
         logger.warning(f"Account deleted: {user.username}")

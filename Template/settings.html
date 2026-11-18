@@ -1564,10 +1564,25 @@
                     input.className = 'settings-input';
                     input.placeholder = 'Type DELETE here';
 
+                    const pwdLabel = document.createElement('label');
+                    pwdLabel.textContent = 'Enter current password to confirm:';
+                    pwdLabel.style.display = 'block';
+                    pwdLabel.style.marginTop = '14px';
+                    pwdLabel.style.marginBottom = '8px';
+                    pwdLabel.style.color = 'var(--text)';
+
+                    const pwdInput = document.createElement('input');
+                    pwdInput.id = 'delete-password';
+                    pwdInput.type = 'password';
+                    pwdInput.className = 'settings-input';
+                    pwdInput.placeholder = 'Enter your password';
+
                     body.appendChild(warning);
                     body.appendChild(info);
                     body.appendChild(label);
                     body.appendChild(input);
+                    body.appendChild(pwdLabel);
+                    body.appendChild(pwdInput);
                 },
                 (footer, overlay) => {
                     const cancelBtn = document.createElement('button');
@@ -1589,9 +1604,14 @@
 
         async function confirmDeleteAccount() {
             const confirmation = document.getElementById('delete-confirmation').value;
+            const password = document.getElementById('delete-password') ? document.getElementById('delete-password').value : '';
 
             if (confirmation !== 'DELETE') {
                 showMessage('Please type DELETE exactly to confirm', 'error');
+                return;
+            }
+            if (!password) {
+                showMessage('Password is required to delete account', 'error');
                 return;
             }
 
@@ -1601,6 +1621,7 @@
                     headers: csrfHeaders({
                         'Content-Type': 'application/json'
                     }),
+                    body: JSON.stringify({ password }),
                     credentials: 'same-origin'
                 });
 
