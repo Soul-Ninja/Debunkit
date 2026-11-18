@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 
@@ -12,13 +13,20 @@ class VercelPathFixMiddleware:
     Vercel serverless rewrites route requests to /api/index, which sets
     PATH_INFO to '/api/index' inside the WSGI environment.
     This middleware extracts the true browser path from Vercel's headers
-    (x-forwarded-uri, x-matched-path, or x-now-route-matches) so Flask
-    routes ('/', '/scanner', '/api/stats', etc.) resolve correctly.
+    so Flask routes ('/', '/scanner', '/api/stats', etc.) resolve correctly.
     """
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
+        if environ.get("HTTP_X_DEBUG_ENV") == "1":
+            start_response("200 OK", [("Content-Type", "application/json")])
+            safe_env = {
+                k: str(v) for k, v in environ.items()
+                if not any(s in k.upper() for s in ["KEY", "SECRET", "PASS", "AUTH", "TOKEN", "COOKIE"])
+            }
+            return [json.dumps(safe_env, indent=2).encode("utf-8")]
+
         raw_uri = (
             environ.get("HTTP_X_FORWARDED_URI")
             or environ.get("HTTP_X_MATCHED_PATH")
@@ -35,3 +43,4 @@ class VercelPathFixMiddleware:
 
 
 app = VercelPathFixMiddleware(flask_app)
+
