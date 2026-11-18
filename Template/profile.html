@@ -38,24 +38,24 @@
             </div>
 
             <div class="nav-menu">
-                <button class="nav-btn" onclick="window.location.href='/dashboard'">
+                <button class="nav-btn" data-action="nav" data-href="/dashboard">
                     <svg viewBox="0 0 24 24" class="icon-svg"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                     <span>Dashboard</span>
                 </button>
 
-                <button class="nav-btn active" onclick="window.location.href='/profile'">
+                <button class="nav-btn active" data-action="nav" data-href="/profile">
                     <svg viewBox="0 0 24 24" class="icon-svg"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     <span>Dossier Profile</span>
                 </button>
 
-                <button class="nav-btn" onclick="window.location.href='/settings'">
+                <button class="nav-btn" data-action="nav" data-href="/settings">
                     <svg viewBox="0 0 24 24" class="icon-svg"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                     <span>Settings</span>
                 </button>
             </div>
 
             <div class="user-menu">
-                <button class="nav-btn" onclick="logout()" style="color: var(--red-text);">
+                <button class="nav-btn" data-action="logout" style="color: var(--red-text);">
                     <svg viewBox="0 0 24 24" class="icon-svg"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                     <span>Sign Out</span>
                 </button>
@@ -107,18 +107,18 @@
                     <div class="setting-item">
                         <label for="edit-username">Change Investigator Username</label>
                         <input type="text" id="edit-username" placeholder="New username (min 3 characters)" minlength="3">
-                        <button class="btn" onclick="updateUsername()">Update Username</button>
+                        <button class="btn" data-action="update-username">Update Username</button>
                     </div>
 
                     <div class="setting-item">
                         <label for="edit-email">Change Registry Email</label>
                         <input type="email" id="edit-email" placeholder="New email address">
-                        <button class="btn" onclick="updateEmail()">Update Email</button>
+                        <button class="btn" data-action="update-email">Update Email</button>
                     </div>
                 </div>
 
                 <div class="profile-actions">
-                    <button class="btn" onclick="window.location.href='/settings'">Configure Bureau Settings</button>
+                    <button class="btn" data-action="nav" data-href="/settings">Configure Bureau Settings</button>
                 </div>
             </div>
 
@@ -230,14 +230,14 @@
                     <div class="modal-box">
                         <div class="modal-header">
                             <h3>Confirm Sign Out</h3>
-                            <button class="modal-close" onclick="closeModal()">&times;</button>
+                            <button class="modal-close" data-action="close-modal">&times;</button>
                         </div>
                         <div class="modal-body">
                             <p>Are you sure you wish to conclude this bureau session?</p>
                         </div>
                         <div class="modal-footer">
-                            <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
-                            <button class="modal-btn confirm" onclick="confirmLogout()">Sign Out</button>
+                            <button class="modal-btn cancel" data-action="close-modal">Cancel</button>
+                            <button class="modal-btn confirm" data-action="confirm-logout">Sign Out</button>
                         </div>
                     </div>
                 `;
@@ -272,6 +272,25 @@
             const modal = document.getElementById('modal-overlay');
             if (modal && e.target === modal) {
                 closeModal();
+                return;
+            }
+
+            const actionEl = e.target.closest('[data-action]');
+            if (!actionEl) return;
+            const action = actionEl.getAttribute('data-action');
+            if (action === 'nav') {
+                const href = actionEl.getAttribute('data-href');
+                if (href) window.location.href = href;
+            } else if (action === 'logout') {
+                logout();
+            } else if (action === 'update-username') {
+                updateUsername();
+            } else if (action === 'update-email') {
+                updateEmail();
+            } else if (action === 'close-modal') {
+                closeModal();
+            } else if (action === 'confirm-logout') {
+                confirmLogout();
             }
         });
     </script>

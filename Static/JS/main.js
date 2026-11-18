@@ -550,8 +550,11 @@ function switchTab(e, mode) {
         return;
     }
 
+    const tabBtn = (e instanceof Element) ? e : ((e && e.currentTarget && e.currentTarget !== document) ? e.currentTarget : (e && e.target ? e.target.closest('.tab-btn') : null));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    e.currentTarget.classList.add('active');
+    if (tabBtn) {
+        tabBtn.classList.add('active');
+    }
 
     document.querySelectorAll('.input-section').forEach(sec => sec.classList.remove('active'));
 
@@ -2067,6 +2070,77 @@ function showLanguageModal() {
 }
 
 console.log('[Main.js] Loaded successfully');
+
+// ===== EVENT DELEGATION FOR DATA-ACTION ATTRIBUTES =====
+document.addEventListener('click', (e) => {
+    const actionEl = e.target.closest('[data-action]');
+    if (!actionEl) return;
+
+    const action = actionEl.getAttribute('data-action');
+    if (!action) return;
+
+    if (action === 'switch-view') {
+        const view = actionEl.getAttribute('data-view');
+        if (view) switchView(view);
+    } else if (action === 'switch-tab') {
+        const mode = actionEl.getAttribute('data-mode');
+        if (mode) switchTab(actionEl, mode);
+    } else if (action === 'focus-scanner-mode') {
+        const mode = actionEl.getAttribute('data-mode');
+        if (mode) focusScannerMode(mode);
+    } else if (action === 'fill-example-claim') {
+        const claim = actionEl.getAttribute('data-claim');
+        const mode = actionEl.getAttribute('data-mode') || 'title';
+        if (claim) fillExampleClaim(claim, mode);
+    } else if (action === 'start-scan') {
+        startScan();
+    } else if (action === 'clear-ui') {
+        clearUI();
+    } else if (action === 'copy-current-report') {
+        copyCurrentReport();
+    } else if (action === 'download-current-report') {
+        downloadCurrentReport();
+    } else if (action === 'show-clear-confirmation') {
+        showClearConfirmation();
+    } else if (action === 'load-analysis-history') {
+        loadAnalysisHistory();
+    } else if (action === 'reset-history-filters') {
+        resetHistoryFilters();
+    } else if (action === 'close-modal') {
+        closeModal();
+    } else if (action === 'confirm-action') {
+        confirmAction();
+    } else if (action === 'toggle-user-menu') {
+        if (typeof toggleUserMenu === 'function') toggleUserMenu();
+    } else if (action === 'show-language-modal') {
+        e.preventDefault();
+        showLanguageModal();
+    } else if (action === 'show-help-modal') {
+        e.preventDefault();
+        showHelpModal();
+    } else if (action === 'logout') {
+        e.preventDefault();
+        if (typeof logout === 'function') logout();
+    } else if (action === 'nav') {
+        const href = actionEl.getAttribute('data-href');
+        if (href) window.location.href = href;
+    }
+});
+
+document.addEventListener('input', (e) => {
+    const actionEl = e.target.closest('[data-action="apply-history-filters"]');
+    if (actionEl) {
+        applyHistoryFilters();
+    }
+});
+
+document.addEventListener('change', (e) => {
+    const actionEl = e.target.closest('[data-action="apply-history-filters"]');
+    if (actionEl) {
+        applyHistoryFilters();
+    }
+});
+
 // Page-to-page navigation: 150ms opacity fade only
 document.addEventListener('click', (e) => {
     const anchor = e.target.closest('a');

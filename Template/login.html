@@ -100,7 +100,7 @@
                             <label for="password">Password</label>
                             <div class="password-input-group">
                                 <input type="password" id="password" name="password" placeholder="Enter your secret credentials" required autocomplete="current-password">
-                                <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password')" aria-label="Toggle password visibility">
+                                <button type="button" class="password-toggle" data-action="toggle-password" data-target="password" aria-label="Toggle password visibility">
                                     <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" id="eye-icon-password"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                 </button>
                             </div>
@@ -155,6 +155,14 @@
                 }
             }
         }
+
+        document.addEventListener('click', (e) => {
+            const toggleBtn = e.target.closest('[data-action="toggle-password"]');
+            if (toggleBtn) {
+                const targetId = toggleBtn.getAttribute('data-target') || 'password';
+                togglePasswordVisibility(targetId);
+            }
+        });
 
         function getCSRFToken() {
             const meta = document.querySelector('meta[name="csrf-token"]');

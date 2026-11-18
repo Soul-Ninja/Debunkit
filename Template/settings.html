@@ -289,10 +289,10 @@
             </div>
 
             <div class="nav-menu">
-                <button class="nav-btn" onclick="window.location.href='/dashboard'">
+                <button class="nav-btn" data-action="nav" data-href="/dashboard">
                     <svg viewBox="0 0 24 24" class="icon-svg"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> <span>Dashboard</span>
                 </button>
-                <button class="nav-btn" onclick="window.location.href='/profile'">
+                <button class="nav-btn" data-action="nav" data-href="/profile">
                     <svg viewBox="0 0 24 24" class="icon-svg"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> <span>Profile</span>
                 </button>
                 <button class="nav-btn active">
@@ -301,7 +301,7 @@
             </div>
 
             <div class="user-menu">
-                <button class="nav-btn" onclick="showLogoutModal()"
+                <button class="nav-btn" data-action="show-logout-modal"
                     style="background: rgba(224, 82, 82, 0.1); border-color: var(--danger); color: var(--danger);">
                     <svg viewBox="0 0 24 24" class="icon-svg"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> <span>Sign Out</span>
                 </button>
@@ -319,7 +319,7 @@
 
                         <div class="setting-item">
                             <label for="theme-select" data-i18n="theme_label">Theme</label>
-                            <select id="theme-select" class="settings-select" onchange="previewAppearance()">
+                            <select id="theme-select" class="settings-select" data-action="preview-appearance">
                                 <option value="system" {% if user.theme=='system' %}selected{% endif %}>System Default
                                 </option>
                                 <option value="dark" {% if user.theme=='dark' %}selected{% endif %}>Dark Mode</option>
@@ -331,7 +331,7 @@
 
                         <div class="setting-item">
                             <label for="language-select" data-i18n="language_label">Language</label>
-                            <select id="language-select" class="settings-select" onchange="previewLanguage()">
+                            <select id="language-select" class="settings-select" data-action="preview-language">
                                 <option value="en">English</option>
                                 <option value="hi">हिन्दी</option>
                                 <option value="ja">日本語</option>
@@ -341,7 +341,7 @@
 
                         <div class="setting-item">
                             <label for="background-select">Background</label>
-                            <select id="background-select" class="settings-select" onchange="previewAppearance()">
+                            <select id="background-select" class="settings-select" data-action="preview-appearance">
                                 <option value="animated">Animated Canvas</option>
                                 <option value="solid">Solid Background</option>
                                 <option value="gradient">Soft Gradient</option>
@@ -363,9 +363,9 @@
                         </div>
 
                         <div class="settings-actions">
-                            <button class="settings-btn" onclick="savePreferences()" data-i18n="save_preferences">Save
+                            <button class="settings-btn" data-action="save-preferences" data-i18n="save_preferences">Save
                                 Preferences</button>
-                            <button class="settings-btn secondary" onclick="resetAppearancePreview()">Reset
+                            <button class="settings-btn secondary" data-action="reset-appearance-preview">Reset
                                 Preview</button>
                         </div>
                     </section>
@@ -379,7 +379,7 @@
                                 <input type="password" id="current-password" class="settings-input"
                                     placeholder="Enter current password">
                                 <button type="button" class="password-toggle"
-                                    onclick="togglePasswordVisibility('current-password')">👁️</button>
+                                    data-action="toggle-password" data-target="current-password">👁️</button>
                             </div>
                         </div>
 
@@ -389,7 +389,7 @@
                                 <input type="password" id="new-password" class="settings-input"
                                     placeholder="Min 8 chars, uppercase, number, special">
                                 <button type="button" class="password-toggle"
-                                    onclick="togglePasswordVisibility('new-password')">👁️</button>
+                                    data-action="toggle-password" data-target="new-password">👁️</button>
                             </div>
                             <small data-i18n="password_hint">Must include uppercase, lowercase, number, and special
                                 character.</small>
@@ -401,14 +401,14 @@
                                 <input type="password" id="confirm-password" class="settings-input"
                                     placeholder="Re-enter new password">
                                 <button type="button" class="password-toggle"
-                                    onclick="togglePasswordVisibility('confirm-password')">👁️</button>
+                                    data-action="toggle-password" data-target="confirm-password">👁️</button>
                             </div>
                         </div>
 
                         <div class="settings-actions">
-                            <button class="settings-btn" onclick="changePassword()" data-i18n="update_password">Update
+                            <button class="settings-btn" data-action="change-password" data-i18n="update_password">Update
                                 Password</button>
-                            <button class="settings-btn secondary" onclick="clearPasswordFields()"
+                            <button class="settings-btn secondary" data-action="clear-password-fields"
                                 data-i18n="clear">Clear</button>
                         </div>
                     </section>
@@ -440,7 +440,7 @@
                         </div>
 
                         <div class="settings-actions">
-                            <button class="settings-btn" onclick="saveLocalPrivacySettings()"
+                            <button class="settings-btn" data-action="save-privacy"
                                 data-i18n="save_privacy">Save Privacy</button>
                         </div>
 
@@ -478,22 +478,22 @@
                         <h3 data-i18n="about_title">ℹ️ About & Legal</h3>
 
                         <div class="settings-list">
-                            <button class="settings-list-item" onclick="showInfoModal('about')">
+                            <button class="settings-list-item" data-action="show-info-modal" data-modal="about">
                                 <span>📌 <span data-i18n="about_us">About Us</span></span>
                                 <span>›</span>
                             </button>
 
-                            <button class="settings-list-item" onclick="showInfoModal('terms')">
+                            <button class="settings-list-item" data-action="show-info-modal" data-modal="terms">
                                 <span>📄 <span data-i18n="terms">Terms of Service</span></span>
                                 <span>›</span>
                             </button>
 
-                            <button class="settings-list-item" onclick="showInfoModal('privacy')">
+                            <button class="settings-list-item" data-action="show-info-modal" data-modal="privacy">
                                 <span><span data-i18n="privacy_policy">Privacy Policy</span></span>
                                 <span>›</span>
                             </button>
 
-                            <button class="settings-list-item" onclick="showInfoModal('features')">
+                            <button class="settings-list-item" data-action="show-info-modal" data-modal="features">
                                 <span>🧩 <span data-i18n="features">Features</span></span>
                                 <span>›</span>
                             </button>
@@ -511,7 +511,7 @@
                         </div>
 
                         <div class="settings-actions">
-                            <button class="settings-btn danger" onclick="showDeleteModal()"
+                            <button class="settings-btn danger" data-action="show-delete-modal"
                                 data-i18n="delete_my_account">
                                 Delete My Account
                             </button>
@@ -1722,6 +1722,47 @@
                     applyAppearance('system', currentBg);
                 }
             });
+        });
+
+        document.addEventListener('click', (e) => {
+            const actionEl = e.target.closest('[data-action]');
+            if (!actionEl) return;
+            const action = actionEl.getAttribute('data-action');
+            if (action === 'nav') {
+                const href = actionEl.getAttribute('data-href');
+                if (href) window.location.href = href;
+            } else if (action === 'show-logout-modal') {
+                showLogoutModal();
+            } else if (action === 'save-preferences') {
+                savePreferences();
+            } else if (action === 'reset-appearance-preview') {
+                resetAppearancePreview();
+            } else if (action === 'toggle-password') {
+                const target = actionEl.getAttribute('data-target');
+                if (target) togglePasswordVisibility(target);
+            } else if (action === 'change-password') {
+                changePassword();
+            } else if (action === 'clear-password-fields') {
+                clearPasswordFields();
+            } else if (action === 'save-privacy') {
+                saveLocalPrivacySettings();
+            } else if (action === 'show-info-modal') {
+                const modalType = actionEl.getAttribute('data-modal');
+                if (modalType) showInfoModal(modalType);
+            } else if (action === 'show-delete-modal') {
+                showDeleteModal();
+            }
+        });
+
+        document.addEventListener('change', (e) => {
+            const actionEl = e.target.closest('[data-action]');
+            if (!actionEl) return;
+            const action = actionEl.getAttribute('data-action');
+            if (action === 'preview-appearance') {
+                previewAppearance();
+            } else if (action === 'preview-language') {
+                previewLanguage();
+            }
         });
     </script>
 </body>

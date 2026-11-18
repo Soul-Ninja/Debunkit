@@ -171,6 +171,7 @@ def unauthorized():
 
 # ===== FRONTEND VIEWS =====
 @app.route("/")
+@app.route("/api/index")
 def index():
     return render_template("landing.html")
 

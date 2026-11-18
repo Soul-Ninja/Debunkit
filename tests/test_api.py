@@ -244,3 +244,28 @@ class TestReviews:
         assert res.status_code == 201
         assert res.get_json()["review"]["author_name"] == "realreader"
         assert len(client.get("/api/reviews").get_json()["reviews"]) == 1
+
+
+class TestCSPNoInlineEventHandlers:
+    def test_no_inline_event_handlers_in_templates(self):
+        """Verify strict CSP compliance: no inline on* event handler attributes in any template."""
+        import glob
+        import os
+        import re
+
+        template_dir = os.path.join(os.path.dirname(__file__), "..", "Template")
+        html_files = glob.glob(os.path.join(template_dir, "*.html"))
+        assert len(html_files) > 0, "No template files found to check"
+
+        pattern = re.compile(r'\son[a-z]+="', re.IGNORECASE)
+        violations = {}
+
+        for path in html_files:
+            filename = os.path.basename(path)
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+                matches = pattern.findall(content)
+                if matches:
+                    violations[filename] = matches
+
+        assert not violations, f"Templates contain inline event handlers forbidden by CSP: {violations}"
