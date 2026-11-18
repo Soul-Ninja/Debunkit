@@ -1,0 +1,1070 @@
+/**
+ * DEBUNK.IT — Editorial Interactive Engine
+ * Handles BS-o-Meter truth gauge, Accessible SFX, Tickers & Editorial Reviews
+ */
+
+(function () {
+    'use strict';
+
+    // =========================================================================
+    // 1. SOUND FX ENGINE (DEFAULTS TO OFF, ACCESSIBLE)
+    // =========================================================================
+    let audioCtx = null;
+    let sfxEnabled = localStorage.getItem('debunkit_sfx') === 'on'; // default OFF
+
+    function initAudio() {
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                audioCtx = new AudioContext();
+            }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function playTone(freq, type, duration, gainStart = 0.12, gainEnd = 0.001) {
+        if (!sfxEnabled || !audioCtx) return;
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+            gain.gain.setValueAtTime(gainStart, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(gainEnd, audioCtx.currentTime + duration);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {
+            console.debug('Audio error:', e);
+        }
+    }
+
+    function playBuzzer() {
+        if (!sfxEnabled || !audioCtx) return;
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+
+            osc.frequency.setValueAtTime(280, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.35);
+
+            gain.gain.setValueAtTime(0.14, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.35);
+        } catch (e) {}
+    }
+
+    function playSuccessChime() {
+        if (!sfxEnabled || !audioCtx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+            setTimeout(() => {
+                playTone(freq, 'sine', 0.2, 0.1, 0.001);
+            }, idx * 60);
+        });
+    }
+
+    function playRadarPing() {
+        playTone(1600, 'sine', 0.1, 0.06, 0.001);
+    }
+
+    function playClick() {
+        playTone(700, 'triangle', 0.03, 0.04, 0.001);
+    }
+
+    function playChime() {
+        playTone(980, 'triangle', 0.12, 0.05);
+    }
+
+    // =========================================================================
+    // 2. PRESET VIRAL CLAIMS FOR BS-O-METER (CLEAN TYPOGRAPHY, NO EMOJIS)
+    // =========================================================================
+    const VIRAL_PRESETS = [
+        {
+            id: 'garlic',
+            btnText: 'Garlic Cures Loans & 5G',
+            claim: 'Drinking boiled garlic water cures student loans and 5G radiation.',
+            verdict: '100% REFUTED',
+            score: '99.9%',
+            tone: 'danger',
+            angle: 78,
+            readoutText: 'MAXIMUM CAP',
+            diagnosis: 'Confirmed rumor dynamics. Boiling garlic leaves your student debt untouched while assuring social distancing through pungent breath.',
+            type: 'headline'
+        },
+        {
+            id: 'microwave',
+            btnText: 'Microwave Fast-Charge',
+            claim: 'Putting your iPhone in the microwave for 30 seconds supercharges the battery to 100%.',
+            verdict: 'CRITICAL HAZARD',
+            score: '100%',
+            tone: 'danger',
+            angle: 80,
+            readoutText: 'HAZARDOUS BOGUS',
+            diagnosis: 'Debunked by basic thermodynamics. The only outcome is destroyed circuitry and an expensive insurance deductible.',
+            type: 'headline'
+        },
+        {
+            id: 'aliens',
+            btnText: 'Pyramids Alien Wi-Fi',
+            claim: 'The Egyptian pyramids were ancient wireless power transmitters built by extraterrestrials.',
+            verdict: 'UNFOUNDED SPECULATION',
+            score: '99.8%',
+            tone: 'danger',
+            angle: 75,
+            readoutText: 'COSMIC NONSENSE',
+            diagnosis: 'Limestone masonry and human labor documented. Zero intergalactic blueprints or electronic components uncovered.',
+            type: 'headline'
+        },
+        {
+            id: 'avocado',
+            btnText: 'Avocado 5G Shield',
+            claim: 'Eating ground avocado pits makes the human body immune to electromagnetic Wi-Fi signals.',
+            verdict: 'ORGANIC BOGUS',
+            score: '96.4%',
+            tone: 'danger',
+            angle: 70,
+            readoutText: 'GRADE-A BOLOGNA',
+            diagnosis: 'Woody seed stones containing bitter tannins offer zero Faraday cage properties. Please do not damage teeth on seed stones.',
+            type: 'headline'
+        },
+        {
+            id: 'ai-laundry',
+            btnText: 'AI Laundry Singularity',
+            claim: 'AI models have secretly agreed to automate all laundry and fold clothes by next Tuesday.',
+            verdict: 'DELUSIONAL HOPE',
+            score: '50.0%',
+            tone: 'sus',
+            angle: 0,
+            readoutText: 'WISHFUL THINKING',
+            diagnosis: 'While modern models compose sonnets, robotic manipulators still struggle with cloth physics and missing laundry socks.',
+            type: 'headline'
+        },
+        {
+            id: 'water',
+            btnText: 'Water Hydrates Humans',
+            claim: 'Drinking clean fresh water is necessary for human hydration and organ function.',
+            verdict: 'VERIFIED FACT',
+            score: '0.1%',
+            tone: 'legit',
+            angle: -78,
+            readoutText: 'CONFIRMED TRUTH',
+            diagnosis: 'Established biological reality. H2O is required for mammalian cellular metabolism and kidney filtration.',
+            type: 'headline'
+        }
+    ];
+
+    // =========================================================================
+    // 3. BS-O-METER UI CONTROLLER
+    // =========================================================================
+    let currentActivePreset = null;
+    let hasGaugeSwung = false;
+    let gaugeCountRaf = null;
+
+    function animateGaugeCount(startVal, endVal, durationMs) {
+        if (gaugeCountRaf) {
+            cancelAnimationFrame(gaugeCountRaf);
+            gaugeCountRaf = null;
+        }
+        const scoreEl = document.getElementById('gauge-score');
+        if (!scoreEl) return;
+
+        const startTime = performance.now();
+        function tick(now) {
+            const elapsed = now - startTime;
+            const progress = Math.min(1, elapsed / durationMs);
+            // Cubic ease-out matching the needle overshoot transition
+            const ease = 1 - Math.pow(1 - progress, 3);
+            const current = startVal + (endVal - startVal) * ease;
+            scoreEl.textContent = current.toFixed(1) + '%';
+            if (progress < 1) {
+                gaugeCountRaf = requestAnimationFrame(tick);
+            } else {
+                scoreEl.textContent = endVal.toFixed(1) + '%';
+                gaugeCountRaf = null;
+            }
+        }
+        gaugeCountRaf = requestAnimationFrame(tick);
+    }
+
+    function renderMeterPreset(preset, isUserAction = true) {
+        initAudio();
+
+        currentActivePreset = preset;
+        const needle = document.getElementById('gauge-needle');
+        const score = document.getElementById('gauge-score');
+        const label = document.getElementById('gauge-label');
+        const roastStamp = document.getElementById('roast-stamp');
+        const roastText = document.getElementById('roast-text');
+        const roastCard = document.getElementById('roast-card');
+        const scanFullBtn = document.getElementById('btn-scan-full');
+        const customInput = document.getElementById('custom-claim-input');
+
+        if (isUserAction) {
+            if (gaugeCountRaf) {
+                cancelAnimationFrame(gaugeCountRaf);
+                gaugeCountRaf = null;
+            }
+            hasGaugeSwung = true;
+        }
+
+        if (customInput) {
+            customInput.value = preset.claim;
+        }
+
+        const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (needle) {
+            if (!isUserAction && !prefersReduced && !hasGaugeSwung) {
+                needle.style.transform = 'rotate(0deg)';
+            } else {
+                needle.style.transform = `rotate(${preset.angle}deg)`;
+            }
+        }
+
+        if (score) {
+            if (!isUserAction && !prefersReduced && !hasGaugeSwung) {
+                score.textContent = '0.0%';
+            } else {
+                score.textContent = preset.score;
+            }
+            score.className = `gauge-score ${preset.tone}`;
+        }
+
+        if (label) {
+            label.textContent = preset.readoutText;
+        }
+
+        if (roastStamp) {
+            roastStamp.textContent = preset.verdict;
+            roastStamp.className = `roast-stamp ${preset.tone}`;
+        }
+
+        if (roastText) {
+            roastText.textContent = preset.diagnosis;
+        }
+
+        if (roastCard) {
+            roastCard.className = `roast-card ${preset.tone}`;
+        }
+
+        if (scanFullBtn) {
+            scanFullBtn.href = `/scanner?claim=${encodeURIComponent(preset.claim)}&mode=${preset.type || 'title'}`;
+        }
+
+        document.querySelectorAll('.sample-chip').forEach(chip => {
+            if (chip.dataset.id === preset.id) {
+                chip.classList.add('active');
+                chip.setAttribute('aria-pressed', 'true');
+            } else {
+                chip.classList.remove('active');
+                chip.setAttribute('aria-pressed', 'false');
+            }
+        });
+
+        if (preset.tone === 'legit') {
+            playSuccessChime();
+        } else if (preset.tone === 'danger') {
+            playBuzzer();
+        } else {
+            playRadarPing();
+        }
+    }
+
+    function evaluateCustomClaim(text) {
+        if (!text || text.trim().length < 5) {
+            showLandingToast('Please enter at least 5 characters to analyze.');
+            return;
+        }
+
+        if (gaugeCountRaf) {
+            cancelAnimationFrame(gaugeCountRaf);
+            gaugeCountRaf = null;
+        }
+        hasGaugeSwung = true;
+
+        initAudio();
+        playRadarPing();
+
+        const clean = text.toLowerCase().trim();
+        let scoreVal = 85;
+        let angleVal = 55;
+        let verdictVal = 'HIGH SUSPICION';
+        let readoutVal = 'PROBABLE BOGUS';
+        let toneVal = 'danger';
+        let diagVal = 'Heuristic indicators suggest unverified rumor dynamics or sensationalist phrasing. Check full citations below.';
+
+        if (clean.includes('water') && (clean.includes('drink') || clean.includes('hydrate'))) {
+            scoreVal = 0.5;
+            angleVal = -75;
+            verdictVal = 'VERIFIED ACCURATE';
+            readoutVal = 'SOLID TRUTH';
+            toneVal = 'legit';
+            diagVal = 'Hydration and hydration biology confirmed by scientific consensus.';
+        } else if (clean.includes('alien') || clean.includes('ufo') || clean.includes('flat earth')) {
+            scoreVal = 99.8;
+            angleVal = 78;
+            verdictVal = 'UNVERIFIED CONSPIRACY';
+            readoutVal = 'SPECULATIVE LORE';
+            toneVal = 'danger';
+            diagVal = 'This hypothesis relies on fringe message board discussions lacking documented evidence.';
+        } else if (clean.includes('cure') || clean.includes('miracle') || clean.includes('garlic') || clean.includes('5g')) {
+            scoreVal = 97.5;
+            angleVal = 72;
+            verdictVal = 'UNVERIFIED WELLNESS CLAIM';
+            readoutVal = 'VIRAL RUMOR';
+            toneVal = 'danger';
+            diagVal = 'Medical assertions without clinical trials or regulatory approval.';
+        } else {
+            scoreVal = Math.min(99, Math.max(45, 60 + (text.length % 35)));
+            angleVal = ((scoreVal / 100) * 160) - 80;
+            diagVal = `Forensic analysis flags a ${scoreVal}% probability of misinformation or omission of primary context.`;
+        }
+
+        const customPreset = {
+            id: 'custom',
+            btnText: 'Custom Input',
+            claim: text,
+            verdict: verdictVal,
+            score: scoreVal + '%',
+            tone: toneVal,
+            angle: angleVal,
+            readoutText: readoutVal,
+            diagnosis: diagVal,
+            type: text.startsWith('http://') || text.startsWith('https://') ? 'url' : 'title'
+        };
+
+        renderMeterPreset(customPreset);
+    }
+
+    // =========================================================================
+    // 4. STATS COUNTERS ANIMATION (INTERSECTION OBSERVER)
+    // =========================================================================
+    function initCounters() {
+        const counters = document.querySelectorAll('.stat-num[data-target]');
+        if (!counters.length) return;
+
+        const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const targetEl = entry.target;
+                    const targetVal = parseFloat(targetEl.getAttribute('data-target'));
+                    const prefix = targetEl.getAttribute('data-prefix') || '';
+                    const suffix = targetEl.getAttribute('data-suffix') || '';
+                    const duration = 1600;
+                    const startTime = performance.now();
+
+                    function updateCount(currentTime) {
+                        const elapsed = currentTime - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+                        const ease = 1 - Math.pow(1 - progress, 3);
+                        const currentNum = Math.floor(targetVal * ease);
+
+                        targetEl.textContent = prefix + currentNum.toLocaleString() + suffix;
+
+                        if (progress < 1) {
+                            requestAnimationFrame(updateCount);
+                        } else {
+                            targetEl.textContent = prefix + targetVal.toLocaleString() + suffix;
+                        }
+                    }
+
+                    requestAnimationFrame(updateCount);
+                    obs.unobserve(targetEl);
+                }
+            });
+        }, { threshold: 0.3 });
+
+        counters.forEach(c => observer.observe(c));
+    }
+
+    // =========================================================================
+    // 5. TOAST NOTIFICATION HELPER
+    // =========================================================================
+    function showLandingToast(msg) {
+        let toast = document.getElementById('landing-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'landing-toast';
+            toast.className = 'debunk-toast';
+            document.body.appendChild(toast);
+        }
+
+        toast.textContent = msg;
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(10px)';
+        }, 3200);
+    }
+
+    // =========================================================================
+    // 6. HERO "TRUST" -> "TRUST?": hand-struck line plus a question mark
+    //    (hover on a mouse, tap to toggle on touch; the word stays readable)
+    // =========================================================================
+    function initCrazyTitle() {
+        const wrap = document.getElementById('hero-title-wrap');
+        const word = document.getElementById('decode-debunk');
+        if (!wrap || !word) return;
+
+        const setDoubt = (on) => word.classList.toggle('is-doubted', on);
+        const canHover = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+        wrap.addEventListener('pointerenter', (e) => {
+            if (e.pointerType === 'mouse') setDoubt(true);
+        });
+        wrap.addEventListener('pointerleave', (e) => {
+            if (e.pointerType === 'mouse') setDoubt(false);
+        });
+        wrap.addEventListener('click', () => {
+            playRadarPing();
+            if (!canHover.matches) setDoubt(!word.classList.contains('is-doubted'));
+        });
+    }
+
+    // =========================================================================
+    // 7. COMMUNITY REVIEWS SYSTEM
+    // =========================================================================
+    function initCommunityReviews() {
+        const modalBackdrop = document.getElementById('review-modal-backdrop');
+        const openBtn = document.getElementById('btn-open-review-modal');
+        const closeBtn = document.getElementById('btn-close-review-modal');
+        const cancelBtn = document.getElementById('btn-cancel-review');
+        const form = document.getElementById('community-review-form');
+        const starPicker = document.getElementById('star-picker');
+        const ratingVal = document.getElementById('review-rating-val');
+        const quotesGrid = document.getElementById('quotes-grid');
+
+        function openModal() {
+            if (!modalBackdrop) return;
+            initAudio();
+            modalBackdrop.classList.add('open');
+            modalBackdrop.setAttribute('aria-hidden', 'false');
+            playChime();
+            const firstInput = document.getElementById('review-role');
+            if (firstInput) firstInput.focus();
+        }
+
+        function closeModal() {
+            if (!modalBackdrop) return;
+            modalBackdrop.classList.remove('open');
+            modalBackdrop.setAttribute('aria-hidden', 'true');
+        }
+
+        if (openBtn) openBtn.addEventListener('click', openModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+        if (modalBackdrop) {
+            modalBackdrop.addEventListener('click', (e) => {
+                if (e.target === modalBackdrop) closeModal();
+            });
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modalBackdrop.classList.contains('open')) {
+                    closeModal();
+                }
+            });
+        }
+
+        if (starPicker && ratingVal) {
+            const stars = starPicker.querySelectorAll('.star-pick');
+            stars.forEach(star => {
+                star.addEventListener('click', () => {
+                    const val = parseInt(star.getAttribute('data-val') || '5', 10);
+                    ratingVal.value = val;
+                    stars.forEach(s => {
+                        const sVal = parseInt(s.getAttribute('data-val') || '1', 10);
+                        if (sVal <= val) {
+                            s.classList.add('active');
+                        } else {
+                            s.classList.remove('active');
+                        }
+                    });
+                    playTone(550 + (val * 80), 'triangle', 0.04, 0.04);
+                });
+            });
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        function createReviewCard(author, role, rating, content, isNew = false) {
+            const card = document.createElement('div');
+            card.className = `quote-card ${isNew ? 'new-community-review' : ''}`;
+            const starsStr = '\u2605'.repeat(rating) + '\u2606'.repeat(Math.max(0, 5 - rating));
+
+            card.innerHTML = `
+                <div class="quote-stars" aria-label="${rating} out of 5 stars">${starsStr}</div>
+                <p class="quote-body">"${escapeHtml(content)}"</p>
+                <div class="quote-author">
+                    <div class="author-avatar">${escapeHtml(author.charAt(0).toUpperCase())}</div>
+                    <div class="author-info">
+                        <h4>${escapeHtml(author)}</h4>
+                        <p>${escapeHtml(role)}</p>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        const emptyState = document.getElementById('quotes-empty');
+        function addReviewCard(card, atTop) {
+            if (emptyState) emptyState.hidden = true;
+            if (atTop) quotesGrid.insertBefore(card, quotesGrid.firstChild);
+            else quotesGrid.appendChild(card);
+        }
+
+        // Only reviews stored on the server are shown: nothing is seeded or kept in localStorage.
+        function loadCommunityReviews() {
+            if (!quotesGrid) return;
+            fetch('/api/reviews')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.status === 'success' && Array.isArray(data.reviews)) {
+                        data.reviews.forEach(r => addReviewCard(
+                            createReviewCard(r.author_name, r.author_role, r.rating, r.content), false));
+                    }
+                })
+                .catch(() => {});
+        }
+
+        loadCommunityReviews();
+
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const roleInput = document.getElementById('review-role');
+                const contentInput = document.getElementById('review-content');
+                const role = roleInput ? roleInput.value.trim() : '';
+                const content = contentInput ? contentInput.value.trim() : '';
+                const rating = parseInt(ratingVal ? ratingVal.value : '5', 10);
+                if (!content) return;
+
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                fetch('/api/reviews', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfMeta ? csrfMeta.getAttribute('content') : ''
+                    },
+                    body: JSON.stringify({ role, rating, content })
+                })
+                    .then(res => res.json().then(body => ({ ok: res.ok, body })))
+                    .then(({ ok, body }) => {
+                        if (!ok || !body.review) {
+                            showLandingToast((body && body.error) || 'Could not post your dispatch. Please try again.');
+                            return;
+                        }
+                        const r = body.review;
+                        const card = createReviewCard(r.author_name, r.author_role, r.rating, r.content, true);
+                        addReviewCard(card, true);
+                        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        playSuccessChime();
+                        showLandingToast('Dispatch published. Thank you.');
+                        closeModal();
+                        form.reset();
+                    })
+                    .catch(() => showLandingToast('Network error. Please try again.'));
+            });
+        }
+    }
+
+    // =========================================================================
+    // 9. SIGNATURE MOTION ENGINE: "PRINTED, REDACTED, STAMPED"
+    // =========================================================================
+
+    // 9.1 Data-reveal IntersectionObserver: triggers EVERY TIME user scrolls down!
+    function initScrollReveals() {
+        window.__revealReady = true;
+        const revealElements = document.querySelectorAll('[data-reveal]');
+        if (!revealElements.length) return;
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+            revealElements.forEach(el => el.classList.add('is-in'));
+            return;
+        }
+
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-in');
+                } else {
+                    // Reset when scrolling out of view so appearing animation runs every time you scroll down!
+                    entry.target.classList.remove('is-in');
+                }
+            });
+        }, {
+            rootMargin: '-40px 0px',
+            threshold: 0.12
+        });
+
+        revealElements.forEach(el => revealObserver.observe(el));
+    }
+
+    // 9.1a Scroll-driven Forensic Gauge (Part A.1)
+    function initScrollDrivenGauge() {
+        const meterSection = document.getElementById('meter');
+        const needle = document.getElementById('gauge-needle');
+        const score = document.getElementById('gauge-score');
+        if (!meterSection || !needle || !score) return;
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+            hasGaugeSwung = true;
+            needle.style.transform = 'rotate(78deg)';
+            score.textContent = '99.9%';
+            return;
+        }
+
+        const gaugeObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !hasGaugeSwung) {
+                    hasGaugeSwung = true;
+                    needle.style.transform = 'rotate(78deg)';
+                    animateGaugeCount(0, 99.9, 600);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.25,
+            rootMargin: '0px 0px -40px 0px'
+        });
+
+        gaugeObserver.observe(meterSection);
+    }
+
+    // 9.1b Stamped Dossier Cards (Part A.2)
+    function initStampedDossiers() {
+        const cards = document.querySelectorAll('.dossier-card');
+        if (!cards.length) return;
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+            cards.forEach(c => c.classList.add('is-stamped'));
+            return;
+        }
+
+        const dossierObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-stamped');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.15,
+            rootMargin: '0px 0px -40px 0px'
+        });
+
+        cards.forEach(c => dossierObserver.observe(c));
+    }
+
+    // 9.1c Highlighter Marker Swipes (Part A.3)
+    function initHighlighterSwipe() {
+        const marks = document.querySelectorAll('mark.hl');
+        if (!marks.length) return;
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+            marks.forEach(m => m.classList.add('is-highlighted'));
+            return;
+        }
+
+        const hlObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-highlighted');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.2,
+            rootMargin: '0px 0px -30px 0px'
+        });
+
+        marks.forEach(m => hlObserver.observe(m));
+    }
+
+    // 9.2 Sticky Nav hairline and backdrop toggle past 8px
+    function initStickyNavScroll() {
+        const nav = document.querySelector('.landing-nav');
+        if (!nav) return;
+
+        let isScrolled = false;
+        let ticking = false;
+
+        const onScroll = () => {
+            const scrolled = window.scrollY > 8;
+            if (scrolled !== isScrolled) {
+                isScrolled = scrolled;
+                nav.classList.toggle('nav-scrolled', isScrolled);
+            }
+            ticking = false;
+        };
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                window.requestAnimationFrame(onScroll);
+                ticking = true;
+            }
+        }, { passive: true });
+
+        onScroll();
+    }
+
+    // 9.3 Ticker headline snap highlight sweep
+    function initTickerSnap() {
+        const tickerViewport = document.querySelector('.ticker-viewport');
+        const tickerItems = document.querySelectorAll('.ticker-item');
+        if (!tickerViewport || !tickerItems.length || !('IntersectionObserver' in window)) return;
+
+        const snapObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('ticker-snap');
+                    setTimeout(() => {
+                        entry.target.classList.remove('ticker-snap');
+                    }, 400);
+                }
+            });
+        }, {
+            root: tickerViewport,
+            rootMargin: '0px 0px 0px -10px',
+            threshold: 0.5
+        });
+
+        tickerItems.forEach(item => snapObserver.observe(item));
+    }
+
+    // 9.4 Hero collage cursor-follow subtle parallax (max 6px, smoothed with lerp)
+    function initHeroParallax() {
+        const collage = document.querySelector('.hero-collage-graphic');
+        if (!collage) return;
+
+        const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!isFinePointer || prefersReducedMotion) return;
+
+        let targetX = 0;
+        let targetY = 0;
+        let currentX = 0;
+        let currentY = 0;
+        let animId = null;
+
+        const hero = document.querySelector('.hero-section');
+        if (!hero) return;
+
+        hero.addEventListener('mousemove', (e) => {
+            const rect = hero.getBoundingClientRect();
+            const relX = (e.clientX - rect.left) / rect.width - 0.5;
+            const relY = (e.clientY - rect.top) / rect.height - 0.5;
+            targetX = relX * 12; // max ±6px
+            targetY = relY * 12;
+
+            if (!animId) {
+                animId = requestAnimationFrame(updateParallax);
+            }
+        }, { passive: true });
+
+        hero.addEventListener('mouseleave', () => {
+            targetX = 0;
+            targetY = 0;
+        });
+
+        function updateParallax() {
+            currentX += (targetX - currentX) * 0.08;
+            currentY += (targetY - currentY) * 0.08;
+
+            collage.style.transform = `translate3d(${currentX.toFixed(2)}px, ${currentY.toFixed(2)}px, 0)`;
+
+            if (Math.abs(targetX - currentX) > 0.05 || Math.abs(targetY - currentY) > 0.05) {
+                animId = requestAnimationFrame(updateParallax);
+            } else {
+                animId = null;
+            }
+        }
+    }
+
+    // 9.5 Page-to-page navigation: 150ms opacity fade only
+    function initPageFadeTransition() {
+        document.addEventListener('click', (e) => {
+            const anchor = e.target.closest('a');
+            if (!anchor) return;
+            const href = anchor.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('javascript:') || anchor.target === '_blank') return;
+            if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+            if (href.startsWith('/') || href.startsWith(window.location.origin)) {
+                e.preventDefault();
+                document.body.classList.add('page-leaving');
+                setTimeout(() => {
+                    window.location.href = href;
+                }, 120);
+            }
+        });
+    }
+
+    // 9.6 Editorial Edition Switcher (Day: Paper / Night: Charcoal) with Ink-Wipe Transition
+    function initThemeToggle() {
+        const slider = document.getElementById('edition-slider');
+        if (!slider) return;
+
+        const dayBtn = slider.querySelector('.edition-day');
+        const nightBtn = slider.querySelector('.edition-night');
+
+        function getCurrentTheme() {
+            const attr = document.documentElement.getAttribute('data-theme');
+            if (attr === 'dark') return 'dark';
+            if (attr === 'light') return 'light';
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function updateSliderUI(theme) {
+            const isDark = (theme === 'dark');
+            slider.setAttribute('aria-checked', isDark ? 'true' : 'false');
+            if (dayBtn) dayBtn.classList.toggle('active', !isDark);
+            if (nightBtn) nightBtn.classList.toggle('active', isDark);
+        }
+
+        function applyTheme(newTheme, triggerEl = null) {
+            const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            // Subtle tactile switch tone if SFX enabled
+            if (typeof playTone === 'function') {
+                playTone(newTheme === 'dark' ? 520 : 760, 'triangle', 0.035, 0.04);
+            }
+
+            function commitTheme() {
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('debunkit_theme', newTheme);
+                updateSliderUI(newTheme);
+
+                // Sync with authenticated user settings endpoint in background
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+                fetch('/api/user/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ theme: newTheme })
+                }).catch(() => { /* silent fail for unauthenticated guests */ });
+            }
+
+            // View Transition circular ink wipe across the page
+            if (document.startViewTransition && !isReducedMotion && triggerEl) {
+                const rect = triggerEl.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+                const endRadius = Math.hypot(
+                    Math.max(x, window.innerWidth - x),
+                    Math.max(y, window.innerHeight - y)
+                );
+
+                const transition = document.startViewTransition(() => {
+                    commitTheme();
+                });
+
+                transition.ready.then(() => {
+                    document.documentElement.animate(
+                        {
+                            clipPath: [
+                                `circle(0px at ${x}px ${y}px)`,
+                                `circle(${endRadius}px at ${x}px ${y}px)`
+                            ]
+                        },
+                        {
+                            duration: 460,
+                            easing: 'cubic-bezier(0.23, 1, 0.32, 1)',
+                            pseudoElement: '::view-transition-new(root)'
+                        }
+                    );
+                });
+            } else {
+                // Fallback smooth CSS transition
+                document.documentElement.classList.add('theme-transitioning');
+                commitTheme();
+                setTimeout(() => {
+                    document.documentElement.classList.remove('theme-transitioning');
+                }, 420);
+            }
+        }
+
+        // Initialize state from localStorage or system
+        const savedTheme = localStorage.getItem('debunkit_theme') || getCurrentTheme();
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateSliderUI(savedTheme);
+
+        // Click to toggle or pick specific edition
+        slider.addEventListener('click', (e) => {
+            const current = getCurrentTheme();
+            const btn = e.target.closest('.edition-btn');
+            let nextTheme;
+            if (btn && btn.dataset.edition) {
+                nextTheme = btn.dataset.edition;
+            } else {
+                nextTheme = (current === 'dark') ? 'light' : 'dark';
+            }
+            if (nextTheme !== current) {
+                applyTheme(nextTheme, slider);
+            }
+        });
+
+        // Keyboard accessibility (Space / Enter)
+        slider.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const current = getCurrentTheme();
+                const nextTheme = (current === 'dark') ? 'light' : 'dark';
+                applyTheme(nextTheme, slider);
+            }
+        });
+    }
+
+    // =========================================================================
+    // 8. INITIALIZE ON DOM READY
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+        // SFX Toggle Setup (default OFF)
+        const sfxBtn = document.getElementById('sfx-toggle-btn');
+        if (sfxBtn) {
+            function updateSFXButtonUI() {
+                if (sfxEnabled) {
+                    sfxBtn.classList.add('active');
+                    sfxBtn.setAttribute('aria-pressed', 'true');
+                    sfxBtn.innerHTML = `
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                        <span class="sfx-text">SFX: ON</span>
+                    `;
+                } else {
+                    sfxBtn.classList.remove('active');
+                    sfxBtn.setAttribute('aria-pressed', 'false');
+                    sfxBtn.innerHTML = `
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                        <span class="sfx-text">SFX: OFF</span>
+                    `;
+                }
+            }
+            updateSFXButtonUI();
+
+            sfxBtn.addEventListener('click', () => {
+                initAudio();
+                sfxEnabled = !sfxEnabled;
+                localStorage.setItem('debunkit_sfx', sfxEnabled ? 'on' : 'off');
+                updateSFXButtonUI();
+                if (sfxEnabled) {
+                    playSuccessChime();
+                    showLandingToast('Sound effects enabled.');
+                } else {
+                    showLandingToast('Sound effects muted.');
+                }
+            });
+        }
+
+        // Mobile Nav Toggle
+        const mobileBtn = document.querySelector('.mobile-menu-btn');
+        const navLinks = document.querySelector('.nav-links');
+        if (mobileBtn && navLinks) {
+            mobileBtn.addEventListener('click', () => {
+                navLinks.classList.toggle('open');
+                const isOpen = navLinks.classList.contains('open');
+                mobileBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                playClick();
+            });
+
+            // Close mobile menu when an item is selected
+            navLinks.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (navLinks.classList.contains('open')) {
+                        navLinks.classList.remove('open');
+                        mobileBtn.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            });
+        }
+
+        // Render Preset Chips
+        const chipsContainer = document.getElementById('samples-container');
+        if (chipsContainer) {
+            chipsContainer.innerHTML = '';
+            VIRAL_PRESETS.forEach(preset => {
+                const chip = document.createElement('button');
+                chip.className = 'sample-chip';
+                chip.dataset.id = preset.id;
+                chip.textContent = preset.btnText;
+                chip.addEventListener('click', () => {
+                    playClick();
+                    renderMeterPreset(preset);
+                });
+                chipsContainer.appendChild(chip);
+            });
+        }
+
+        renderMeterPreset(VIRAL_PRESETS[0], false);
+
+        // Custom Claim Input
+        const testBtn = document.getElementById('btn-test-custom');
+        const customInput = document.getElementById('custom-claim-input');
+        if (testBtn && customInput) {
+            testBtn.addEventListener('click', () => {
+                evaluateCustomClaim(customInput.value);
+            });
+            customInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    evaluateCustomClaim(customInput.value);
+                }
+            });
+        }
+
+        // Ticker item clicks
+        document.querySelectorAll('.ticker-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const claimText = item.getAttribute('data-claim');
+                if (claimText) {
+                    if (customInput) customInput.value = claimText;
+                    evaluateCustomClaim(claimText);
+                    const meterSection = document.getElementById('meter');
+                    if (meterSection) {
+                        meterSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            });
+        });
+
+        initCounters();
+        initCommunityReviews();
+        initCrazyTitle();
+        initScrollReveals();
+        initScrollDrivenGauge();
+        initStampedDossiers();
+        initHighlighterSwipe();
+        initStickyNavScroll();
+        initTickerSnap();
+        initHeroParallax();
+        initPageFadeTransition();
+        initThemeToggle();
+
+        // One-time audio unlock on first interaction
+        document.body.addEventListener('click', () => {
+            initAudio();
+        }, { once: true });
+    });
+})();

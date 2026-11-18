@@ -1,0 +1,2158 @@
+let currentMode = 'title';
+let isAnalyzing = false;
+let lastAnalysisReport = null;
+let cachedHistoryAnalyses = [];
+
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 1500;
+
+// ===== SAFE DOM HELPERS =====
+
+function clearElement(element) {
+    if (!element) return;
+
+    while (element.firstChild) {
+        element.removeChild(element.firstChild);
+    }
+}
+
+function setStatusMessage(container, message, color = 'var(--text)') {
+    if (!container) return;
+
+    clearElement(container);
+
+    const card = document.createElement('div');
+    card.className = 'editorial-state-card';
+
+    const p = document.createElement('p');
+    p.className = 'editorial-instruction';
+    p.textContent = message;
+    if (color && color !== 'var(--text)') {
+        p.style.color = color;
+    }
+
+    const ruled = document.createElement('div');
+    ruled.className = 'ruled-placeholder';
+    ruled.setAttribute('aria-hidden', 'true');
+    ruled.innerHTML = '<span class="ruled-line"></span><span class="ruled-line"></span><span class="ruled-line"></span>';
+
+    card.appendChild(p);
+    card.appendChild(ruled);
+    container.appendChild(card);
+}
+
+function createCell(text, align = 'left') {
+    const td = document.createElement('td');
+    td.textContent = text;
+    td.style.padding = '10px';
+    td.style.textAlign = align;
+    return td;
+}
+
+function createDetailRow(label, value, options = {}) {
+    const wrapper = document.createElement('div');
+    wrapper.style.marginBottom = '14px';
+
+    const labelEl = document.createElement('div');
+    labelEl.textContent = label;
+    labelEl.style.color = 'var(--accent)';
+    labelEl.style.fontWeight = 'bold';
+    labelEl.style.marginBottom = '5px';
+    labelEl.style.fontSize = '13px';
+
+    const valueEl = document.createElement('div');
+    valueEl.textContent = value || 'N/A';
+    valueEl.style.color = options.color || 'var(--text)';
+    valueEl.style.whiteSpace = options.preWrap ? 'pre-wrap' : 'normal';
+    valueEl.style.wordBreak = 'break-word';
+    valueEl.style.lineHeight = '1.5';
+
+    if (options.monospace) {
+        valueEl.style.fontFamily = "'Courier New', Courier, monospace";
+        valueEl.style.background = 'rgba(255,255,255,0.03)';
+        valueEl.style.border = '1px solid var(--border)';
+        valueEl.style.borderRadius = '6px';
+        valueEl.style.padding = '10px';
+        valueEl.style.maxHeight = '180px';
+        valueEl.style.overflowY = 'auto';
+    }
+
+    wrapper.appendChild(labelEl);
+    wrapper.appendChild(valueEl);
+
+    return wrapper;
+}
+
+// ===== CSRF HELPERS =====
+
+function getCSRFToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : '';
+}
+
+function csrfHeaders(headers = {}) {
+    return {
+        ...headers,
+        'X-CSRFToken': getCSRFToken()
+    };
+}
+
+// ===== VERDICT HELPERS =====
+
+function normalizeVerdict(verdict) {
+    const value = String(verdict || '').trim().toUpperCase();
+
+    const aliases = {
+        'REAL': 'SUPPORTED',
+        'TRUE': 'SUPPORTED',
+        'CONFIRMED': 'SUPPORTED',
+        'FAKE': 'REFUTED',
+        'FALSE': 'REFUTED',
+        'DEBUNKED': 'REFUTED',
+        'UNCERTAIN': 'INSUFFICIENT EVIDENCE',
+        'UNKNOWN': 'INSUFFICIENT EVIDENCE',
+        'UNVERIFIED': 'INSUFFICIENT EVIDENCE',
+        'SUSPICIOUS': 'LOW CREDIBILITY'
+    };
+
+    return aliases[value] || value || 'INSUFFICIENT EVIDENCE';
+}
+
+function normalizeVerdictSafe(verdict) {
+    return normalizeVerdict(verdict);
+}
+
+function verdictClass(verdict) {
+    return 'verdict-' + normalizeVerdict(verdict).replace(/\s+/g, '-');
+}
+
+function getVerdictColor(verdict) {
+    const normalized = normalizeVerdict(verdict);
+
+    if (normalized === 'SUPPORTED') return 'var(--verdict-supported)';
+    if (normalized === 'REFUTED') return 'var(--verdict-refuted)';
+    if (normalized === 'MISLEADING') return 'var(--verdict-misleading)';
+    if (normalized === 'LOW CREDIBILITY') return 'var(--verdict-low-cred)';
+    if (normalized === 'INSUFFICIENT EVIDENCE') return 'var(--verdict-insufficient)';
+
+    return 'var(--verdict-misleading)';
+}
+
+function mergeBreakdown(rawBreakdown, normalizer) {
+    const merged = {};
+
+    Object.entries(rawBreakdown || {}).forEach(([rawKey, count]) => {
+        const normalizedKey = normalizer(rawKey);
+        const numericCount = Number(count) || 0;
+
+        merged[normalizedKey] = (merged[normalizedKey] || 0) + numericCount;
+    });
+
+    return merged;
+}
+
+function normalizeModeLabel(mode) {
+    const value = String(mode || 'unknown').trim().toLowerCase();
+
+    if (value === 'ai') return 'AI Analysis';
+    if (value === 'local') return 'Local NLP';
+    if (value === 'local_fallback') return 'Local NLP';
+    if (value === 'ml_model') return 'ML Model';
+
+    return value
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, char => char.toUpperCase());
+}
+
+// ===== COPY REPORT =====
+
+function buildReportText(report) {
+    if (!report) {
+        return '';
+    }
+
+    const verdict = normalizeVerdict(report.verdict);
+    const confidence = report.confidence ?? 'N/A';
+    const reason = report.reason || 'N/A';
+    const factCheck = report.fact_check || 'N/A';
+    const inputType = report.input_type || report.type || 'N/A';
+    const textAnalyzed = report.text_analyzed || 'N/A';
+    const generatedAt = report.generated_at || new Date().toLocaleString();
+
+    const redFlags = Array.isArray(report.red_flags) && report.red_flags.length > 0
+        ? report.red_flags.map(flag => `- ${flag}`).join('\n')
+        : 'None detected.';
+
+    const sources = Array.isArray(report.sources) && report.sources.length > 0
+        ? report.sources.map((src, index) => {
+            const title = src.title || `Source ${index + 1}`;
+            const url = src.url || 'No URL';
+            return `${index + 1}. ${title}\n   ${url}`;
+        }).join('\n')
+        : 'No sources available.';
+
+    return `DEBUNK.IT ANALYSIS REPORT
+
+Generated At: ${generatedAt}
+Input Type: ${inputType}
+
+Claim / Text Analyzed:
+${textAnalyzed}
+
+Verdict: ${verdict}
+Confidence: ${confidence}%
+
+Reason:
+${reason}
+
+Fact-check:
+${factCheck}
+
+Red Flags:
+${redFlags}
+
+Sources:
+${sources}
+
+Generated by DEBUNK.IT
+AI-assisted misinformation analysis system`;
+}
+
+async function copyCurrentReport() {
+    if (!lastAnalysisReport) {
+        showNotification('No report available to copy yet.', 'warning');
+        return;
+    }
+
+    const reportText = buildReportText(lastAnalysisReport);
+
+    try {
+        await navigator.clipboard.writeText(reportText);
+        showNotification('Report copied to clipboard.', 'success');
+    } catch (error) {
+        console.error('[Clipboard Error]', error);
+        showNotification('Could not copy report. Browser blocked clipboard access.', 'error');
+    }
+}
+function sanitizeFilenamePart(value) {
+    return String(value || 'report')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .substring(0, 40) || 'report';
+}
+
+function downloadCurrentReport() {
+    if (!lastAnalysisReport) {
+        showNotification('No report available to download yet.', 'warning');
+        return;
+    }
+
+    const reportText = buildReportText(lastAnalysisReport);
+    const verdict = sanitizeFilenamePart(normalizeVerdict(lastAnalysisReport.verdict));
+    const timestamp = new Date()
+        .toISOString()
+        .replace(/[:.]/g, '-')
+        .substring(0, 19);
+
+    const filename = `debunkit-${verdict}-${timestamp}.txt`;
+
+    const blob = new Blob([reportText], {
+        type: 'text/plain;charset=utf-8'
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+
+    showNotification('Report downloaded successfully.', 'success');
+}
+
+// ===== DYNAMIC DASHBOARD HELPERS =====
+
+const MODE_HINTS = {
+    title: 'Headline mode is best for quick news claims, viral captions, and short breaking-news titles.',
+    url: 'URL mode extracts article text first, then checks the submitted source with live context.',
+    text: 'Text mode is best for long articles, forwarded messages, and full claim explanations.'
+};
+
+function updateModeHint(mode) {
+    const hint = document.getElementById('mode-hint');
+
+    if (hint) {
+        hint.textContent = MODE_HINTS[mode] || MODE_HINTS.title;
+    }
+}
+
+function focusScannerMode(mode) {
+    if (isAnalyzing) {
+        showNotification('Analysis in progress. Please wait.', 'warning');
+        return;
+    }
+
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => btn.classList.remove('active'));
+
+    tabButtons.forEach(btn => {
+        const label = btn.textContent.trim().toLowerCase();
+
+        if (
+            label === mode ||
+            (mode === 'title' && label === 'headline')
+        ) {
+            btn.classList.add('active');
+        }
+    });
+
+    document.querySelectorAll('.input-section').forEach(section => {
+        section.classList.remove('active');
+    });
+
+    const selectedInput = document.getElementById('input-' + mode);
+    if (selectedInput) {
+        selectedInput.classList.add('active');
+    }
+
+    currentMode = mode;
+    updateModeHint(mode);
+
+    const activeInput = document.getElementById('val-' + mode);
+    if (activeInput) {
+        activeInput.focus();
+    }
+
+    const scannerPanel = document.querySelector('.scanner-panel');
+    if (scannerPanel) {
+        scannerPanel.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+    }
+}
+
+function fillExampleClaim(text, mode = 'title') {
+    if (text.startsWith('http://') || text.startsWith('https://')) {
+        mode = 'url';
+    }
+    focusScannerMode(mode);
+
+    const input = document.getElementById('val-' + mode);
+
+    if (input) {
+        input.value = text;
+        input.focus();
+    }
+
+    showNotification('Example claim loaded. Click Analyze Data to scan it.', 'info');
+}
+
+const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Ease-out count from `from` to `to`; always ends on the exact final text.
+function countUp(el, to, { from = 0, duration = 600, delay = 0, prefix = '', suffix = '' } = {}) {
+    cancelAnimationFrame(el._countRaf);
+    const render = (n) => { el.textContent = prefix + n + suffix; };
+    if (prefersReducedMotion() || from === to) {
+        render(to);
+        return;
+    }
+    render(from);
+    let start = null;
+    const step = (now) => {
+        if (start === null) start = now + delay;
+        const t = Math.min(Math.max((now - start) / duration, 0), 1);
+        render(Math.round(from + (to - from) * (1 - Math.pow(1 - t, 3))));
+        if (t < 1) el._countRaf = requestAnimationFrame(step);
+    };
+    el._countRaf = requestAnimationFrame(step);
+}
+
+function setDashboardMetric(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    if (typeof value === 'number') {
+        const from = parseInt(el.textContent, 10);
+        countUp(el, value, { from: Number.isNaN(from) ? 0 : from });
+    } else {
+        el.textContent = value;
+    }
+}
+
+// Scan progress strip. shortcut: stages are time-based, the server reports no progress; upgrade if /analyze streams stages.
+let scanStageTimer = null;
+function startScanStages() {
+    const items = document.querySelectorAll('#scanner-loading .scan-stages li');
+    if (!items.length) return;
+    let i = 0;
+    const paint = () => items.forEach((li, idx) => {
+        li.classList.toggle('is-done', idx < i);
+        li.classList.toggle('is-current', idx === i);
+    });
+    paint();
+    clearInterval(scanStageTimer);
+    scanStageTimer = setInterval(() => {
+        if (i < items.length - 1) { i++; paint(); }
+    }, 2600);
+}
+
+function stopScanStages() {
+    clearInterval(scanStageTimer);
+    scanStageTimer = null;
+}
+
+function updateConfidenceVisual(confidence) {
+    const fill = document.getElementById('confidence-fill');
+
+    if (!fill) return;
+
+    const value = Number(confidence);
+    const safeValue = Number.isFinite(value)
+        ? Math.max(0, Math.min(value, 100))
+        : 0;
+
+    fill.style.width = safeValue + '%';
+
+    if (safeValue >= 75) {
+        fill.style.background = 'var(--success)';
+    } else if (safeValue >= 50) {
+        fill.style.background = 'var(--warn)';
+    } else {
+        fill.style.background = 'var(--danger)';
+    }
+}
+
+async function loadDashboardOverview() {
+    await Promise.allSettled([
+        loadDashboardStats(),
+        loadRecentAnalyses()
+    ]);
+}
+
+async function loadDashboardStats() {
+    try {
+        const response = await fetch('/api/stats', {
+            headers: { 'Accept': 'application/json' }
+        });
+
+        if (!response.ok) {
+            setDashboardMetric('dash-total-scans', '--');
+            setDashboardMetric('dash-supported-count', '--');
+            setDashboardMetric('dash-refuted-count', '--');
+            return;
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error('Non-JSON stats response');
+        }
+
+        const data = await response.json();
+        const verdicts = mergeBreakdown(data.verdict_breakdown || {}, normalizeVerdict);
+
+        setDashboardMetric('dash-total-scans', data.total_analyses || 0);
+        setDashboardMetric('dash-supported-count', verdicts.SUPPORTED || 0);
+        setDashboardMetric('dash-refuted-count', verdicts.REFUTED || 0);
+
+    } catch (error) {
+        console.warn('[Dashboard] Stats unavailable:', error);
+
+        setDashboardMetric('dash-total-scans', '--');
+        setDashboardMetric('dash-supported-count', '--');
+        setDashboardMetric('dash-refuted-count', '--');
+    }
+}
+
+async function loadRecentAnalyses() {
+    const container = document.getElementById('recent-analyses-content');
+
+    if (!container) return;
+
+    try {
+        const response = await fetch('/api/history?limit=3', {
+            headers: { 'Accept': 'application/json' }
+        });
+
+        if (!response.ok) {
+            setStatusMessage(container, 'Login to see recent scans.', 'var(--muted)');
+            return;
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            setStatusMessage(container, 'Login to see recent scans.', 'var(--muted)');
+            return;
+        }
+
+        const data = await response.json();
+
+        if (!data.analyses || data.analyses.length === 0) {
+            setStatusMessage(container, 'No recent scans yet.', 'var(--muted)');
+            return;
+        }
+
+        clearElement(container);
+
+        data.analyses.forEach(analysis => {
+            const item = document.createElement('div');
+            item.className = 'recent-item';
+            item.addEventListener('click', () => showAnalysisDetail(analysis.id));
+
+            const title = document.createElement('div');
+            title.className = 'recent-item-title';
+
+            const rawText = String(analysis.text_analyzed || '');
+            title.textContent = rawText.substring(0, 78) + (rawText.length > 78 ? '...' : '');
+
+            const meta = document.createElement('div');
+            meta.className = 'recent-item-meta';
+
+            const verdict = normalizeVerdict(analysis.verdict);
+
+            const verdictSpan = document.createElement('span');
+            verdictSpan.className = 'recent-verdict';
+            verdictSpan.textContent = verdict;
+            verdictSpan.style.color = getVerdictColor(verdict);
+
+            const confSpan = document.createElement('span');
+            confSpan.textContent = Number.isFinite(Number(analysis.confidence))
+                ? `${analysis.confidence}%`
+                : 'N/A';
+
+            meta.appendChild(verdictSpan);
+            meta.appendChild(confSpan);
+
+            item.appendChild(title);
+            item.appendChild(meta);
+
+            container.appendChild(item);
+        });
+
+    } catch (error) {
+        console.warn('[Dashboard] Recent analyses unavailable:', error);
+        setStatusMessage(container, 'Recent scans unavailable.', 'var(--muted)');
+    }
+}
+
+// ===== UI SWITCHING =====
+
+function switchTab(e, mode) {
+    if (isAnalyzing) {
+        showNotification('Analysis in progress. Please wait.', 'warning');
+        return;
+    }
+
+    const tabBtn = (e instanceof Element) ? e : ((e && e.currentTarget && e.currentTarget !== document) ? e.currentTarget : (e && e.target ? e.target.closest('.tab-btn') : null));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    if (tabBtn) {
+        tabBtn.classList.add('active');
+    }
+
+    document.querySelectorAll('.input-section').forEach(sec => sec.classList.remove('active'));
+
+    const section = document.getElementById('input-' + mode);
+    if (section) {
+        section.classList.add('active');
+    }
+
+    currentMode = mode;
+    updateModeHint(mode);
+
+    console.log(`[UI] Switched to ${mode} input mode`);
+}
+
+function switchView(viewId) {
+    if (isAnalyzing) {
+        showNotification('Analysis in progress. Please wait.', 'warning');
+        return;
+    }
+
+    document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+
+    const view = document.getElementById('view-' + viewId);
+    const nav = document.getElementById('nav-' + viewId);
+
+    if (view) view.classList.add('active');
+    if (nav) nav.classList.add('active');
+
+    try {
+        const targetPath = viewId === 'scanner' ? (window.location.pathname === '/dashboard' ? '/dashboard' : '/scanner') : '/' + viewId;
+        if (window.location.pathname !== targetPath) {
+            window.history.pushState({ viewId }, '', targetPath);
+        }
+    } catch (e) {
+        // Safe fallback in sandboxed environments
+    }
+
+    if (viewId === 'history') {
+        loadAnalysisHistory();
+    } else if (viewId === 'analytics') {
+        loadSystemAnalytics();
+    } else if (viewId === 'scanner') {
+        loadDashboardOverview();
+    }
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+
+    notification.style.cssText = `
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        background: ${type === 'error' ? 'var(--red)' : type === 'success' ? 'var(--mint)' : type === 'warning' ? 'var(--blush)' : 'var(--ink)'};
+        color: ${type === 'success' ? 'var(--ink)' : 'var(--paper)'};
+        border: 2px solid var(--ink);
+        padding: 12px 20px;
+        border-radius: var(--radius-sm, 2px);
+        z-index: 10000;
+        font-weight: 700;
+        box-shadow: var(--shadow-press, 3px 3px 0 var(--ink));
+        font-family: var(--font-sans, system-ui, sans-serif);
+        font-size: 0.82rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    `;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    }, 4000);
+}
+
+// ===== INPUT / RESULTS =====
+
+function getPayload() {
+    const inputElement = document.getElementById('val-' + currentMode);
+    const val = inputElement ? inputElement.value.trim() : '';
+
+    return {
+        type: currentMode,
+        text: val
+    };
+}
+
+function displayError(errorMessage) {
+    lastAnalysisReport = null;
+
+    const resPanel = document.getElementById('result-panel');
+    const resultEmpty = document.getElementById('result-empty');
+    const scannerLoading = document.getElementById('scanner-loading');
+    const vSpan = document.getElementById('res-verdict');
+
+    if (scannerLoading) scannerLoading.style.display = 'none';
+    if (resultEmpty) resultEmpty.style.display = 'none';
+    if (resPanel) resPanel.style.display = 'block';
+
+    if (vSpan) {
+        vSpan.textContent = 'ERROR';
+        vSpan.className = 'res-verdict res-error';
+    }
+
+    const confidenceEl = document.getElementById('res-confidence');
+    const reasonEl = document.getElementById('res-reason');
+    const factcheckEl = document.getElementById('res-factcheck');
+    const flagsEl = document.getElementById('res-flags');
+
+    if (confidenceEl) confidenceEl.innerText = '';
+    if (reasonEl) reasonEl.innerText = errorMessage;
+    if (factcheckEl) factcheckEl.innerText = 'N/A';
+    if (flagsEl) flagsEl.innerText = 'N/A';
+
+    updateConfidenceVisual(0);
+
+    const sourcesContainer = document.getElementById('res-sources-container');
+    if (sourcesContainer) sourcesContainer.style.display = 'none';
+}
+
+function renderSources(sources) {
+    const sourcesContainer = document.getElementById('res-sources-container');
+    const sourcesDiv = document.getElementById('res-sources');
+
+    if (!sourcesContainer || !sourcesDiv) return;
+
+    clearElement(sourcesDiv);
+
+    if (sources && Array.isArray(sources) && sources.length > 0) {
+        sourcesContainer.style.display = 'block';
+
+        sources.forEach(src => {
+            if (!src.url || !src.title) return;
+
+            if (!src.url.startsWith('http://') && !src.url.startsWith('https://')) {
+                console.warn(`[Security] Blocked non-HTTP URL: ${src.url}`);
+                return;
+            }
+
+            const a = document.createElement('a');
+            a.href = src.url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.textContent = '[LINK] ' + src.title;
+
+            Object.assign(a.style, {
+                color: 'var(--text)',
+                textDecoration: 'none',
+                fontSize: '13px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                border: '1px solid var(--border)',
+                display: 'block',
+                transition: 'border-color 0.2s',
+                cursor: 'pointer',
+                marginBottom: '5px'
+            });
+
+            a.addEventListener('mouseover', () => {
+                a.style.borderColor = 'var(--accent)';
+            });
+
+            a.addEventListener('mouseout', () => {
+                a.style.borderColor = 'var(--border)';
+            });
+
+            sourcesDiv.appendChild(a);
+        });
+    } else {
+        sourcesContainer.style.display = 'none';
+    }
+}
+
+async function startScan(retryCount = 0) {
+    if (isAnalyzing) {
+        showNotification('Analysis already in progress. Please wait.', 'warning');
+        return;
+    }
+
+    const payload = getPayload();
+    const resPanel = document.getElementById('result-panel');
+    const resultEmpty = document.getElementById('result-empty');
+    const scanner = document.getElementById('scanner');
+    const btn = document.getElementById('analyze-btn');
+
+    if (payload.text.length < 5) {
+        displayError('Please provide valid input (at least 5 characters) to analyze.');
+        return;
+    }
+
+    if (currentMode === 'url') {
+        try {
+            new URL(payload.text);
+        } catch {
+            displayError('Please enter a valid URL (e.g., https://en.wikipedia.org/wiki/Artificial_intelligence)');
+            return;
+        }
+    }
+
+    lastAnalysisReport = null;
+
+    const scannerLoading = document.getElementById('scanner-loading');
+    if (resultEmpty) resultEmpty.style.display = 'none';
+    if (resPanel) resPanel.style.display = 'none';
+    if (scannerLoading) scannerLoading.style.display = 'block';
+    if (scanner) scanner.style.display = 'block';
+    startScanStages();
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = '● SCANNING...';
+    }
+
+    isAnalyzing = true;
+
+    console.log(`[API] Starting analysis (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
+
+    try {
+        const response = await fetch('/analyze', {
+            method: 'POST',
+            headers: csrfHeaders({
+                'Content-Type': 'application/json'
+            }),
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(30000)
+        });
+
+        const data = await response.json();
+
+        if (scannerLoading) scannerLoading.style.display = 'none';
+
+        if (!response.ok) {
+            const errorMsg = data.error || `HTTP ${response.status}`;
+
+            if (response.status === 429) {
+                displayError(errorMsg);
+                showNotification(errorMsg, 'warning');
+            } else if (response.status === 400) {
+                displayError('Invalid input: ' + errorMsg);
+            } else if (response.status >= 500) {
+                if (retryCount < MAX_RETRIES) {
+                    console.log(`[API] Server error, retrying in ${RETRY_DELAY}ms...`);
+                    setTimeout(() => startScan(retryCount + 1), RETRY_DELAY);
+                    return;
+                }
+
+                displayError('Server error. Please try again later.');
+            } else {
+                displayError('Error: ' + errorMsg);
+            }
+        } else {
+            if (resPanel) {
+                resPanel.style.display = 'block';
+                resPanel.classList.remove('reveal-run');
+                void resPanel.offsetWidth;
+                resPanel.classList.add('reveal-run');
+            }
+            if (resultEmpty) resultEmpty.style.display = 'none';
+
+            const vSpan = document.getElementById('res-verdict');
+            const verdict = normalizeVerdict(data.verdict);
+
+            lastAnalysisReport = {
+                ...data,
+                input_type: currentMode,
+                text_analyzed: payload.text,
+                generated_at: new Date().toLocaleString()
+            };
+
+            if (vSpan) {
+                vSpan.innerText = 'VERDICT: ' + verdict;
+                vSpan.className = 'res-verdict ' + verdictClass(verdict);
+                vSpan.style.animation = 'none';
+                void vSpan.offsetWidth;
+                vSpan.style.animation = 'stampThud 220ms cubic-bezier(0.23, 1, 0.32, 1) forwards';
+            }
+
+            const confidenceEl = document.getElementById('res-confidence');
+            const reasonEl = document.getElementById('res-reason');
+            const factcheckEl = document.getElementById('res-factcheck');
+            const flagsEl = document.getElementById('res-flags');
+
+            if (confidenceEl) {
+                const conf = Number(data.confidence);
+                if (Number.isFinite(conf)) countUp(confidenceEl, Math.round(conf), { prefix: 'CONFIDENCE: ', suffix: '%', delay: 240 });
+                else confidenceEl.innerText = 'CONFIDENCE: ' + data.confidence + '%';
+            }
+            if (reasonEl) reasonEl.textContent = data.reason || 'N/A';
+            if (factcheckEl) factcheckEl.textContent = data.fact_check || 'N/A';
+
+            const flagsText = (data.red_flags && data.red_flags.length > 0)
+                ? data.red_flags.join(' | ')
+                : 'None detected.';
+
+            if (flagsEl) flagsEl.textContent = flagsText;
+
+            // Confidence bar fills AFTER the stamp thud lands (220ms + slight bump)
+            const fillEl = document.getElementById('confidence-fill');
+            if (fillEl) fillEl.style.width = '0%';
+            setTimeout(() => {
+                updateConfidenceVisual(data.confidence);
+            }, 240);
+            renderSources(data.sources);
+
+            console.log(`[Analysis] Complete: ${verdict} (${data.confidence}%)`);
+            showNotification(`Analysis complete: ${verdict} (${data.confidence}% confidence)`, 'success');
+
+            loadDashboardOverview();
+        }
+    } catch (error) {
+        console.error('[Error]', error);
+
+        const scannerLoading = document.getElementById('scanner-loading');
+        if (scannerLoading) scannerLoading.style.display = 'none';
+
+        if (resPanel) resPanel.style.display = 'block';
+        if (resultEmpty) resultEmpty.style.display = 'none';
+
+        if (error.name === 'AbortError') {
+            if (retryCount < MAX_RETRIES) {
+                console.log(`[API] Request timeout, retrying in ${RETRY_DELAY}ms...`);
+                setTimeout(() => startScan(retryCount + 1), RETRY_DELAY);
+                return;
+            }
+
+            displayError('Request timed out. Please check your connection and try again.');
+        } else {
+            if (retryCount < MAX_RETRIES) {
+                console.log(`[API] Network error, retrying in ${RETRY_DELAY}ms...`);
+                setTimeout(() => startScan(retryCount + 1), RETRY_DELAY);
+                return;
+            }
+
+            displayError('Failed to connect to the Core Engine. Please check your connection.');
+        }
+    } finally {
+        stopScanStages();
+        if (scanner) scanner.style.display = 'none';
+
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = '▶ ANALYZE DATA';
+        }
+
+        isAnalyzing = false;
+    }
+}
+
+function renderSignInPrompt(container) {
+    clearElement(container);
+
+    const card = document.createElement('div');
+    card.className = 'history-signin-card';
+    card.style.padding = '36px 24px';
+    card.style.textAlign = 'center';
+    card.style.background = 'rgba(255, 255, 255, 0.02)';
+    card.style.border = '1px dashed var(--border)';
+    card.style.borderRadius = '8px';
+    card.style.margin = '20px 0';
+
+    const icon = document.createElement('div');
+    icon.textContent = '🔒';
+    icon.style.fontSize = '36px';
+    icon.style.marginBottom = '12px';
+    card.appendChild(icon);
+
+    const title = document.createElement('h3');
+    title.textContent = 'Sign In to View Analysis History';
+    title.style.margin = '0 0 10px 0';
+    title.style.color = 'var(--accent)';
+    card.appendChild(title);
+
+    const desc = document.createElement('p');
+    desc.textContent = 'Analysis history is saved to registered accounts. Sign in or create an account to view, filter, and export past verification reports.';
+    desc.style.color = 'var(--text-muted, #aaa)';
+    desc.style.maxWidth = '500px';
+    desc.style.margin = '0 auto 20px auto';
+    desc.style.lineHeight = '1.6';
+    card.appendChild(desc);
+
+    const actions = document.createElement('div');
+    actions.style.display = 'flex';
+    actions.style.justifyContent = 'center';
+    actions.style.gap = '12px';
+    actions.style.flexWrap = 'wrap';
+
+    const loginBtn = document.createElement('a');
+    loginBtn.href = '/login';
+    loginBtn.className = 'btn';
+    loginBtn.textContent = 'LOG IN';
+    loginBtn.style.textDecoration = 'none';
+    loginBtn.style.padding = '10px 24px';
+    loginBtn.style.display = 'inline-block';
+    actions.appendChild(loginBtn);
+
+    const registerBtn = document.createElement('a');
+    registerBtn.href = '/register';
+    registerBtn.className = 'btn';
+    registerBtn.textContent = 'SIGN UP';
+    registerBtn.style.background = 'var(--border)';
+    registerBtn.style.color = 'var(--text)';
+    registerBtn.style.textDecoration = 'none';
+    registerBtn.style.padding = '10px 24px';
+    registerBtn.style.display = 'inline-block';
+    actions.appendChild(registerBtn);
+
+    card.appendChild(actions);
+    container.appendChild(card);
+
+    const countLabel = document.getElementById('history-count-label');
+    if (countLabel) {
+        countLabel.textContent = 'Sign-in required';
+    }
+}
+
+async function loadAnalysisHistory() {
+    const contentDiv = document.getElementById('history-content');
+    setStatusMessage(contentDiv, 'Loading analysis history.');
+
+    try {
+        const response = await fetch('/api/history?limit=100', {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response');
+        }
+
+        const data = await response.json();
+
+        if (response.status === 401 || (data && data.authenticated === false)) {
+            cachedHistoryAnalyses = [];
+            updateHistoryCountLabel(0, 0);
+            renderSignInPrompt(contentDiv);
+            return;
+        }
+
+        if (!response.ok) {
+            setStatusMessage(
+                contentDiv,
+                'Error loading history: ' + (data.error || 'Unknown error'),
+                'var(--danger)'
+            );
+            return;
+        }
+
+        if (!data.analyses || data.analyses.length === 0) {
+            cachedHistoryAnalyses = [];
+            updateHistoryCountLabel(0, 0);
+            setStatusMessage(contentDiv, 'No analyses yet. Start by analyzing some content!');
+            return;
+        }
+
+        cachedHistoryAnalyses = data.analyses;
+        applyHistoryFilters();
+
+    } catch (error) {
+        console.error('[Error]', error);
+        setStatusMessage(
+            contentDiv,
+            'Failed to load history: ' + (error.message || 'Unknown error'),
+            'var(--danger)'
+        );
+    }
+}
+
+function getHistoryFilters() {
+    const searchInput = document.getElementById('history-search');
+    const verdictSelect = document.getElementById('history-verdict-filter');
+    const modeSelect = document.getElementById('history-mode-filter');
+    const sortSelect = document.getElementById('history-sort');
+
+    return {
+        search: searchInput ? searchInput.value.trim().toLowerCase() : '',
+        verdict: verdictSelect ? verdictSelect.value : 'all',
+        mode: modeSelect ? modeSelect.value : 'all',
+        sort: sortSelect ? sortSelect.value : 'newest'
+    };
+}
+
+function applyHistoryFilters() {
+    const filters = getHistoryFilters();
+
+    let filtered = [...cachedHistoryAnalyses];
+
+    if (filters.search) {
+        filtered = filtered.filter(analysis => {
+            const searchableText = [
+                analysis.text_analyzed,
+                analysis.reason,
+                analysis.fact_check,
+                analysis.verdict,
+                analysis.mode,
+                Array.isArray(analysis.red_flags) ? analysis.red_flags.join(' ') : ''
+            ]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+
+            return searchableText.includes(filters.search);
+        });
+    }
+
+    if (filters.verdict !== 'all') {
+        filtered = filtered.filter(analysis => {
+            return normalizeVerdict(analysis.verdict) === filters.verdict;
+        });
+    }
+
+    if (filters.mode !== 'all') {
+        filtered = filtered.filter(analysis => {
+            return normalizeModeLabel(analysis.mode) === filters.mode;
+        });
+    }
+
+    filtered.sort((a, b) => {
+        if (filters.sort === 'oldest') {
+            return getAnalysisDateValue(a) - getAnalysisDateValue(b);
+        }
+
+        if (filters.sort === 'confidence-high') {
+            return (Number(b.confidence) || 0) - (Number(a.confidence) || 0);
+        }
+
+        if (filters.sort === 'confidence-low') {
+            return (Number(a.confidence) || 0) - (Number(b.confidence) || 0);
+        }
+
+        return getAnalysisDateValue(b) - getAnalysisDateValue(a);
+    });
+
+    renderHistoryTable(filtered);
+    updateHistoryCountLabel(filtered.length, cachedHistoryAnalyses.length);
+}
+
+function getAnalysisDateValue(analysis) {
+    if (!analysis || !analysis.timestamp) return 0;
+
+    const parsedDate = new Date(analysis.timestamp);
+    return Number.isNaN(parsedDate.getTime()) ? 0 : parsedDate.getTime();
+}
+
+function updateHistoryCountLabel(showing, total) {
+    const label = document.getElementById('history-count-label');
+
+    if (!label) return;
+
+    label.textContent = `Showing ${showing} of ${total} analyses`;
+}
+
+function resetHistoryFilters() {
+    const searchInput = document.getElementById('history-search');
+    const verdictSelect = document.getElementById('history-verdict-filter');
+    const modeSelect = document.getElementById('history-mode-filter');
+    const sortSelect = document.getElementById('history-sort');
+
+    if (searchInput) searchInput.value = '';
+    if (verdictSelect) verdictSelect.value = 'all';
+    if (modeSelect) modeSelect.value = 'all';
+    if (sortSelect) sortSelect.value = 'newest';
+
+    applyHistoryFilters();
+}
+
+let hasHistoryLoadedOnce = false;
+
+function renderHistoryTable(analyses) {
+    const contentDiv = document.getElementById('history-content');
+
+    if (!contentDiv) return;
+
+    if (!analyses || analyses.length === 0) {
+        setStatusMessage(contentDiv, 'No inquiries match the current filter parameters.', 'var(--ink-muted)');
+        return;
+    }
+
+    clearElement(contentDiv);
+
+    const tableWrapper = document.createElement('div');
+    tableWrapper.className = 'history-table-wrapper';
+
+    const table = document.createElement('table');
+    table.className = 'history-table';
+
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+
+    const headers = [
+        { text: 'Inquiry Text', align: 'left' },
+        { text: 'Verdict Stamp', align: 'center' },
+        { text: 'Confidence', align: 'center' },
+        { text: 'Mode', align: 'center' },
+        { text: 'Date', align: 'center' }
+    ];
+
+    headers.forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header.text;
+        th.style.textAlign = header.align;
+        headerRow.appendChild(th);
+    });
+
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    analyses.forEach((analysis, index) => {
+        const row = document.createElement('tr');
+        if (!hasHistoryLoadedOnce && !prefersReduced) {
+            row.classList.add('ledger-row-enter');
+            row.style.setProperty('--row-delay', `${index * 40}ms`);
+        }
+        row.addEventListener('click', () => showAnalysisDetail(analysis.id));
+
+        const rawText = String(analysis.text_analyzed || '');
+        const previewText = rawText.substring(0, 65) + (rawText.length > 65 ? '...' : '');
+
+        const textCell = createCell(previewText, 'left');
+
+        const verdict = normalizeVerdict(analysis.verdict);
+        const verdictCell = document.createElement('td');
+        verdictCell.style.padding = '10px';
+        verdictCell.style.textAlign = 'center';
+
+        const tag = document.createElement('span');
+        tag.className = `verdict-tag ${verdictClass(verdict)}`;
+        tag.textContent = verdict;
+        verdictCell.appendChild(tag);
+
+        const confidenceValue = Number.isFinite(Number(analysis.confidence))
+            ? `${analysis.confidence}%`
+            : 'N/A';
+
+        const confidenceCell = createCell(confidenceValue, 'center');
+
+        const modeCell = createCell(normalizeModeLabel(analysis.mode), 'center');
+        modeCell.style.color = 'var(--muted)';
+        modeCell.style.fontSize = '12px';
+
+        let dateText = 'N/A';
+
+        if (analysis.timestamp) {
+            const parsedDate = new Date(analysis.timestamp);
+            if (!Number.isNaN(parsedDate.getTime())) {
+                dateText = parsedDate.toLocaleDateString();
+            }
+        }
+
+        const dateCell = createCell(dateText, 'center');
+        dateCell.style.color = 'var(--muted)';
+        dateCell.style.fontSize = '12px';
+
+        row.appendChild(textCell);
+        row.appendChild(verdictCell);
+        row.appendChild(confidenceCell);
+        row.appendChild(modeCell);
+        row.appendChild(dateCell);
+
+        tbody.appendChild(row);
+    });
+
+    hasHistoryLoadedOnce = true;
+
+    table.appendChild(tbody);
+    tableWrapper.appendChild(table);
+    contentDiv.appendChild(tableWrapper);
+}
+
+// ===== ANALYTICS =====
+
+let hasTelemetryLoadedOnce = false;
+
+async function loadSystemAnalytics() {
+    const contentDiv = document.getElementById('analytics-content');
+    setStatusMessage(contentDiv, 'Compiling system telemetry and verdict distribution records...');
+
+    try {
+        const response = await fetch('/api/stats', {
+            headers: { 'Accept': 'application/json' }
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response');
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            setStatusMessage(
+                contentDiv,
+                'Error loading stats: ' + (data.error || 'Unknown error'),
+                'var(--danger)'
+            );
+            return;
+        }
+
+        clearElement(contentDiv);
+
+        const defaultVerdicts = {
+            'SUPPORTED': 0,
+            'REFUTED': 0,
+            'MISLEADING': 0,
+            'LOW CREDIBILITY': 0,
+            'INSUFFICIENT EVIDENCE': 0
+        };
+
+        const normalizedVerdictBreakdown = {
+            ...defaultVerdicts,
+            ...mergeBreakdown(data.verdict_breakdown || {}, normalizeVerdict)
+        };
+
+        const defaultModes = {
+            'AI Analysis': 0,
+            'Local NLP': 0,
+            'ML Model': 0
+        };
+
+        const normalizedModeBreakdown = {
+            ...defaultModes,
+            ...mergeBreakdown(data.mode_breakdown || {}, normalizeModeLabel)
+        };
+
+        const totalVerdicts = Object.values(normalizedVerdictBreakdown).reduce((sum, val) => sum + val, 0);
+
+        // 1. Dark "Ink" Focal Panel for Telemetry Summary (Part B.2)
+        const summaryPanel = document.createElement('div');
+        summaryPanel.className = 'telemetry-summary';
+        summaryPanel.innerHTML = `
+            <div class="telemetry-summary-item">
+                <span class="telemetry-summary-label">TOTAL INQUIRIES COMPILED</span>
+                <span class="telemetry-summary-value">${Number(data.total_analyses || totalVerdicts || 0).toLocaleString()}</span>
+            </div>
+            <div class="telemetry-summary-item">
+                <span class="telemetry-summary-label">AVERAGE INQUIRY CONFIDENCE</span>
+                <span class="telemetry-summary-value">${Number(data.average_confidence || 0).toFixed(1)}%</span>
+            </div>
+            <div class="telemetry-summary-item">
+                <span class="telemetry-summary-label">SYSTEM PERIMETER</span>
+                <span class="telemetry-summary-value" style="font-size: 1.15rem; letter-spacing: 0.05em;">ACTIVE // DUAL-RAG</span>
+            </div>
+        `;
+        contentDiv.appendChild(summaryPanel);
+
+        // 2. Telemetry Visuals: Segmented Proportion Bar + Ledger Table (Part B.3)
+        const visualCard = document.createElement('div');
+        visualCard.className = 'telemetry-visual-card';
+
+        const barTitle = document.createElement('h3');
+        barTitle.className = 'telemetry-card-title';
+        barTitle.textContent = 'VERDICT DISTRIBUTION & PROPORTION BAR';
+        visualCard.appendChild(barTitle);
+
+        const barTrack = document.createElement('div');
+        barTrack.className = 'telemetry-bar';
+        barTrack.setAttribute('role', 'progressbar');
+        barTrack.setAttribute('aria-label', 'Verdict Distribution Proportions');
+
+        const verdictMeta = [
+            { name: 'SUPPORTED', slug: 'supported', symbol: '✓', colorVar: 'var(--verdict-supported)' },
+            { name: 'REFUTED', slug: 'refuted', symbol: '✕', colorVar: 'var(--verdict-refuted)' },
+            { name: 'MISLEADING', slug: 'misleading', symbol: '⚠', colorVar: 'var(--verdict-misleading)' },
+            { name: 'LOW CREDIBILITY', slug: 'low-credibility', symbol: '◆', colorVar: 'var(--verdict-low-cred)' },
+            { name: 'INSUFFICIENT EVIDENCE', slug: 'insufficient-evidence', symbol: '?', colorVar: 'var(--verdict-insufficient)' }
+        ];
+
+        const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        verdictMeta.forEach(meta => {
+            const count = normalizedVerdictBreakdown[meta.name] || 0;
+            const pct = totalVerdicts > 0 ? (count / totalVerdicts) * 100 : 0;
+            if (pct > 0) {
+                const seg = document.createElement('div');
+                seg.className = `telemetry-seg seg-${meta.slug}`;
+                seg.dataset.slug = meta.slug;
+                seg.style.width = `${pct}%`;
+                seg.title = `${meta.name}: ${count} (${pct.toFixed(1)}%)`;
+
+                if (!hasTelemetryLoadedOnce && !prefersReduced) {
+                    seg.style.transform = 'scaleX(0)';
+                }
+                barTrack.appendChild(seg);
+            }
+        });
+
+        visualCard.appendChild(barTrack);
+
+        // Animate segment entrance on first view (Part B.3)
+        if (!hasTelemetryLoadedOnce && !prefersReduced) {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    barTrack.querySelectorAll('.telemetry-seg').forEach(seg => {
+                        seg.style.transform = 'scaleX(1)';
+                    });
+                });
+            });
+        }
+
+        // Ledger Table with Legend (symbol + color swatch + verdict name)
+        const table = document.createElement('table');
+        table.className = 'telemetry-ledger-table';
+
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+            <tr>
+                <th style="width: 45%;">Verdict Stamp & Legend</th>
+                <th style="text-align: right; width: 25%;">Recorded Inquiries</th>
+                <th style="text-align: right; width: 30%;">Proportion / Share</th>
+            </tr>
+        `;
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        verdictMeta.forEach(meta => {
+            const count = normalizedVerdictBreakdown[meta.name] || 0;
+            const pct = totalVerdicts > 0 ? ((count / totalVerdicts) * 100).toFixed(1) : '0.0';
+
+            const tr = document.createElement('tr');
+            tr.dataset.slug = meta.slug;
+            tr.innerHTML = `
+                <td>
+                    <span class="telemetry-legend-badge">
+                        <span class="telemetry-swatch" style="background: ${meta.colorVar};" aria-hidden="true"></span>
+                        <span style="color: ${meta.colorVar}; font-weight: bold;">${meta.symbol} ${meta.name}</span>
+                    </span>
+                </td>
+                <td style="text-align: right; font-weight: 600;">${Number(count).toLocaleString()}</td>
+                <td style="text-align: right; color: var(--ink-muted);">${pct}%</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        visualCard.appendChild(table);
+        contentDiv.appendChild(visualCard);
+
+        // Hovering a legend row or a bar segment spotlights that verdict in both.
+        const focusVerdict = (slug) => {
+            visualCard.classList.toggle('has-focus', !!slug);
+            visualCard.querySelectorAll('[data-slug]').forEach(el => el.classList.toggle('is-focus', el.dataset.slug === slug));
+        };
+        visualCard.querySelectorAll('[data-slug]').forEach(el => {
+            el.addEventListener('pointerenter', () => focusVerdict(el.dataset.slug));
+            el.addEventListener('pointerleave', () => focusVerdict(''));
+        });
+
+        // 3. Inspection Pipeline Mode Breakdown Ledger Table
+        const modeCard = document.createElement('div');
+        modeCard.className = 'telemetry-visual-card';
+
+        const modeTitle = document.createElement('h3');
+        modeTitle.className = 'telemetry-card-title';
+        modeTitle.textContent = 'INSPECTION PIPELINE INVOCATIONS';
+        modeCard.appendChild(modeTitle);
+
+        const modeTable = document.createElement('table');
+        modeTable.className = 'telemetry-ledger-table';
+        modeTable.innerHTML = `
+            <thead>
+                <tr>
+                    <th style="width: 60%;">Inspection Mode</th>
+                    <th style="text-align: right; width: 40%;">Recorded Executions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${Object.entries(normalizedModeBreakdown)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([modeLabel, count]) => `
+                        <tr>
+                            <td style="font-family: var(--font-sans); font-size: 0.82rem; font-weight: 600;">${modeLabel}</td>
+                            <td style="text-align: right; font-weight: 600;">${Number(count).toLocaleString()}</td>
+                        </tr>
+                    `).join('')}
+            </tbody>
+        `;
+        modeCard.appendChild(modeTable);
+        contentDiv.appendChild(modeCard);
+
+        hasTelemetryLoadedOnce = true;
+
+    } catch (error) {
+        console.error('[Error]', error);
+        setStatusMessage(
+            contentDiv,
+            'Failed to load analytics: ' + (error.message || 'Unknown error'),
+            'var(--danger)'
+        );
+    }
+}
+
+// ===== MODAL / CLEAR DATABASE =====
+
+let pendingAction = null;
+
+function showClearConfirmation() {
+    const modal = document.getElementById('modal-overlay');
+    const title = document.getElementById('modal-title');
+    const message = document.getElementById('modal-message');
+    const footer = document.querySelector('.modal-footer');
+
+    if (!modal || !title || !message || !footer) {
+        console.error('Modal overlay not found');
+        return;
+    }
+
+    title.textContent = 'Clear Database';
+    clearElement(message);
+    clearElement(footer);
+
+    const warning = document.createElement('p');
+    warning.className = 'warning-text';
+    warning.textContent = 'WARNING: This will DELETE ALL analyses from the database.';
+
+    const note = document.createElement('p');
+    note.textContent = 'This action cannot be undone.';
+
+    const confirmText = document.createElement('p');
+    confirmText.textContent = 'Are you absolutely sure?';
+    confirmText.style.marginTop = '15px';
+    confirmText.style.color = 'var(--danger)';
+
+    message.appendChild(warning);
+    message.appendChild(note);
+    message.appendChild(confirmText);
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'modal-btn cancel';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', closeModal);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'modal-btn confirm';
+    deleteBtn.textContent = 'Delete All';
+    deleteBtn.style.background = 'var(--danger)';
+    deleteBtn.addEventListener('click', confirmAction);
+
+    footer.appendChild(cancelBtn);
+    footer.appendChild(deleteBtn);
+
+    pendingAction = 'clearDatabase';
+    modal.style.display = 'flex';
+}
+
+function closeModal() {
+    const modal = document.getElementById('modal-overlay');
+    const footer = document.querySelector('.modal-footer');
+
+    if (!modal) return;
+
+    if (footer) {
+        clearElement(footer);
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'modal-btn cancel';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.addEventListener('click', closeModal);
+
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = 'modal-btn confirm';
+        confirmBtn.id = 'modal-confirm-btn';
+        confirmBtn.textContent = 'Confirm';
+        confirmBtn.addEventListener('click', confirmAction);
+
+        footer.appendChild(cancelBtn);
+        footer.appendChild(confirmBtn);
+    }
+
+    modal.style.display = 'none';
+    pendingAction = null;
+}
+
+function confirmAction() {
+    if (pendingAction === 'clearDatabase') {
+        clearAllAnalyses();
+    }
+
+    closeModal();
+}
+
+async function clearAllAnalyses() {
+    try {
+        const response = await fetch('/api/clear-database', {
+            method: 'POST',
+            headers: csrfHeaders({
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            })
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response');
+        }
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showNotification(`Database cleared! ${data.deleted || 0} analyses deleted.`, 'success');
+            cachedHistoryAnalyses = [];
+            updateHistoryCountLabel(0, 0);
+            const contentDiv = document.getElementById('history-content');
+            if (contentDiv) {
+                setStatusMessage(contentDiv, 'No analyses yet. Start by analyzing some content!');
+            }
+            setTimeout(() => {
+                loadAnalysisHistory();
+                loadDashboardOverview();
+            }, 1000);
+        } else {
+            showNotification(`Error: ${data.error || 'Failed to clear database'}`, 'error');
+        }
+    } catch (error) {
+        console.error('[Error]', error);
+        showNotification(`Failed to clear database: ${error.message}`, 'error');
+    }
+}
+
+// ===== ANALYSIS DETAIL MODAL =====
+
+async function showAnalysisDetail(analysisId) {
+    const modal = document.getElementById('modal-overlay');
+    const title = document.getElementById('modal-title');
+    const message = document.getElementById('modal-message');
+    const footer = document.querySelector('.modal-footer');
+
+    if (!modal || !title || !message || !footer) {
+        showNotification('Detail modal not found.', 'error');
+        return;
+    }
+
+    title.textContent = `Analysis #${analysisId}`;
+    clearElement(message);
+    clearElement(footer);
+
+    const loading = document.createElement('p');
+    loading.textContent = 'Loading analysis details.';
+    loading.style.color = 'var(--text)';
+    message.appendChild(loading);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-btn cancel';
+    closeBtn.textContent = 'Close';
+    closeBtn.addEventListener('click', closeModal);
+    footer.appendChild(closeBtn);
+
+    pendingAction = null;
+    modal.style.display = 'flex';
+
+    try {
+        const response = await fetch(`/api/analysis/${analysisId}`);
+        const data = await response.json();
+
+        clearElement(message);
+
+        if (!response.ok) {
+            const errorBox = document.createElement('p');
+            errorBox.textContent = data.error || 'Failed to load analysis details.';
+            errorBox.style.color = 'var(--danger)';
+            message.appendChild(errorBox);
+            return;
+        }
+
+        const detailContainer = document.createElement('div');
+        detailContainer.style.maxHeight = '65vh';
+        detailContainer.style.overflowY = 'auto';
+        detailContainer.style.paddingRight = '5px';
+
+        const verdict = normalizeVerdict(data.verdict);
+        const verdictColor = getVerdictColor(verdict);
+
+        const summaryBox = document.createElement('div');
+        summaryBox.style.display = 'grid';
+        summaryBox.style.gridTemplateColumns = '1fr 1fr';
+        summaryBox.style.gap = '10px';
+        summaryBox.style.marginBottom = '18px';
+
+        const verdictBox = document.createElement('div');
+        verdictBox.style.background = 'rgba(255,255,255,0.03)';
+        verdictBox.style.border = '1px solid var(--border)';
+        verdictBox.style.borderRadius = '6px';
+        verdictBox.style.padding = '12px';
+
+        const verdictLabel = document.createElement('div');
+        verdictLabel.textContent = 'VERDICT';
+        verdictLabel.style.color = 'var(--accent)';
+        verdictLabel.style.fontWeight = 'bold';
+        verdictLabel.style.marginBottom = '6px';
+
+        const verdictValue = document.createElement('div');
+        verdictValue.textContent = verdict;
+        verdictValue.style.color = verdictColor;
+        verdictValue.style.fontWeight = 'bold';
+
+        verdictBox.appendChild(verdictLabel);
+        verdictBox.appendChild(verdictValue);
+
+        const confidenceBox = document.createElement('div');
+        confidenceBox.style.background = 'rgba(255,255,255,0.03)';
+        confidenceBox.style.border = '1px solid var(--border)';
+        confidenceBox.style.borderRadius = '6px';
+        confidenceBox.style.padding = '12px';
+
+        const confidenceLabel = document.createElement('div');
+        confidenceLabel.textContent = 'CONFIDENCE';
+        confidenceLabel.style.color = 'var(--accent)';
+        confidenceLabel.style.fontWeight = 'bold';
+        confidenceLabel.style.marginBottom = '6px';
+
+        const confidenceValue = document.createElement('div');
+        confidenceValue.textContent = Number.isFinite(Number(data.confidence))
+            ? `${data.confidence}%`
+            : 'N/A';
+        confidenceValue.style.color = 'var(--text)';
+        confidenceValue.style.fontWeight = 'bold';
+
+        confidenceBox.appendChild(confidenceLabel);
+        confidenceBox.appendChild(confidenceValue);
+
+        summaryBox.appendChild(verdictBox);
+        summaryBox.appendChild(confidenceBox);
+        detailContainer.appendChild(summaryBox);
+
+        let dateText = 'N/A';
+
+        if (data.timestamp) {
+            const parsedDate = new Date(data.timestamp);
+            if (!Number.isNaN(parsedDate.getTime())) {
+                dateText = parsedDate.toLocaleString();
+            }
+        }
+
+        detailContainer.appendChild(createDetailRow('DATE', dateText));
+        detailContainer.appendChild(createDetailRow('MODE', data.mode || 'N/A'));
+        detailContainer.appendChild(createDetailRow('TEXT ANALYZED', data.text_analyzed || 'N/A', {
+            monospace: true,
+            preWrap: true
+        }));
+        detailContainer.appendChild(createDetailRow('REASON', data.reason || 'N/A', {
+            preWrap: true
+        }));
+        detailContainer.appendChild(createDetailRow('FACT-CHECK', data.fact_check || 'N/A', {
+            preWrap: true
+        }));
+
+        const redFlags = Array.isArray(data.red_flags) && data.red_flags.length > 0
+            ? data.red_flags.join(' | ')
+            : 'None detected.';
+
+        detailContainer.appendChild(createDetailRow('RED FLAGS', redFlags, {
+            color: redFlags === 'None detected.' ? 'var(--text)' : 'var(--warn)',
+            preWrap: true
+        }));
+
+        const sourcesSection = document.createElement('div');
+        sourcesSection.style.marginTop = '16px';
+
+        const sourcesTitle = document.createElement('div');
+        sourcesTitle.textContent = 'SOURCES';
+        sourcesTitle.style.color = 'var(--accent)';
+        sourcesTitle.style.fontWeight = 'bold';
+        sourcesTitle.style.marginBottom = '8px';
+        sourcesTitle.style.fontSize = '13px';
+
+        sourcesSection.appendChild(sourcesTitle);
+
+        if (Array.isArray(data.sources) && data.sources.length > 0) {
+            data.sources.forEach((src, index) => {
+                const sourceLink = document.createElement('a');
+
+                const sourceTitle = src.title || `Source ${index + 1}`;
+                const url = src.url || '';
+
+                sourceLink.textContent = `[${index + 1}] ${sourceTitle}`;
+                sourceLink.style.display = 'block';
+                sourceLink.style.color = 'var(--text)';
+                sourceLink.style.textDecoration = 'none';
+                sourceLink.style.border = '1px solid var(--border)';
+                sourceLink.style.background = 'rgba(255,255,255,0.03)';
+                sourceLink.style.borderRadius = '6px';
+                sourceLink.style.padding = '8px 10px';
+                sourceLink.style.marginBottom = '6px';
+                sourceLink.style.wordBreak = 'break-word';
+
+                if (url.startsWith('http://') || url.startsWith('https://')) {
+                    sourceLink.href = url;
+                    sourceLink.target = '_blank';
+                    sourceLink.rel = 'noopener noreferrer';
+                } else {
+                    sourceLink.href = '#';
+                    sourceLink.addEventListener('click', event => event.preventDefault());
+                    sourceLink.style.opacity = '0.6';
+                }
+
+                sourceLink.addEventListener('mouseover', () => {
+                    sourceLink.style.borderColor = 'var(--accent)';
+                });
+
+                sourceLink.addEventListener('mouseout', () => {
+                    sourceLink.style.borderColor = 'var(--border)';
+                });
+
+                sourcesSection.appendChild(sourceLink);
+            });
+        } else {
+            const noSources = document.createElement('p');
+            noSources.textContent = 'No sources stored for this analysis.';
+            noSources.style.color = 'var(--muted)';
+            sourcesSection.appendChild(noSources);
+        }
+
+        detailContainer.appendChild(sourcesSection);
+        message.appendChild(detailContainer);
+    } catch (error) {
+        console.error('[Error]', error);
+        clearElement(message);
+
+        const errorBox = document.createElement('p');
+        errorBox.textContent = 'Failed to load analysis details: ' + (error.message || 'Unknown error');
+        errorBox.style.color = 'var(--danger)';
+        message.appendChild(errorBox);
+    }
+}
+
+// ===== CLEAR UI =====
+
+function clearUI() {
+    if (isAnalyzing) {
+        showNotification('Analysis in progress. Cannot clear.', 'warning');
+        return;
+    }
+
+    lastAnalysisReport = null;
+
+    const textInput = document.getElementById('val-text');
+    const urlInput = document.getElementById('val-url');
+    const titleInput = document.getElementById('val-title');
+    const resultPanel = document.getElementById('result-panel');
+    const resultEmpty = document.getElementById('result-empty');
+    const scannerLoading = document.getElementById('scanner-loading');
+
+    if (textInput) textInput.value = '';
+    if (urlInput) urlInput.value = '';
+    if (titleInput) titleInput.value = '';
+
+    if (scannerLoading) scannerLoading.style.display = 'none';
+    if (resultPanel) resultPanel.style.display = 'none';
+    if (resultEmpty) resultEmpty.style.display = 'block';
+
+    updateConfidenceVisual(0);
+
+    const btn = document.getElementById('analyze-btn');
+
+    if (btn) {
+        btn.disabled = false;
+        btn.innerText = '▶ ANALYZE DATA';
+    }
+
+    console.log('[UI] Cleared');
+}
+
+// ===== USER DROPDOWN INFO MODALS =====
+
+function createInfoModal(titleText, bodyBuilder) {
+    const modal = document.getElementById('modal-overlay');
+    const title = document.getElementById('modal-title');
+    const message = document.getElementById('modal-message');
+    const footer = document.querySelector('.modal-footer');
+
+    if (!modal || !title || !message || !footer) {
+        showNotification('Modal not found.', 'error');
+        return;
+    }
+
+    title.textContent = titleText;
+    clearElement(message);
+    clearElement(footer);
+
+    bodyBuilder(message);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-btn cancel';
+    closeBtn.textContent = 'Close';
+    closeBtn.addEventListener('click', closeModal);
+
+    footer.appendChild(closeBtn);
+
+    pendingAction = null;
+    modal.style.display = 'flex';
+}
+
+function createModalSection(container, heading, text) {
+    const box = document.createElement('div');
+    box.style.border = '1px solid var(--border)';
+    box.style.background = 'rgba(255,255,255,0.035)';
+    box.style.borderRadius = '8px';
+    box.style.padding = '12px';
+    box.style.marginBottom = '10px';
+
+    const h = document.createElement('h4');
+    h.textContent = heading;
+    h.style.color = 'var(--accent)';
+    h.style.margin = '0 0 8px 0';
+
+    const p = document.createElement('p');
+    p.textContent = text;
+    p.style.color = 'var(--text)';
+    p.style.lineHeight = '1.6';
+    p.style.margin = '0';
+
+    box.appendChild(h);
+    box.appendChild(p);
+    container.appendChild(box);
+}
+
+function createModalList(container, heading, items) {
+    const box = document.createElement('div');
+    box.style.border = '1px solid var(--border)';
+    box.style.background = 'rgba(255,255,255,0.035)';
+    box.style.borderRadius = '8px';
+    box.style.padding = '12px';
+    box.style.marginBottom = '10px';
+
+    const h = document.createElement('h4');
+    h.textContent = heading;
+    h.style.color = 'var(--accent)';
+    h.style.margin = '0 0 8px 0';
+
+    const ul = document.createElement('ul');
+    ul.style.margin = '0 0 0 18px';
+    ul.style.padding = '0';
+    ul.style.color = 'var(--text)';
+    ul.style.lineHeight = '1.7';
+
+    items.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        ul.appendChild(li);
+    });
+
+    box.appendChild(h);
+    box.appendChild(ul);
+    container.appendChild(box);
+}
+
+function showAboutModal() {
+    createInfoModal('About DEBUNK.IT', (container) => {
+        const wrapper = document.createElement('div');
+        wrapper.style.maxHeight = '65vh';
+        wrapper.style.overflowY = 'auto';
+        wrapper.style.paddingRight = '8px';
+
+        createModalSection(
+            wrapper,
+            'What is DEBUNK.IT?',
+            'DEBUNK.IT is an AI-assisted misinformation analysis system that helps users examine headlines, URLs, and full article text using source-aware reasoning.'
+        );
+
+        createModalList(wrapper, 'What it can analyze', [
+            'News headlines and short public claims.',
+            'Article URLs using webpage scraping.',
+            'Full article text pasted by the user.',
+            'Claims that may be supported, refuted, misleading, low credibility, or lacking enough evidence.'
+        ]);
+
+        createModalList(wrapper, 'Core features', [
+            'AI-powered claim analysis.',
+            'Live source scanning.',
+            'URL article extraction.',
+            'Analysis history for logged-in users.',
+            'Verdict confidence score.',
+            'Reason, fact-check summary, red flags, and sources.'
+        ]);
+
+        createModalSection(
+            wrapper,
+            'Important limitation',
+            'DEBUNK.IT is not a final truth authority. Breaking news, old videos, satire, edited media, and conflicting sources may still require manual verification.'
+        );
+
+        container.appendChild(wrapper);
+    });
+}
+
+function showHelpModal() {
+    createInfoModal('Get Help', (container) => {
+        const wrapper = document.createElement('div');
+        wrapper.style.maxHeight = '65vh';
+        wrapper.style.overflowY = 'auto';
+        wrapper.style.paddingRight = '8px';
+
+        createModalList(wrapper, 'How to use the scanner', [
+            'Use HEADLINE mode for quick claims or news titles.',
+            'Use URL mode when you have a full article link.',
+            'Use TEXT mode when you want to paste a full article or long message.',
+            'Click Analyze Data and wait for the verdict, confidence, reason, fact-check, and red flags.'
+        ]);
+
+        createModalList(wrapper, 'Verdict meaning', [
+            'SUPPORTED: credible evidence supports the central claim.',
+            'REFUTED: credible evidence contradicts the central claim.',
+            'INSUFFICIENT EVIDENCE: sources do not clearly prove or disprove it.',
+            'MISLEADING: partly true but missing context or framed unfairly.',
+            'LOW CREDIBILITY: weak sourcing, risky pattern, or suspicious claim.'
+        ]);
+
+        createModalList(wrapper, 'Tips for better results', [
+            'Paste the exact headline instead of vague summaries.',
+            'For URLs, use the direct article link, not a homepage link.',
+            'For viral images or videos, describe where and when it claims to be from.',
+            'Check the sources section before trusting the result.'
+        ]);
+
+        createModalSection(
+            wrapper,
+            'Need more control?',
+            'Go to Settings to change theme, background, language, privacy preferences, password, and account options.'
+        );
+
+        container.appendChild(wrapper);
+    });
+}
+
+function showLanguageModal() {
+    createInfoModal('Language', (container) => {
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'grid';
+        wrapper.style.gap = '12px';
+
+        const info = document.createElement('p');
+        info.textContent = 'Choose your preferred language. This currently affects the Settings page and saved language preference.';
+        info.style.color = 'var(--text)';
+        info.style.lineHeight = '1.6';
+        info.style.margin = '0';
+
+        const select = document.createElement('select');
+        select.id = 'quick-language-select';
+        select.style.width = '100%';
+        select.style.padding = '12px';
+        select.style.borderRadius = '6px';
+        select.style.border = '1px solid var(--border)';
+        select.style.background = 'rgba(255,255,255,0.04)';
+        select.style.color = 'var(--text)';
+        select.style.fontFamily = 'inherit';
+
+        const languages = [
+            { value: 'en', label: 'English' },
+            { value: 'hi', label: 'हिन्दी' },
+            { value: 'ja', label: '日本語' }
+        ];
+
+        const savedLanguage = localStorage.getItem('debunkit_language') || 'en';
+
+        languages.forEach(lang => {
+            const option = document.createElement('option');
+            option.value = lang.value;
+            option.textContent = lang.label;
+
+            if (lang.value === savedLanguage) {
+                option.selected = true;
+            }
+
+            select.appendChild(option);
+        });
+
+        const note = document.createElement('p');
+        note.textContent = 'For full language controls, open Settings.';
+        note.style.color = 'var(--muted)';
+        note.style.fontSize = '13px';
+        note.style.lineHeight = '1.5';
+        note.style.margin = '0';
+
+        const actions = document.createElement('div');
+        actions.style.display = 'flex';
+        actions.style.gap = '10px';
+        actions.style.marginTop = '8px';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'modal-btn confirm';
+        saveBtn.textContent = 'Save Language';
+        saveBtn.addEventListener('click', () => {
+            const selectedLanguage = document.getElementById('quick-language-select').value;
+            localStorage.setItem('debunkit_language', selectedLanguage);
+            showNotification('Language preference saved.', 'success');
+            closeModal();
+        });
+
+        const settingsBtn = document.createElement('button');
+        settingsBtn.className = 'modal-btn cancel';
+        settingsBtn.textContent = 'Open Settings';
+        settingsBtn.addEventListener('click', () => {
+            window.location.href = '/settings';
+        });
+
+        actions.appendChild(saveBtn);
+        actions.appendChild(settingsBtn);
+
+        wrapper.appendChild(info);
+        wrapper.appendChild(select);
+        wrapper.appendChild(note);
+        wrapper.appendChild(actions);
+
+        container.appendChild(wrapper);
+    });
+}
+
+console.log('[Main.js] Loaded successfully');
+
+// ===== EVENT DELEGATION FOR DATA-ACTION ATTRIBUTES =====
+document.addEventListener('click', (e) => {
+    const actionEl = e.target.closest('[data-action]');
+    if (!actionEl) return;
+
+    const action = actionEl.getAttribute('data-action');
+    if (!action) return;
+
+    if (action === 'switch-view') {
+        const view = actionEl.getAttribute('data-view');
+        if (view) switchView(view);
+    } else if (action === 'switch-tab') {
+        const mode = actionEl.getAttribute('data-mode');
+        if (mode) switchTab(actionEl, mode);
+    } else if (action === 'focus-scanner-mode') {
+        const mode = actionEl.getAttribute('data-mode');
+        if (mode) focusScannerMode(mode);
+    } else if (action === 'fill-example-claim') {
+        const claim = actionEl.getAttribute('data-claim');
+        const mode = actionEl.getAttribute('data-mode') || 'title';
+        if (claim) fillExampleClaim(claim, mode);
+    } else if (action === 'start-scan') {
+        startScan();
+    } else if (action === 'clear-ui') {
+        clearUI();
+    } else if (action === 'copy-current-report') {
+        copyCurrentReport();
+    } else if (action === 'download-current-report') {
+        downloadCurrentReport();
+    } else if (action === 'show-clear-confirmation') {
+        showClearConfirmation();
+    } else if (action === 'load-analysis-history') {
+        loadAnalysisHistory();
+    } else if (action === 'reset-history-filters') {
+        resetHistoryFilters();
+    } else if (action === 'close-modal') {
+        closeModal();
+    } else if (action === 'confirm-action') {
+        confirmAction();
+    } else if (action === 'toggle-user-menu') {
+        if (typeof toggleUserMenu === 'function') toggleUserMenu();
+    } else if (action === 'show-language-modal') {
+        e.preventDefault();
+        showLanguageModal();
+    } else if (action === 'show-help-modal') {
+        e.preventDefault();
+        showHelpModal();
+    } else if (action === 'logout') {
+        e.preventDefault();
+        if (typeof logout === 'function') logout();
+    } else if (action === 'nav') {
+        const href = actionEl.getAttribute('data-href');
+        if (href) window.location.href = href;
+    }
+});
+
+document.addEventListener('input', (e) => {
+    const actionEl = e.target.closest('[data-action="apply-history-filters"]');
+    if (actionEl) {
+        applyHistoryFilters();
+    }
+});
+
+document.addEventListener('change', (e) => {
+    const actionEl = e.target.closest('[data-action="apply-history-filters"]');
+    if (actionEl) {
+        applyHistoryFilters();
+    }
+});
+
+// Page-to-page navigation: 150ms opacity fade only
+document.addEventListener('click', (e) => {
+    const anchor = e.target.closest('a');
+    if (!anchor) return;
+    const href = anchor.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:') || anchor.target === '_blank') return;
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    if (href.startsWith('/') || href.startsWith(window.location.origin)) {
+        e.preventDefault();
+        document.body.classList.add('page-leaving');
+        setTimeout(() => {
+            window.location.href = href;
+        }, 120);
+    }
+});
